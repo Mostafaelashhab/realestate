@@ -17,10 +17,19 @@ window.EnrLive = (() => {
             .sort((a, b) => (+a.number) - (+b.number))
             .map(p => {
                 const ok = p.available && !p.sold && !p.locked;
-                const cls = ok ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400 line-through';
-                return `<span class="inline-flex items-center justify-center w-7 h-7 rounded text-[10px] ${cls}" title="${ok ? 'متاح' : 'محجوز'}">${p.number}</span>`;
+                const cls = ok ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400';
+                const price = Math.round((p.cost || 0) / 100);
+                return `<div class="flex flex-col items-center justify-center min-w-[2.6rem] px-1.5 py-1 rounded-lg ${cls}" title="${ok ? 'متاح' : 'محجوز'}">
+                    <span class="text-[11px] font-bold leading-none ${ok ? '' : 'line-through'}">${p.number}</span>
+                    <span class="text-[9px] leading-none mt-0.5 opacity-90">${price} ج</span>
+                </div>`;
             }).join('');
-        return `<div class="flex flex-wrap gap-1 mt-2">${chips}</div>`;
+        return `
+            <div class="flex flex-wrap gap-1 mt-2">${chips}</div>
+            <div class="flex gap-3 mt-2 text-[10px] text-slate-400">
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> متاح</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-100 inline-block"></span> محجوز</span>
+            </div>`;
     };
 
     const trip = (step) => {

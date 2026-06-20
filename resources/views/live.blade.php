@@ -20,21 +20,22 @@
     @endphp
 
     @if ($trains->isEmpty())
-        <div class="bg-white rounded-xl shadow-sm p-8 text-center text-slate-500">
+        <div class="bg-white rounded-3xl shadow-sm p-8 text-center text-slate-500">
+            <div class="text-4xl mb-2">🛤️</div>
             مفيش قطارات محسوبة كمتحركة في الوقت ده. جرّب تاني بعد شوية أو افتح صفحة أي قطار لمتابعته.
         </div>
     @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="space-y-3">
         @foreach ($trains as $row)
             @php [$cls, $txt] = $statusStyles[$row['position']['status']] ?? $statusStyles['unknown']; @endphp
-            <a href="{{ route('trains.show', $row['train']) }}" class="block bg-white rounded-xl shadow-sm hover:shadow-md transition p-4">
+            <a href="{{ route('trains.show', $row['train']) }}" class="block bg-white rounded-3xl shadow-sm active:scale-[.99] transition p-4">
                 <div class="flex items-center justify-between gap-3 mb-2">
                     <div class="flex items-center gap-2">
-                        <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2 py-1 rounded">قطار {{ $row['train']->number }}</span>
+                        <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2.5 py-1 rounded-full">قطار {{ $row['train']->number }}</span>
                         <span class="text-xs text-slate-500">{{ $row['train']->type_label }}</span>
                     </div>
-                    <span class="text-xs font-bold px-2 py-1 rounded-full {{ $cls }}">{{ $txt }}</span>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $cls }}">{{ $txt }}</span>
                 </div>
                 <p class="text-sm text-slate-700">{{ $row['position']['message'] }}</p>
                 @if ($row['position']['overall_progress'] !== null)

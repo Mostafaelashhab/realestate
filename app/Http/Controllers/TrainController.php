@@ -24,13 +24,23 @@ class TrainController extends Controller
         return redirect()->route('trains.show', $train);
     }
 
-    public function show(Train $train, TrainPositionEstimator $estimator)
+    public function show(Train $train, Request $request, TrainPositionEstimator $estimator)
     {
         $train->load(['stops.station']);
         $position = $estimator->estimate($train);
 
-        $origin = $train->stops->first()?->station;
-        $terminal = $train->stops->last()?->station;
+        // لو جاي من بحث بمحطتين، نعرض سعر نفس الجزء؛ غير كده مسار القطار الكامل.
+        $fromStop = $request->filled('from') ? $train->stops->firstWhere('station_id', $request->integer('from')) : null;
+        $toStop = $request->filled('to') ? $train->stops->firstWhere('station_id', $request->integer('to')) : null;
+        $validSegment = $fromStop && $toStop && $fromStop->stop_order < $toStop->stop_order;
+
+        $origin = $validSegment ? $fromStop->station : $train->stops->first()?->station;
+        $terminal = $validSegment ? $toStop->station : $train->stops->last()?->station;
+
+        // جدول المحطات: من محطة الركوب لمحطة النزول لو جاي من بحث، وإلا المسار كامل.
+        $scheduleStops = $validSegment
+            ? $train->stops->whereBetween('stop_order', [$fromStop->stop_order, $toStop->stop_order])->values()
+            : $train->stops;
 
         // الأسعار الرسمية لكامل مسار القطار (إن وُجدت من الاستيراد).
         $fares = ($origin && $terminal)
@@ -41,7 +51,7 @@ class TrainController extends Controller
                 ->get()
             : collect();
 
-        return view('trains.show', compact('train', 'position', 'fares', 'origin', 'terminal'));
+        return view('trains.show', compact('train', 'position', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment'));
     }
 
     /** نقطة JSON لتحديث موقع القطار دوريًا من الواجهة. */

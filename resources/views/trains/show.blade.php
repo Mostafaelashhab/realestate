@@ -39,7 +39,7 @@
     </div>
 
     {{-- بطاقة الموقع التقديري --}}
-    <section class="bg-white rounded-2xl shadow p-5 mb-5">
+    <section class="bg-white rounded-3xl shadow-sm p-5 mb-5">
         <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
             <h2 class="font-bold flex items-center gap-2">📍 القطر فين دلوقتي؟
                 <span class="text-[11px] font-normal text-slate-400">(تقدير محسوب من الجدول)</span>
@@ -81,8 +81,13 @@
     </section>
 
     {{-- جدول المحطات --}}
-    <section class="bg-white rounded-2xl shadow p-5 mb-5">
-        <h2 class="font-bold mb-3">جدول المحطات والمواعيد ({{ $train->stops->count() }} محطة)</h2>
+    <section class="bg-white rounded-3xl shadow-sm p-5 mb-5">
+        <h2 class="font-bold mb-3">
+            جدول المحطات والمواعيد ({{ $scheduleStops->count() }} محطة)
+            @if ($validSegment)
+                <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
+            @endif
+        </h2>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -93,7 +98,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($train->stops as $stop)
+                    @foreach ($scheduleStops as $stop)
                         <tr class="border-b border-slate-50">
                             <td class="py-2.5 font-medium">{{ $stop->station->name_ar }}</td>
                             <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->arrival_time) ?? '—' }}</td>
@@ -106,7 +111,7 @@
     </section>
 
     {{-- الدرجات والأسعار الرسمية --}}
-    <section class="bg-white rounded-2xl shadow p-5">
+    <section class="bg-white rounded-3xl shadow-sm p-5">
         <h2 class="font-bold mb-1">الأسعار الرسمية
             @if ($origin && $terminal)
                 <span class="text-xs font-normal text-slate-400">({{ $origin->name_ar }} ← {{ $terminal->name_ar }})</span>
@@ -136,7 +141,7 @@
 
     {{-- التوافر اللحظي الرسمي (اختياري، بضغطة المستخدم) --}}
     @if ($origin?->enr_id && $terminal?->enr_id)
-        <section class="bg-white rounded-2xl shadow p-5 mt-5">
+        <section class="bg-white rounded-3xl shadow-sm p-5 mt-5">
             <h2 class="font-bold mb-1">المواعيد والمقاعد المتاحة (لحظي)</h2>
             <p class="text-xs text-slate-400 mb-3">يُجلب مباشرة من نظام الهيئة عند الطلب — مواعيد دقيقة، عربات، أسعار، ومقاعد متاحة.</p>
 

@@ -13,15 +13,15 @@
 
     <a href="{{ \App\Support\EgyptRailReference::bookingUrl($from->booking_name, $to->booking_name, $date->toDateString()) }}"
         target="_blank" rel="noopener"
-        class="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl px-4 py-3 mb-4 transition">
+        class="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-[.99] text-white font-bold rounded-2xl px-4 py-3 mb-4 transition shadow-lg shadow-amber-500/25">
         🎫 احجز على الموقع الرسمي لهيئة السكة الحديد
     </a>
 
     @forelse ($results as $r)
-        <a href="{{ route('trains.show', $r['train']) }}" class="block bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 mb-3">
+        <a href="{{ route('trains.show', ['train' => $r['train'], 'from' => $from->id, 'to' => $to->id]) }}" class="block bg-white rounded-3xl shadow-sm active:scale-[.99] transition p-4 mb-3">
             <div class="flex items-center justify-between gap-4 flex-wrap">
-                <div class="flex items-center gap-3">
-                    <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2 py-1 rounded">قطار {{ $r['train']->number }}</span>
+                <div class="flex items-center gap-2">
+                    <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2.5 py-1 rounded-full">قطار {{ $r['train']->number }}</span>
                     <span class="text-xs text-slate-500">{{ $r['train']->type_label }}</span>
                 </div>
                 <div class="text-left">
@@ -53,7 +53,7 @@
 
             <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
                 @forelse ($r['fares'] as $fare)
-                    <span class="text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 rounded px-2 py-1">
+                    <span class="text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full px-2.5 py-1">
                         {{ $fare['label'] }}: <b>{{ number_format($fare['price']) }} ج.م</b>
                     </span>
                 @empty
@@ -62,7 +62,8 @@
             </div>
         </a>
     @empty
-        <div class="bg-white rounded-xl shadow-sm p-8 text-center text-slate-500">
+        <div class="bg-white rounded-3xl shadow-sm p-8 text-center text-slate-500">
+            <div class="text-4xl mb-2">🚉</div>
             لا توجد قطارات مباشرة بين هاتين المحطتين في هذا اليوم ضمن البيانات المتاحة.
         </div>
     @endforelse
