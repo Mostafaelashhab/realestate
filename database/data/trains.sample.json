@@ -1,0 +1,25 @@
+{
+    "stations": [
+        { "code": "CAI", "name_ar": "القاهرة (رمسيس)", "name_en": "Cairo", "governorate": "القاهرة", "lat": 30.0626, "lng": 31.2497 },
+        { "code": "TNT", "name_ar": "طنطا", "name_en": "Tanta", "governorate": "الغربية", "lat": 30.7865, "lng": 31.0004 },
+        { "code": "ALX", "name_ar": "الإسكندرية", "name_en": "Alexandria", "governorate": "الإسكندرية", "lat": 31.1934, "lng": 29.9056 }
+    ],
+    "trains": [
+        {
+            "number": "999",
+            "type": "spanish",
+            "name": "مثال — القاهرة/الإسكندرية",
+            "runs_on": null,
+            "active": true,
+            "stops": [
+                { "station": "CAI", "departure": "09:00", "distance_km": 0 },
+                { "station": "TNT", "arrival": "09:55", "departure": "09:58", "distance_km": 90 },
+                { "station": "ALX", "arrival": "11:30", "distance_km": 208 }
+            ],
+            "classes": [
+                { "class_key": "first_ac", "base_fare": 120, "per_km": 0.55 },
+                { "class_key": "second_ac", "base_fare": 90, "per_km": 0.40 }
+            ]
+        }
+    ]
+}

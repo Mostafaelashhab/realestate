@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+    --color-rail-50: #eef7f1;
+    --color-rail-600: #0f7a4b;
+    --color-rail-700: #0b6340;
+    --color-rail-800: #094d33;
+}
+
+body {
+    font-family: var(--font-sans);
+}
