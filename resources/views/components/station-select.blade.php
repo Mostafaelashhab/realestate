@@ -13,7 +13,7 @@
     <button type="button" data-trigger
         class="relative w-full flex items-center ps-10 pe-14 py-3.5 text-start {{ $round }} focus:outline-none focus:bg-rail-50/40 transition">
         <x-icon :name="$icon" class="absolute start-4 top-1/2 -translate-y-1/2 {{ $icon === 'dot' ? 'w-3 h-3' : 'w-4 h-4' }} {{ $iconClass }}"/>
-        <span data-label class="text-slate-400 truncate">{{ $placeholder }}</span>
+        <span data-label class="min-w-0 truncate text-slate-400">{{ $placeholder }}</span>
     </button>
 
     <div data-panel hidden
