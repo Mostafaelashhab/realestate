@@ -85,21 +85,22 @@
         {{-- تبويبات سفلية --}}
         @php
             $tabs = [
-                ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show')],
+                ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
                 ['route' => 'favorites', 'icon' => 'star', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
+                ['route' => 'alerts.mine', 'icon' => 'alert', 'label' => 'تنبيهاتي', 'on' => request()->routeIs('alerts.mine')],
                 ['route' => 'fines', 'icon' => 'scale', 'label' => 'الغرامات', 'on' => request()->routeIs('fines')],
-                ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ عن خطأ', 'on' => request()->routeIs('report')],
+                ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ', 'on' => request()->routeIs('report')],
             ];
         @endphp
         <nav class="fixed bottom-0 inset-x-0 z-30">
             <div
                 class="mx-auto max-w-xl bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)]">
-                <div class="grid grid-cols-4">
+                <div class="grid grid-cols-5">
                     @foreach ($tabs as $tab)
                         <a href="{{ route($tab['route']) }}"
                             class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-700' : 'text-slate-400 hover:text-slate-600' }}">
                             <x-icon :name="$tab['icon']" class="w-6 h-6 {{ $tab['on'] ? '' : 'opacity-70' }}" />
-                            <span class="text-[11px] font-bold">{{ $tab['label'] }}</span>
+                            <span class="text-[11px] font-bold whitespace-nowrap">{{ $tab['label'] }}</span>
                         </a>
                     @endforeach
                 </div>
