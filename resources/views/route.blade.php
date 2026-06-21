@@ -128,10 +128,9 @@
             </div>
         @endif
     @else
-        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-8 text-center text-slate-500 mb-4">
-            <x-icon name="station" class="w-10 h-10 mx-auto mb-2 text-slate-300"/>
+        <x-empty icon="station" class="mb-4">
             لا توجد قطارات مباشرة بين <b>{{ $from->name_ar }}</b> و<b>{{ $to->name_ar }}</b> في هذا اليوم.
-        </div>
+        </x-empty>
         @include('trains.partials.route-suggestions', ['suggestions' => $suggestions, 'from' => $from, 'to' => $to, 'date' => $date])
     @endif
 

@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', "محطة {$station->name_ar}")
+@section('og_title', "مواعيد القطارات من محطة {$station->name_ar}")
+@section('og_desc', "كل القطارات القايمة من محطة {$station->name_ar} اليوم — المواعيد والوجهات.")
 
 @section('content')
     <div class="flex items-center gap-2 mb-1">
@@ -9,28 +11,36 @@
     </div>
     <p class="text-sm text-slate-500 mb-4">القطارات القايمة من المحطة اليوم ({{ $departures->count() }}) — بترتيب الوقت.</p>
 
-    @forelse ($departures as $d)
-        <a href="{{ route('trains.show', ['train' => $d['train'], 'from' => $station->id, 'to' => $d['destination']->id]) }}"
-            class="flex items-center gap-4 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 active:scale-[.99] transition p-4 mb-3">
-            <div class="text-center shrink-0">
-                <div class="text-2xl font-extrabold whitespace-nowrap">{{ \App\Support\Format::time($d['departure']) }}</div>
+    @php
+        $nowT = now()->format('H:i:s');
+        $upcoming = $departures->filter(fn ($d) => $d['departure'] >= $nowT)->values();
+        $earlier = $departures->filter(fn ($d) => $d['departure'] < $nowT)->values();
+    @endphp
+
+    @if ($departures->isEmpty())
+        <x-empty icon="station">مفيش قطارات قايمة من المحطة دي اليوم ضمن البيانات المتاحة.</x-empty>
+    @else
+        @if ($upcoming->isNotEmpty())
+            <h2 class="text-xs font-bold text-rail-700 mb-2">القادمة</h2>
+            <div class="space-y-3 mb-5">
+                @foreach ($upcoming as $i => $d)
+                    @include('stations.partials.departure', ['d' => $d, 'station' => $station, 'next' => $i === 0])
+                @endforeach
             </div>
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2.5 py-1 rounded-full">قطار {{ $d['train']->number }}</span>
-                    <span class="text-xs text-slate-500 truncate">{{ $d['train']->type_label }}</span>
+        @endif
+
+        @if ($earlier->isNotEmpty())
+            <details class="group">
+                <summary class="text-xs font-bold text-slate-400 mb-2 cursor-pointer list-none flex items-center gap-1">
+                    <x-icon name="chevron-right" class="w-4 h-4 group-open:rotate-90 transition"/>
+                    رحلات فاتت اليوم ({{ $earlier->count() }})
+                </summary>
+                <div class="space-y-3 mt-2 opacity-60">
+                    @foreach ($earlier as $d)
+                        @include('stations.partials.departure', ['d' => $d, 'station' => $station, 'next' => false])
+                    @endforeach
                 </div>
-                <div class="flex items-center gap-1.5 text-sm text-slate-600">
-                    <x-icon name="pin" class="w-4 h-4 text-amber-500 shrink-0"/>
-                    <span class="truncate">{{ $d['destination']->name_ar }}</span>
-                </div>
-            </div>
-            <x-icon name="chevron-right" class="w-5 h-5 text-slate-300 shrink-0"/>
-        </a>
-    @empty
-        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-8 text-center text-slate-500">
-            <x-icon name="station" class="w-10 h-10 mx-auto mb-2 text-slate-300"/>
-            مفيش قطارات قايمة من المحطة دي اليوم ضمن البيانات المتاحة.
-        </div>
-    @endforelse
+            </details>
+        @endif
+    @endif
 @endsection

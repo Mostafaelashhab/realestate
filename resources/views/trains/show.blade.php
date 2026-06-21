@@ -528,6 +528,11 @@
                 const NUMBER = @json($train->number);
                 const ORIGIN_ENR = @json($origin->enr_id);
                 const ORIGIN_NAME = @json($origin->name_ar);
+                const SKELETON = '<div class="animate-pulse space-y-3">' +
+                    '<div class="bg-white rounded-lg border border-slate-200 p-3">' +
+                    '<div class="flex gap-2 mb-3"><div class="h-5 w-14 bg-slate-200 rounded"></div><div class="h-5 w-14 bg-slate-200 rounded"></div><div class="h-5 w-20 bg-slate-200 rounded"></div></div>' +
+                    '<div class="flex flex-wrap gap-1.5">' + Array(16).fill('<div class="w-7 h-9 bg-slate-200 rounded-md"></div>').join('') + '</div>' +
+                    '</div></div>';
                 // محطات قيام أبعد على نفس القطار (الأقرب فالأبعد).
                 const ALTS = @json($boardingAlternatives);
 
@@ -563,7 +568,7 @@
 
                     btn.disabled = true;
                     btn.textContent = 'جاري الجلب…';
-                    out.innerHTML = '<p class="text-sm text-slate-400">جاري جلب البيانات</p>';
+                    out.innerHTML = SKELETON;
 
                     // مهلة زمنية حتى لا تظل الصفحة معلّقة لو تأخّر نظام الهيئة.
                     const controller = new AbortController();
