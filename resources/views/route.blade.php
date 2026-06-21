@@ -69,19 +69,13 @@
         </a>
     </div>
 
-    <a href="{{ \App\Support\EgyptRailReference::bookingUrl($from->booking_name, $to->booking_name, $date->toDateString()) }}"
-        target="_blank" rel="noopener"
-        class="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-[.99] text-white font-bold rounded-2xl px-4 py-3 mb-4 transition shadow-lg shadow-amber-500/25">
-        <x-icon name="ticket" class="w-5 h-5"/>
-        احجز على الموقع الرسمي لهيئة السكة الحديد
-    </a>
 
     @if ($results->isNotEmpty())
         @php $types = $results->map(fn ($r) => $r['train']->type_label)->filter()->unique()->values(); @endphp
 
         <div class="flex items-center gap-2 mb-3 text-sm">
             <span class="text-slate-400 text-xs">ترتيب:</span>
-            <button data-sort="depart" class="sort-btn px-3 py-1.5 rounded-full bg-rail-600 text-white font-bold text-xs transition">الأبدري</button>
+            <button data-sort="depart" class="sort-btn px-3 py-1.5 rounded-full bg-rail-600 text-white font-bold text-xs transition">بالوقت</button>
             <button data-sort="price" class="sort-btn px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 font-bold text-xs transition">الأرخص</button>
             <button data-sort="duration" class="sort-btn px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 font-bold text-xs transition">الأسرع</button>
         </div>

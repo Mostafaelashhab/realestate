@@ -22,13 +22,7 @@
         </div>
     </div>
 
-    <a href="{{ \App\Support\EgyptRailReference::bookingUrl($from->booking_name, $to->booking_name, $date->toDateString()) }}"
-        target="_blank" rel="noopener"
-        class="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-[.99] text-white font-bold rounded-2xl px-4 py-3 mb-4 transition shadow-lg shadow-amber-500/25">
-        <x-icon name="ticket" class="w-5 h-5"/>
-        احجز على الموقع الرسمي لهيئة السكة الحديد
-    </a>
-
+  
     @if ($results->isNotEmpty())
         @php $types = $results->map(fn ($r) => $r['train']->type_label)->filter()->unique()->values(); @endphp
 

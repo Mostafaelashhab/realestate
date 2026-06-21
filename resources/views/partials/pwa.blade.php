@@ -22,6 +22,22 @@
     </div>
 </div>
 
+{{-- نافذة تثبيت التطبيق (أندرويد/كروم) --}}
+<div id="pwa-modal" hidden class="fixed inset-0 z-50 grid place-items-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center">
+        <img src="/icons/icon-192.png" alt="" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-md">
+        <h3 class="text-lg font-extrabold mb-1">ثبّت تطبيق قطارات مصر</h3>
+        <p class="text-sm text-slate-500 mb-5 leading-relaxed">وصول أسرع، يشتغل بدون نت، وتنبيهات بمواعيد قطارك — زي أي تطبيق على شاشتك.</p>
+        <button id="pwa-modal-install" type="button"
+            class="w-full bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white font-extrabold rounded-2xl px-4 py-3.5 transition shadow-lg shadow-rail-600/25">
+            تثبيت الآن
+        </button>
+        <button id="pwa-modal-later" type="button" class="w-full text-slate-500 font-bold rounded-2xl px-4 py-2.5 mt-2 hover:bg-slate-50 transition">
+            مش دلوقتي
+        </button>
+    </div>
+</div>
+
 <div id="qm-toast" hidden
     class="fixed left-1/2 -translate-x-1/2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 bg-slate-900 text-white text-sm rounded-full px-4 py-2 shadow-lg"></div>
 
@@ -95,58 +111,52 @@
             },
         };
 
-        // 2) بانر التثبيت
-        const banner = document.getElementById('pwa-banner');
-        const installBtn = document.getElementById('pwa-install');
-        const dismissBtn = document.getElementById('pwa-dismiss');
-        const bannerText = document.getElementById('pwa-banner-text');
+        // 2) تثبيت التطبيق
         const DISMISS_KEY = 'pwa-banner-dismissed';
-
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 
-        // مخفي لو مثبّت بالفعل أو رفضه المستخدم خلال آخر 7 أيام
-        function recentlyDismissed() {
+        // مرفوض خلال آخر 7 أيام؟
+        const recentlyDismissed = () => {
             const ts = +(localStorage.getItem(DISMISS_KEY) || 0);
             return ts && (Date.now() - ts) < 7 * 24 * 60 * 60 * 1000;
-        }
+        };
+        const dismiss = () => { try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {} };
 
-        function show() {
-            if (isStandalone || recentlyDismissed()) return;
-            banner.hidden = false;
-        }
-        function hide() { banner.hidden = true; }
-
-        dismissBtn.addEventListener('click', () => {
-            try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (e) {}
-            hide();
-        });
-
+        // — أندرويد/كروم: نافذة منبثقة للتثبيت —
+        const modal = document.getElementById('pwa-modal');
+        const modalInstall = document.getElementById('pwa-modal-install');
+        const modalLater = document.getElementById('pwa-modal-later');
         let deferredPrompt = null;
 
-        // أندرويد/كروم: نلتقط حدث التثبيت ونعرض زر "تثبيت"
+        const hideModal = () => { if (modal) modal.hidden = true; };
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.hidden = false;
-            show();
+            if (isStandalone || recentlyDismissed() || !modal) return;
+            setTimeout(() => { modal.hidden = false; }, 2500); // نظهرها بعد لحظة مش فجأة
         });
 
-        installBtn.addEventListener('click', async () => {
+        if (modalInstall) modalInstall.addEventListener('click', async () => {
+            hideModal();
             if (!deferredPrompt) return;
             deferredPrompt.prompt();
             await deferredPrompt.userChoice;
             deferredPrompt = null;
-            hide();
         });
+        if (modalLater) modalLater.addEventListener('click', () => { dismiss(); hideModal(); });
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) { dismiss(); hideModal(); } });
 
-        window.addEventListener('appinstalled', hide);
+        window.addEventListener('appinstalled', hideModal);
 
-        // iOS: لا يوجد تثبيت برمجي — نعرض تعليمات
-        if (isIOS && !isStandalone) {
-            installBtn.hidden = true;
-            bannerText.innerHTML = 'اضغط زر المشاركة <span class="font-bold">⎙</span> ثم «أضف إلى الشاشة الرئيسية».';
-            show();
+        // — iOS: لا يوجد تثبيت برمجي — بانر تعليمات سفلي —
+        const banner = document.getElementById('pwa-banner');
+        if (isIOS && !isStandalone && !recentlyDismissed() && banner) {
+            document.getElementById('pwa-install').hidden = true;
+            document.getElementById('pwa-banner-text').innerHTML = 'اضغط زر المشاركة <span class="font-bold">⎙</span> ثم «أضف إلى الشاشة الرئيسية».';
+            banner.hidden = false;
+            document.getElementById('pwa-dismiss').addEventListener('click', () => { dismiss(); banner.hidden = true; });
         }
     })();
 </script>
