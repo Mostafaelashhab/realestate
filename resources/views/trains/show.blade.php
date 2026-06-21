@@ -3,115 +3,51 @@
 @section('title', "قطار {$train->number}")
 
 @section('content')
-    @php
-        $points = $train->stops
-            ->filter(fn ($s) => $s->map_x !== null && $s->map_y !== null)
-            ->map(fn ($s) => ['x' => $s->map_x, 'y' => $s->map_y, 'name' => $s->station->name_ar])
-            ->values();
-
-        $hasMap = $points->count() > 1;
-        if ($hasMap) {
-            $pad = 8;
-            $minX = $points->min('x') - $pad; $maxX = $points->max('x') + $pad;
-            $minY = $points->min('y') - $pad; $maxY = $points->max('y') + $pad;
-            $vbW = max(1, $maxX - $minX); $vbH = max(1, $maxY - $minY);
-        }
-
-        $statusStyles = [
-            'running' => ['bg-emerald-100 text-emerald-800', 'في الطريق'],
-            'at_station' => ['bg-sky-100 text-sky-800', 'في المحطة'],
-            'before' => ['bg-amber-100 text-amber-800', 'لم يتحرك بعد'],
-            'idle' => ['bg-slate-100 text-slate-600', 'خارج الخدمة الآن'],
-            'unknown' => ['bg-slate-100 text-slate-600', 'غير معروف'],
-        ];
-        [$badgeClass, $badgeText] = $statusStyles[$position['status']] ?? $statusStyles['unknown'];
-    @endphp
-
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
+    {{-- هوية القطار --}}
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
         <span class="bg-rail-700 text-white text-sm font-bold px-3 py-1 rounded-lg">قطار {{ $train->number }}</span>
-        <span class="text-slate-600">{{ $train->type_label }}</span>
+        <span class="text-slate-600 text-sm">{{ $train->type_label }}</span>
         @if ($train->active)
-            <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">✅ مؤكد التشغيل</span>
+            <span class="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">
+                <x-icon name="check" class="w-3.5 h-3.5"/> مؤكد التشغيل
+            </span>
         @endif
-        @if ($train->source)
-            <span class="text-xs text-slate-400 ms-auto">المصدر: {{ $train->source }}@if ($train->source_updated_at) — تحديث {{ $train->source_updated_at->format('Y/m/d') }}@endif</span>
-        @endif
+    
     </div>
 
-    {{-- بطاقة الموقع التقديري --}}
-    <section class="bg-white rounded-3xl shadow-sm p-5 mb-5">
-        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-            <h2 class="font-bold flex items-center gap-2">📍 القطر فين دلوقتي؟
-                <span class="text-[11px] font-normal text-slate-400">(تقدير محسوب من الجدول)</span>
-            </h2>
-            <span id="status-badge" class="text-xs font-bold px-2.5 py-1 rounded-full {{ $badgeClass }}">{{ $badgeText }}</span>
-        </div>
-
-        <p id="position-message" class="text-slate-700 mb-3">{{ $position['message'] }}</p>
-
-        @if ($position['overall_progress'] !== null)
-            <div class="mb-3">
-                <div class="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>{{ $train->stops->first()->station->name_ar }}</span>
-                    <span id="progress-label">{{ $position['overall_progress'] }}%</span>
-                    <span>{{ $train->stops->last()->station->name_ar }}</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                    <div id="progress-bar" class="bg-rail-600 h-2.5 rounded-full transition-all" style="width: {{ $position['overall_progress'] }}%"></div>
-                </div>
+    {{-- ملخّص الرحلة --}}
+    <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
+        <div class="flex items-center justify-between gap-4">
+            <div class="text-center min-w-0">
+                <div class="text-3xl font-extrabold whitespace-nowrap">{{ \App\Support\Format::time($depart) ?? '—' }}</div>
+                <div class="text-sm text-slate-500 truncate">{{ $origin?->name_ar }}</div>
             </div>
-        @endif
 
-        @if ($hasMap)
-            <div class="mt-3 bg-slate-50 rounded-xl border border-slate-200 p-2">
-                <svg viewBox="{{ $minX }} {{ $minY }} {{ $vbW }} {{ $vbH }}" class="w-full" style="max-height: 360px" preserveAspectRatio="xMidYMid meet">
-                    <polyline points="@foreach ($points as $p){{ $p['x'] }},{{ $p['y'] }} @endforeach"
-                        fill="none" stroke="#0b6340" stroke-width="1.2" stroke-linejoin="round" />
-                    @foreach ($points as $p)
-                        <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="1.6" fill="#fff" stroke="#0b6340" stroke-width="0.8">
-                            <title>{{ $p['name'] }}</title>
-                        </circle>
-                    @endforeach
-                    <circle id="train-dot" r="2.6" fill="#dc2626" stroke="#fff" stroke-width="0.8"
-                        style="display:none"></circle>
-                </svg>
-                <p class="text-[11px] text-slate-400 text-center mt-1">مخطط الخط (تقريبي) — النقطة الحمراء موقع القطار التقديري</p>
+            <div class="flex-1 flex flex-col items-center text-slate-400 px-1">
+                @if ($duration)
+                    <div class="text-xs mb-1">{{ $duration }}</div>
+                @endif
+                <div class="w-full flex items-center gap-1 text-rail-500">
+                    <x-icon name="dot" class="w-2.5 h-2.5 shrink-0"/>
+                    <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                    <x-icon name="train" class="w-4 h-4 shrink-0 text-slate-400"/>
+                    <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                    <x-icon name="pin" class="w-3.5 h-3.5 shrink-0 text-amber-500"/>
+                </div>
+                @if ($validSegment)
+                    <div class="text-[11px] mt-1 text-rail-600">رحلتك</div>
+                @endif
             </div>
-        @endif
-    </section>
 
-    {{-- جدول المحطات --}}
-    <section class="bg-white rounded-3xl shadow-sm p-5 mb-5">
-        <h2 class="font-bold mb-3">
-            جدول المحطات والمواعيد ({{ $scheduleStops->count() }} محطة)
-            @if ($validSegment)
-                <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
-            @endif
-        </h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="text-slate-500 border-b border-slate-200 text-right">
-                        <th class="py-2 font-medium">المحطة</th>
-                        <th class="py-2 font-medium">الوصول</th>
-                        <th class="py-2 font-medium">القيام</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($scheduleStops as $stop)
-                        <tr class="border-b border-slate-50">
-                            <td class="py-2.5 font-medium">{{ $stop->station->name_ar }}</td>
-                            <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->arrival_time) ?? '—' }}</td>
-                            <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->departure_time) ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="text-center min-w-0">
+                <div class="text-3xl font-extrabold whitespace-nowrap">{{ \App\Support\Format::time($arrive) ?? '—' }}</div>
+                <div class="text-sm text-slate-500 truncate">{{ $terminal?->name_ar }}</div>
+            </div>
         </div>
     </section>
 
     {{-- الدرجات والأسعار الرسمية --}}
-    <section class="bg-white rounded-3xl shadow-sm p-5">
+    <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <h2 class="font-bold mb-1">الأسعار الرسمية
             @if ($origin && $terminal)
                 <span class="text-xs font-normal text-slate-400">({{ $origin->name_ar }} ← {{ $terminal->name_ar }})</span>
@@ -135,78 +71,188 @@
         <a href="{{ \App\Support\EgyptRailReference::bookingUrl($origin?->booking_name, $terminal?->booking_name, now()->toDateString()) }}"
             target="_blank" rel="noopener"
             class="mt-4 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl px-4 py-3 transition">
-            🎫 احجز على الموقع الرسمي لهيئة السكة الحديد
+            <x-icon name="ticket" class="w-5 h-5"/>
+            احجز على الموقع الرسمي لهيئة السكة الحديد
+        </a>
+
+        <a href="{{ route('report', ['type' => 'price', 'train' => $train->number]) }}"
+            class="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
+            <x-icon name="flag" class="w-3.5 h-3.5"/>
+            السعر غلط؟ بلّغنا
         </a>
     </section>
 
-    {{-- التوافر اللحظي الرسمي (اختياري، بضغطة المستخدم) --}}
+    {{-- جدول المحطات --}}
+    <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
+        <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <h2 class="font-bold">
+                جدول المحطات ({{ $scheduleStops->count() }} محطة)
+                @if ($validSegment)
+                    <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
+                @endif
+            </h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-slate-500 border-b border-slate-200 text-right">
+                        <th class="py-2 font-medium">المحطة</th>
+                        <th class="py-2 font-medium">
+                            <span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3.5 h-3.5"/> الوصول</span>
+                        </th>
+                        <th class="py-2 font-medium">القيام</th>
+                        <th class="py-2 font-medium whitespace-nowrap text-rail-700">السعر حتى {{ $terminal?->name_ar }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($scheduleStops as $stop)
+                        @php
+                            $edge = $loop->first || $loop->last;
+                            $stationFare = $loop->last ? null : $stationFares->get($stop->station_id);
+                        @endphp
+                        <tr class="border-b border-slate-50 {{ $edge ? 'text-rail-800' : '' }}">
+                            <td class="py-2.5 font-medium">
+                                <span class="inline-flex items-center gap-1.5">
+                                    @if ($loop->first)
+                                        <x-icon name="dot" class="w-2 h-2 text-rail-600"/>
+                                    @elseif ($loop->last)
+                                        <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/>
+                                    @endif
+                                    {{ $stop->station->name_ar }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->arrival_time) ?? '—' }}</td>
+                            <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->departure_time) ?? '—' }}</td>
+                            <td class="py-2.5 whitespace-nowrap">
+                                @if ($stationFare !== null)
+                                    <span class="font-bold text-rail-700">{{ number_format($stationFare) }}</span> <span class="text-xs text-slate-400">ج.م</span>
+                                @else
+                                    <span class="text-slate-300">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{{ route('report', ['type' => 'schedule', 'train' => $train->number]) }}"
+            class="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
+            <x-icon name="flag" class="w-3.5 h-3.5"/>
+            ميعاد غلط؟ بلّغنا
+        </a>
+    </section>
+
+    {{-- التوافر اللحظي الرسمي — يُجلب تلقائيًا عند فتح الصفحة --}}
     @if ($origin?->enr_id && $terminal?->enr_id)
-        <section class="bg-white rounded-3xl shadow-sm p-5 mt-5">
+        <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5">
             <h2 class="font-bold mb-1">المواعيد والمقاعد المتاحة (لحظي)</h2>
-            <p class="text-xs text-slate-400 mb-3">يُجلب مباشرة من نظام الهيئة عند الطلب — مواعيد دقيقة، عربات، أسعار، ومقاعد متاحة.</p>
+            <p class="text-xs text-slate-400 mb-3">مباشرة - مواعيد دقيقة، عربات، درجات، أسعار، ومقاعد متاحة.</p>
 
             <div class="flex items-center gap-3 flex-wrap mb-3">
-                <input type="date" id="live-date" value="{{ now()->addDay()->toDateString() }}"
+                <input type="date" id="live-date" value="{{ now()->toDateString() }}"
                     class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
                 <button id="live-btn"
                     class="bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold rounded-lg px-4 py-1.5 transition">
-                    اعرض التوافر الرسمي
+                    تحديث
                 </button>
             </div>
             <div id="live-result"></div>
         </section>
 
         <script>
-            document.getElementById('live-btn').addEventListener('click', async function () {
+            (() => {
+                const btn = document.getElementById('live-btn');
                 const out = document.getElementById('live-result');
-                const date = document.getElementById('live-date').value;
-                this.disabled = true;
-                this.textContent = 'جاري الجلب…';
-                out.innerHTML = '';
+                const dateInput = document.getElementById('live-date');
+                const SEARCH_URL = @json(config('enr.search_url'));
+                const TO = @json($terminal->enr_id);
+                const NUMBER = @json($train->number);
+                const ORIGIN_ENR = @json($origin->enr_id);
+                const ORIGIN_NAME = @json($origin->name_ar);
+                // محطات قيام أبعد على نفس القطار (الأقرب فالأبعد).
+                const ALTS = @json($boardingAlternatives);
 
-                const url = EnrLive.buildUrl(@json(config('enr.search_url')), {
-                    from: @json($origin->enr_id), to: @json($terminal->enr_id),
-                    number: @json($train->number), date,
-                });
+                const errBox = (msg) => `<p class="text-sm text-red-600">${msg} جرّب زر «تحديث» أو الحجز بالأعلى.</p>`;
 
-                try {
-                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    out.innerHTML = EnrLive.render(await res.json());
-                } catch (e) {
-                    out.innerHTML = `<p class="text-sm text-red-600">تعذّر الجلب من نظام الهيئة (${e.message}). جرّب زر الحجز بالأعلى.</p>`;
+                // اقتراح محطات أبعد لما مفيش مقاعد من المحطة الحالية.
+                // ALTS مرتّبة من الأقرب للأبعد؛ نعرض فقط ما هو أبعد من المحطة الحالية.
+                function suggestFarther(currentName, currentEnr) {
+                    const idx = ALTS.findIndex(a => a.enr === currentEnr);
+                    const candidates = idx === -1 ? ALTS : ALTS.slice(idx + 1);
+                    if (!candidates.length) return '';
+                    const chips = candidates.map(a =>
+                        `<button type="button" data-alt-enr="${a.enr}" data-alt-name="${a.name}"
+                            class="alt-board border border-rail-200 bg-rail-50 hover:bg-rail-100 text-rail-800 text-sm font-medium rounded-lg px-3 py-1.5 transition">
+                            ${a.name}
+                        </button>`).join('');
+                    return `
+                        <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                            <p class="text-sm font-bold text-amber-800 mb-1">مفيش مقاعد من ${currentName}؟</p>
+                            <p class="text-xs text-amber-700 mb-3">القطار جاي من محطات أبعد — جرّب تحجز من محطة قبلها وانزل في وجهتك، يمكن يكون فيها مقاعد:</p>
+                            <div class="flex flex-wrap gap-2">${chips}</div>
+                        </div>`;
                 }
-                this.disabled = false;
-                this.textContent = 'تحديث';
-            });
-        </script>
-    @endif
 
-    @if ($hasMap)
-        <script>
-            const positionUrl = "{{ route('trains.position', $train) }}";
-            const dot = document.getElementById('train-dot');
+                async function loadLive(fromEnr, fromName) {
+                    if (typeof EnrLive === 'undefined') {
+                        out.innerHTML = errBox('تعذّر تحميل أداة العرض.');
+                        return;
+                    }
 
-            function render(pos) {
-                document.getElementById('position-message').textContent = pos.message;
-                const bar = document.getElementById('progress-bar');
-                if (pos.overall_progress !== null && bar) {
-                    bar.style.width = pos.overall_progress + '%';
-                    document.getElementById('progress-label').textContent = pos.overall_progress + '%';
+                    const from = fromEnr || ORIGIN_ENR;
+                    const name = fromName || ORIGIN_NAME;
+
+                    btn.disabled = true;
+                    btn.textContent = 'جاري الجلب…';
+                    out.innerHTML = '<p class="text-sm text-slate-400">جاري جلب البيانات</p>';
+
+                    // مهلة زمنية حتى لا تظل الصفحة معلّقة لو تأخّر نظام الهيئة.
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 25000);
+
+                    try {
+                        const url = EnrLive.buildUrl(SEARCH_URL, { from, to: TO, number: NUMBER, date: dateInput.value });
+                        const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const data = await res.json();
+
+                        const heading = fromEnr
+                            ? `<p class="text-sm text-rail-700 font-bold mb-2">التوافر من ${name} (محطة أبعد)</p>`
+                            : '';
+                        let html = heading + EnrLive.render(data);
+
+                        // نقترح محطات أبعد فقط لو فيه رحلات فعلاً لكن كلها بدون مقاعد —
+                        // مش لما القطار يكون معاده عدّى أو مش شغّال في اليوم ده (لا رحلات أصلًا).
+                        const hasTrips = Array.isArray(data) && data.some(i => i.steps && i.steps[0]);
+                        if (hasTrips && EnrLive.totalSeats(data) === 0) {
+                            html += suggestFarther(name, from);
+                        }
+                        out.innerHTML = html;
+
+                        out.querySelectorAll('.alt-board').forEach(b =>
+                            b.addEventListener('click', () => loadLive(b.dataset.altEnr, b.dataset.altName)));
+                    } catch (e) {
+                        out.innerHTML = errBox(e.name === 'AbortError'
+                            ? 'انتهت مهلة الاتصال .'
+                            : `تعذّر  احضار البيانات (${e.message}).`);
+                    } finally {
+                        clearTimeout(timer);
+                        btn.disabled = false;
+                        btn.textContent = 'تحديث';
+                    }
                 }
-                if (pos.map_x !== null && pos.map_y !== null) {
-                    dot.setAttribute('cx', pos.map_x);
-                    dot.setAttribute('cy', pos.map_y);
-                    dot.style.display = '';
+
+                btn.addEventListener('click', () => loadLive());
+                dateInput.addEventListener('change', () => loadLive());
+
+                // app.js (EnrLive) يُحمّل كموديول مؤجّل، فننتظر اكتمال تحميله قبل الجلب التلقائي.
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => loadLive());
                 } else {
-                    dot.style.display = 'none';
+                    loadLive();
                 }
-            }
-
-            render(@json($position));
-            setInterval(() => {
-                fetch(positionUrl).then(r => r.json()).then(render).catch(() => {});
-            }, 30000);
+            })();
         </script>
     @endif
 @endsection

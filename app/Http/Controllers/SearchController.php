@@ -6,12 +6,13 @@ use App\Models\Fare;
 use App\Models\Station;
 use App\Models\Train;
 use App\Services\FareCalculator;
+use App\Services\NearestStationSuggester;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
-    public function index(Request $request, FareCalculator $distances)
+    public function index(Request $request, FareCalculator $distances, NearestStationSuggester $suggester)
     {
         // البحث برقم القطار: يتخطّى التحقق من المحطتين ويوجّه لصفحة القطار.
         if (filled($request->input('number'))) {
@@ -88,7 +89,10 @@ class SearchController extends Controller
 
         $stations = Station::orderBy('name_ar')->get();
 
-        return view('search', compact('results', 'from', 'to', 'date', 'stations'));
+        // لو مفيش قطار مباشر، نقترح أقرب محطات بديلة عليها خدمة فعلًا.
+        $suggestions = $results->isEmpty() ? $suggester->suggest($from, $to) : null;
+
+        return view('search', compact('results', 'from', 'to', 'date', 'stations', 'suggestions'));
     }
 
     private function duration(?string $depart, int $dayDiff, ?string $arrive): ?string

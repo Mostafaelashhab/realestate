@@ -5,8 +5,6 @@ use App\Models\Station;
 use App\Models\Train;
 use App\Models\TrainStop;
 use App\Services\FareCalculator;
-use App\Services\TrainPositionEstimator;
-use Carbon\Carbon;
 
 function makeSampleTrain(): Train
 {
@@ -59,28 +57,6 @@ it('stores official fares in piasters and exposes pounds', function () {
     expect($fare->price)->toBe(90.0);
 });
 
-it('reports the train as not departed before its departure time', function () {
-    $train = makeSampleTrain();
-    $at = Carbon::today()->setTime(8, 0);
-
-    $pos = app(TrainPositionEstimator::class)->estimate($train, $at);
-
-    expect($pos['status'])->toBe('before');
-});
-
-it('locates the train between two stations while running', function () {
-    $train = makeSampleTrain();
-    $at = Carbon::today()->setTime(10, 30); // بين طنطا والإسكندرية
-
-    $pos = app(TrainPositionEstimator::class)->estimate($train, $at);
-
-    expect($pos['status'])->toBe('running')
-        ->and($pos['from_station'])->toBe('طنطا')
-        ->and($pos['next_station'])->toBe('الإسكندرية')
-        ->and($pos['lat'])->not->toBeNull()
-        ->and($pos['overall_progress'])->toBeGreaterThan(50); // محسوب بالزمن
-});
-
 it('allows a train to stop at the same station twice', function () {
     $a = Station::create(['egytrains_id' => 100, 'name_ar' => 'محطة أ']);
     $b = Station::create(['egytrains_id' => 101, 'name_ar' => 'محطة ب']);
@@ -91,14 +67,4 @@ it('allows a train to stop at the same station twice', function () {
     TrainStop::create(['train_id' => $train->id, 'station_id' => $a->id, 'stop_order' => 3, 'arrival_time' => '09:00']);
 
     expect($train->stops()->count())->toBe(3);
-});
-
-it('reports the train at a station during its stop window', function () {
-    $train = makeSampleTrain();
-    $at = Carbon::today()->setTime(9, 56); // واقف في طنطا (09:55-09:58)
-
-    $pos = app(TrainPositionEstimator::class)->estimate($train, $at);
-
-    expect($pos['status'])->toBe('at_station')
-        ->and($pos['current_station'])->toBe('طنطا');
 });
