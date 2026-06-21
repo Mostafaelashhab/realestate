@@ -102,6 +102,92 @@
         @endif
     </section>
 
+    {{-- حالة القطار من الركّاب (لحظي) --}}
+    <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5" id="crowd">
+        <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="alert" class="w-5 h-5 text-rail-600"/> حالة القطار من الركّاب</h2>
+        <p class="text-xs text-slate-400 mb-3">بلاغات الركّاب في آخر ٣ ساعات — ساعد غيرك وبلّغ حالته دلوقتي.</p>
+
+        <div id="crowd-summary" class="mb-3">
+            @include('trains.partials.crowd-summary', ['s' => $liveStatus])
+        </div>
+
+        <div class="border-t border-slate-100 pt-3">
+            <p class="text-xs font-bold text-slate-500 mb-2">القطار عامل إيه دلوقتي؟</p>
+            <div class="flex flex-wrap gap-2 mb-2">
+                <button type="button" data-status="on_time" class="crowd-btn text-sm font-bold rounded-xl px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition">في الموعد</button>
+                <button type="button" data-status="delayed" class="crowd-btn text-sm font-bold rounded-xl px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 transition">متأخر</button>
+                <button type="button" data-status="cancelled" class="crowd-btn text-sm font-bold rounded-xl px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 transition">ملغي/واقف</button>
+            </div>
+            <div id="crowd-delay" hidden class="flex flex-wrap gap-1.5 mb-2">
+                <span class="text-xs text-slate-500 self-center">متأخر كام دقيقة؟</span>
+                @foreach ([5, 10, 15, 20, 30, 45, 60] as $m)
+                    <button type="button" data-delay="{{ $m }}" class="crowd-delay text-xs font-bold rounded-lg px-2.5 py-1.5 bg-slate-100 hover:bg-amber-100 transition">{{ $m }}</button>
+                @endforeach
+            </div>
+            <p id="crowd-msg" hidden class="text-xs text-rail-700 font-bold"></p>
+        </div>
+
+        <script>
+            (() => {
+                const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+                const STORE = @json(route('trains.status.store', $train));
+                const STATE = @json(route('trains.status', $train));
+                const COOLDOWN = 'qm:crowd:' + @json($train->number);
+                const summary = document.getElementById('crowd-summary');
+                const delayRow = document.getElementById('crowd-delay');
+                const msg = document.getElementById('crowd-msg');
+                let pendingStatus = null;
+
+                const cooled = () => {
+                    try { return Date.now() - (+localStorage.getItem(COOLDOWN) || 0) < 5 * 60 * 1000; } catch (e) { return false; }
+                };
+
+                async function submit(status, delay) {
+                    if (cooled()) { msg.hidden = false; msg.textContent = 'بلّغت من شوية، شكرًا!'; return; }
+                    try {
+                        const res = await fetch(STORE, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: JSON.stringify({ status, delay_minutes: delay ?? null }),
+                        });
+                        if (!res.ok) throw new Error();
+                        try { localStorage.setItem(COOLDOWN, String(Date.now())); } catch (e) {}
+                        msg.hidden = false; msg.textContent = 'وصل بلاغك، شكرًا! 🙏';
+                        refresh();
+                    } catch (e) { msg.hidden = false; msg.textContent = 'تعذّر الإرسال، جرّب تاني.'; }
+                }
+
+                document.querySelectorAll('.crowd-btn').forEach(b => b.addEventListener('click', () => {
+                    const st = b.dataset.status;
+                    if (st === 'delayed') { pendingStatus = st; delayRow.hidden = false; }
+                    else { delayRow.hidden = true; submit(st); }
+                }));
+                document.querySelectorAll('.crowd-delay').forEach(b => b.addEventListener('click', () => submit('delayed', +b.dataset.delay)));
+
+                const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+                function renderCrowd(s) {
+                    if (!s || !s.count) return '<p class="text-sm text-slate-500">مفيش بلاغات لسه — كن أول من يبلّغ حالة القطار.</p>';
+                    const st = { on_time: ['bg-emerald-50', 'text-emerald-700', 'ring-emerald-200'], delayed: ['bg-amber-50', 'text-amber-700', 'ring-amber-200'], cancelled: ['bg-red-50', 'text-red-700', 'ring-red-200'] }[s.status] || ['bg-emerald-50', 'text-emerald-700', 'ring-emerald-200'];
+                    const rows = (s.recent || []).map(r => {
+                        const label = r.status === 'delayed' ? ('متأخر' + (r.delay ? ' ~' + r.delay + ' د' : '')) : r.status === 'cancelled' ? 'ملغي/واقف' : 'في الموعد';
+                        return `<div class="text-xs text-slate-500 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full ${st[1]} bg-current"></span>${label}${r.note ? ' — ' + esc(r.note) : ''}<span class="text-slate-300">· ${esc(r.ago)}</span></div>`;
+                    }).join('');
+                    return `<div class="rounded-2xl ring-1 ${st[0]} ${st[2]} p-3">
+                        <div class="flex items-center justify-between gap-2"><span class="font-bold ${st[1]}">${esc(s.headline)}</span><span class="text-xs text-slate-500">${s.count} بلاغ · ${esc(s.last_ago)}</span></div>
+                        ${rows ? '<div class="mt-2 flex flex-col gap-1">' + rows + '</div>' : ''}
+                    </div>`;
+                }
+
+                async function refresh() {
+                    try {
+                        const s = await fetch(STATE, { headers: { 'Accept': 'application/json' } }).then(r => r.json());
+                        summary.innerHTML = renderCrowd(s);
+                    } catch (e) {}
+                }
+            })();
+        </script>
+    </section>
+
     {{-- مشاركة الرحلة لحظيًا مع الأهل --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="share" class="w-5 h-5 text-rail-600"/> شارك رحلتك لحظيًا</h2>

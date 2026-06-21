@@ -38,6 +38,11 @@ class Train extends Model
         return $this->hasMany(TrainClass::class);
     }
 
+    public function statusReports(): HasMany
+    {
+        return $this->hasMany(TrainStatusReport::class);
+    }
+
     public function fares(): HasMany
     {
         return $this->hasMany(Fare::class);

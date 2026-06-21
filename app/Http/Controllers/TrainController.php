@@ -79,9 +79,11 @@ class TrainController extends Controller
                 ->map(fn ($group) => (int) round($group->first()->price))
             : collect();
 
+        $liveStatus = \App\Models\TrainStatusReport::summaryFor($train->id);
+
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
-            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares'
+            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares', 'liveStatus'
         ));
     }
 

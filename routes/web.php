@@ -11,15 +11,19 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TrainController;
+use App\Http\Controllers\TrainStatusController;
 use App\Http\Controllers\TripShareController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::view('/favorites', 'favorites')->name('favorites');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');
+Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->name('trains.status');
+Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
 
 // مشاركة الرحلة لحظيًا مع الأهل.

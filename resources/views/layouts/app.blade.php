@@ -85,6 +85,7 @@
         @php
             $tabs = [
                 ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show')],
+                ['route' => 'favorites', 'icon' => 'star', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
                 ['route' => 'fines', 'icon' => 'scale', 'label' => 'الغرامات', 'on' => request()->routeIs('fines')],
                 ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ عن خطأ', 'on' => request()->routeIs('report')],
             ];
@@ -92,7 +93,7 @@
         <nav class="fixed bottom-0 inset-x-0 z-30">
             <div
                 class="mx-auto max-w-xl bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)]">
-                <div class="grid grid-cols-3">
+                <div class="grid grid-cols-4">
                     @foreach ($tabs as $tab)
                         <a href="{{ route($tab['route']) }}"
                             class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-700' : 'text-slate-400 hover:text-slate-600' }}">
