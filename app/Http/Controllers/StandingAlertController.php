@@ -66,6 +66,49 @@ class StandingAlertController extends Controller
         ]);
     }
 
+    /** قائمة تنبيهات الجهاز الحالي (حسب اشتراك الإشعارات). */
+    public function mine(Request $request)
+    {
+        $endpoint = $request->input('endpoint');
+        $sub = $endpoint ? \App\Models\PushSubscription::where('endpoint_hash', hash('sha256', $endpoint))->first() : null;
+        if (! $sub) {
+            return response()->json(['alerts' => []]);
+        }
+
+        $alerts = StandingAlert::where('push_subscription_id', $sub->id)
+            ->whereIn('status', ['active', 'notified'])
+            ->where('depart_at', '>=', Carbon::now()->subDay())
+            ->with(['train', 'fromStation', 'toStation'])
+            ->orderBy('depart_at')
+            ->get()
+            ->map(fn (StandingAlert $a) => [
+                'id' => $a->id,
+                'train' => $a->train?->number,
+                'train_id' => $a->train_id,
+                'from_id' => $a->from_station_id,
+                'to_id' => $a->to_station_id,
+                'from' => $a->fromStation?->name_ar,
+                'to' => $a->toStation?->name_ar,
+                'when' => $a->depart_at->translatedFormat('l j F').' — '.Format::time($a->depart_at),
+                'status' => $a->status,
+                'status_label' => $a->status === 'notified' ? 'تم التنبيه' : 'مفعّل',
+            ]);
+
+        return response()->json(['alerts' => $alerts]);
+    }
+
+    /** إلغاء تنبيه (يتأكد إنه لنفس الجهاز عبر الـ endpoint). */
+    public function cancel(Request $request, StandingAlert $alert)
+    {
+        $endpoint = $request->input('endpoint');
+        $sub = $alert->pushSubscription;
+        abort_if(! $endpoint || ! $sub || ! hash_equals($sub->endpoint_hash, hash('sha256', $endpoint)), 403);
+
+        $alert->update(['status' => 'cancelled']);
+
+        return response()->json(['ok' => true]);
+    }
+
     /** @return array{0: ?Carbon, 1: ?Carbon} [service_date, depart_at] */
     private function nextDeparture(Train $train, string $time, int $dayOffset): array
     {

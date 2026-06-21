@@ -133,6 +133,9 @@
                 </button>
             </div>
             <p id="sa-msg" hidden class="text-sm font-bold mt-2"></p>
+            <a href="{{ route('alerts.mine') }}" class="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
+                <x-icon name="chevron-right" class="w-3.5 h-3.5"/> شوف طلباتي
+            </a>
         </section>
 
         <script>

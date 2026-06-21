@@ -29,6 +29,11 @@ Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.sh
 Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->name('trains.status');
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
+
+// طلباتي: تنبيهات الراكب الواقف للجهاز الحالي.
+Route::view('/my-alerts', 'my-alerts')->name('alerts.mine');
+Route::post('/my-alerts/list', [StandingAlertController::class, 'mine'])->middleware('throttle:30,1')->name('alerts.list');
+Route::post('/my-alerts/{alert}/cancel', [StandingAlertController::class, 'cancel'])->middleware('throttle:20,1')->name('alerts.cancel');
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
 
 // التقاط بيانات الهيئة من متصفّح المستخدم (تحديث الأسعار والمواعيد تلقائيًا).

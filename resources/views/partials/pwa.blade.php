@@ -94,6 +94,14 @@
         };
         window.QMPush = {
             supported: () => 'serviceWorker' in navigator && 'PushManager' in window && !!vapid,
+            async endpoint() {
+                if (!('serviceWorker' in navigator)) return null;
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.getSubscription();
+                    return sub ? sub.endpoint : null;
+                } catch (e) { return null; }
+            },
             async subscribe(trainNumber) {
                 if (!this.supported()) return false;
                 const perm = await Notification.requestPermission();
