@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StationController;
@@ -19,6 +20,8 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::view('/favorites', 'favorites')->name('favorites');
+// صفحة المسار (SEO) — رابط دائم بالـ slug.
+Route::get('/قطارات/{from}/{to}', [RouteController::class, 'show'])->name('route');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');

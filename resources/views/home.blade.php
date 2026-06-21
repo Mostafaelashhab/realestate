@@ -1,6 +1,20 @@
 @extends('layouts.app')
 
 @section('title', 'مواعيد وأسعار القطارات')
+@section('og_desc', 'مواعيد وأسعار قطارات مصر، والمحطات، والمقاعد المتاحة — في تطبيق واحد سريع.')
+
+@push('head')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'قطارات مصر',
+        'url' => url('/'),
+        'inLanguage' => 'ar-EG',
+        'description' => 'مواعيد وأسعار قطارات مصر والمقاعد المتاحة.',
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+    </script>
+@endpush
 
 @section('content')
     {{-- العروض/البانرات --}}
@@ -221,7 +235,7 @@
             <h3 class="text-xs font-bold text-slate-500 mb-2">وجهات شائعة</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach ($popular as $p)
-                    <a href="{{ route('search', ['from' => $p['from']->id, 'to' => $p['to']->id, 'date' => now()->toDateString()]) }}"
+                    <a href="{{ route('route', ['from' => $p['from']->slug, 'to' => $p['to']->slug]) }}"
                         class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">
                         <span>{{ $p['from']->name_ar }}</span>
                         <x-icon name="arrow-left" class="w-3.5 h-3.5 text-slate-400"/>
