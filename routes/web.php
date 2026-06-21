@@ -14,6 +14,7 @@ use App\Http\Controllers\StandingAlertController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TrainController;
+use App\Http\Controllers\TrainReminderController;
 use App\Http\Controllers\TrainStatusController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +31,11 @@ Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->na
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
 
-// طلباتي: تنبيهات الراكب الواقف للجهاز الحالي.
+// تذكير بميعاد قطار.
+Route::post('/trains/{train}/reminder', [TrainReminderController::class, 'store'])->middleware('throttle:10,1')->name('trains.reminder');
+Route::post('/reminders/{reminder}/cancel', [TrainReminderController::class, 'cancel'])->middleware('throttle:20,1')->name('reminders.cancel');
+
+// طلباتي: تنبيهات الجهاز (مواعيد + مقاعد).
 Route::view('/my-alerts', 'my-alerts')->name('alerts.mine');
 Route::post('/my-alerts/list', [StandingAlertController::class, 'mine'])->middleware('throttle:30,1')->name('alerts.list');
 Route::post('/my-alerts/{alert}/cancel', [StandingAlertController::class, 'cancel'])->middleware('throttle:20,1')->name('alerts.cancel');

@@ -92,10 +92,19 @@
             <script>
                 (() => {
                     const btn = document.getElementById('notify-btn');
+                    const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
                     btn.addEventListener('click', async () => {
                         btn.disabled = true; btn.textContent = 'جاري التفعيل…';
-                        const ok = window.QMPush && await window.QMPush.subscribe(@json($train->number));
-                        btn.textContent = ok ? 'هنبّهك قبل الميعاد ✓' : 'تعذّر تفعيل التنبيه';
+                        const endpoint = window.QMPush && await window.QMPush.subscribe(@json($train->number));
+                        if (!endpoint) { btn.disabled = false; btn.textContent = 'لازم تسمح بالإشعارات'; return; }
+                        try {
+                            const res = await fetch(@json(route('trains.reminder', $train)), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                                body: JSON.stringify({ endpoint, from_station_id: @json($origin?->id) }),
+                            });
+                            btn.textContent = res.ok ? 'هنبّهك قبل الميعاد ✓' : 'تعذّر تفعيل التنبيه';
+                        } catch (e) { btn.disabled = false; btn.textContent = 'تعذّر تفعيل التنبيه'; }
                     });
                 })();
             </script>

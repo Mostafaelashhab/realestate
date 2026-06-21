@@ -75,7 +75,7 @@ class StandingAlertController extends Controller
             return response()->json(['alerts' => []]);
         }
 
-        $alerts = StandingAlert::where('push_subscription_id', $sub->id)
+        $seatAlerts = StandingAlert::where('push_subscription_id', $sub->id)
             ->whereIn('status', ['active', 'notified'])
             ->where('depart_at', '>=', Carbon::now()->subDay())
             ->with(['train', 'fromStation', 'toStation'])
@@ -90,11 +90,30 @@ class StandingAlertController extends Controller
                 'from' => $a->fromStation?->name_ar,
                 'to' => $a->toStation?->name_ar,
                 'when' => $a->depart_at->translatedFormat('l j F').' — '.Format::time($a->depart_at),
-                'status' => $a->status,
                 'status_label' => $a->status === 'notified' ? 'تم التنبيه' : 'مفعّل',
             ]);
 
-        return response()->json(['alerts' => $alerts]);
+        $reminders = \App\Models\TrainReminder::where('push_subscription_id', $sub->id)
+            ->where('status', 'active')
+            ->with(['train.stops.station', 'fromStation'])
+            ->get()
+            ->map(function (\App\Models\TrainReminder $r) {
+                $fromId = $r->from_station_id ?? $r->train?->stops->first()?->station_id;
+                $stop = $r->train?->stops->firstWhere('station_id', $fromId);
+                $time = Format::time($stop?->departure_time ?? $stop?->arrival_time);
+
+                return [
+                    'id' => $r->id,
+                    'train' => $r->train?->number,
+                    'train_id' => $r->train_id,
+                    'from_id' => $fromId,
+                    'from' => $stop?->station?->name_ar,
+                    'time' => $time,
+                    'lead' => $r->lead_minutes,
+                ];
+            });
+
+        return response()->json(['seatAlerts' => $seatAlerts, 'reminders' => $reminders]);
     }
 
     /** إلغاء تنبيه (يتأكد إنه لنفس الجهاز عبر الـ endpoint). */
