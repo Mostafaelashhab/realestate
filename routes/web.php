@@ -14,7 +14,6 @@ use App\Http\Controllers\StationController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TrainController;
 use App\Http\Controllers\TrainStatusController;
-use App\Http\Controllers\TripShareController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
@@ -30,13 +29,6 @@ Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->na
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
-
-// مشاركة الرحلة لحظيًا مع الأهل.
-Route::post('/trip', [TripShareController::class, 'start'])->middleware('throttle:15,1')->name('trip.start');
-Route::get('/trip/{trip}', [TripShareController::class, 'show'])->name('trip.show');
-Route::get('/trip/{trip}/state', [TripShareController::class, 'state'])->name('trip.state');
-Route::post('/trip/{trip}/ping', [TripShareController::class, 'ping'])->middleware('throttle:120,1')->name('trip.ping');
-Route::post('/trip/{trip}/stop', [TripShareController::class, 'stop'])->name('trip.stop');
 
 // اشتراكات إشعارات الويب (Push).
 Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:30,1')->name('push.subscribe');
