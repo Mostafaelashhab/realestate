@@ -21,7 +21,7 @@
     </a>
 
     @forelse ($results as $r)
-        <a href="{{ route('trains.show', ['train' => $r['train'], 'from' => $from->id, 'to' => $to->id]) }}" class="block bg-white rounded-3xl shadow-sm active:scale-[.99] transition p-4 mb-3">
+        <a href="{{ route('trains.show', ['train' => $r['train'], 'from' => $from->id, 'to' => $to->id]) }}" class="block bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 active:scale-[.99] transition p-4 mb-3">
             <div class="flex items-center justify-between gap-4 flex-wrap">
                 <div class="flex items-center gap-2">
                     <span class="bg-rail-50 text-rail-700 text-xs font-bold px-2.5 py-1 rounded-full">قطار {{ $r['train']->number }}</span>
@@ -65,7 +65,7 @@
             </div>
         </a>
     @empty
-        <div class="bg-white rounded-3xl shadow-sm p-8 text-center text-slate-500 mb-4">
+        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-8 text-center text-slate-500 mb-4">
             <x-icon name="station" class="w-10 h-10 mx-auto mb-2 text-slate-300"/>
             لا توجد قطارات مباشرة بين <b>{{ $from->name_ar }}</b> و<b>{{ $to->name_ar }}</b> في هذا اليوم ضمن البيانات المتاحة.
         </div>
@@ -76,7 +76,7 @@
         @endphp
 
         @if (count($altDest) || count($altOrigin))
-            <div class="bg-white rounded-3xl shadow-sm p-5">
+            <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5">
                 <h2 class="font-bold mb-1 flex items-center gap-2">
                     <x-icon name="pin" class="w-5 h-5 text-amber-500"/> أقرب البدائل عليها قطار
                 </h2>

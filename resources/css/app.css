@@ -6,12 +6,39 @@
 @theme {
     --font-sans: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
-    --color-rail-50: #eef7f1;
+
+    /* أخضر السكة الحديد — سكيل كامل */
+    --color-rail-50: #edf7f1;
+    --color-rail-100: #d3ecdd;
+    --color-rail-200: #a9d8bd;
+    --color-rail-300: #74bd95;
+    --color-rail-400: #419e6f;
+    --color-rail-500: #15875a;
     --color-rail-600: #0f7a4b;
     --color-rail-700: #0b6340;
     --color-rail-800: #094d33;
+    --color-rail-900: #073d29;
+    --color-rail-950: #04261a;
+}
+
+html {
+    /* منع الزوم بالنقر المزدوج في وضع التطبيق (PWA) */
+    touch-action: manipulation;
 }
 
 body {
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* منتقي التاريخ: نخلي مؤشّر التقويم يغطّي الحقل كله ليُفتح من أي مكان */
+input[type='date']::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    inset-inline-start: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
 }

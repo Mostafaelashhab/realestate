@@ -22,7 +22,7 @@
         </div>
     @endif
 
-    <form action="{{ route('report.store') }}" method="POST" class="bg-white rounded-3xl shadow-sm p-4 space-y-4">
+    <form action="{{ route('report.store') }}" method="POST" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 space-y-4">
         @csrf
 
         {{-- نوع البلاغ --}}

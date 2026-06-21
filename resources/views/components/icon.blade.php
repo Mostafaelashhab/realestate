@@ -106,5 +106,25 @@
                 <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
             </g>
             @break
+
+        @case('calendar')
+            <g {!! $stroke !!}>
+                <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/>
+                <path d="M3 9.5h18M8 2.5v4m8-4v4"/>
+            </g>
+            @break
+
+        @case('swap')
+            <g {!! $stroke !!}>
+                <path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/>
+            </g>
+            @break
+
+        @case('search')
+            <g {!! $stroke !!}>
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m21 21-4.3-4.3"/>
+            </g>
+            @break
     @endswitch
 </svg>

@@ -49,6 +49,17 @@ class TrainController extends Controller
         $dayDiff = ($alightStop?->arrival_day_offset ?? 0) - ($boardStop?->departure_day_offset ?? 0);
         $duration = $this->duration($depart, $dayDiff, $arrive);
 
+        // محطات قيام أبعد على نفس القطار (أسبق من محطة الركوب) — تُقترح لو مفيش مقاعد.
+        $originStop = $origin ? $train->stops->firstWhere('station_id', $origin->id) : null;
+        $boardingAlternatives = $originStop
+            ? $train->stops
+                ->where('stop_order', '<', $originStop->stop_order)
+                ->filter(fn ($s) => $s->station?->enr_id)
+                ->sortByDesc('stop_order') // الأقرب فالأبعد
+                ->map(fn ($s) => ['enr' => (string) $s->station->enr_id, 'name' => $s->station->name_ar])
+                ->values()
+            : collect();
+
         // الأسعار الرسمية لكامل مسار القطار (إن وُجدت من الاستيراد).
         $fares = ($origin && $terminal)
             ? Fare::where('train_id', $train->id)
@@ -58,9 +69,19 @@ class TrainController extends Controller
                 ->get()
             : collect();
 
+        // سعر التذكرة من كل محطة حتى الوجهة (أرخص درجة) — لعرضه جنب كل محطة في الجدول.
+        $stationFares = $terminal
+            ? Fare::where('train_id', $train->id)
+                ->where('to_station_id', $terminal->id)
+                ->orderBy('price_piasters')
+                ->get()
+                ->groupBy('from_station_id')
+                ->map(fn ($group) => (int) round($group->first()->price))
+            : collect();
+
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
-            'depart', 'arrive', 'duration'
+            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares'
         ));
     }
 

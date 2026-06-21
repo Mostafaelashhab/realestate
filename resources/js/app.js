@@ -77,11 +77,16 @@ window.EnrLive = (() => {
         .map(item => trip(item.steps[0]))
         .join('') || '<p class="text-sm text-slate-400">لا توجد رحلات لهذا اليوم.</p>';
 
+    // إجمالي المقاعد المتاحة عبر كل الرحلات (لاقتراح محطة أبعد لو صفر).
+    const totalSeats = (data) => (Array.isArray(data) ? data : [])
+        .filter(item => item.steps && item.steps[0])
+        .reduce((sum, item) => sum + (item.steps[0].availableSeats || 0), 0);
+
     // يبني رابط بحث الهيئة الرسمي
     const buildUrl = (base, { from, to, number, date }) =>
         `${base}?from=${from}&to=${to}&transfers=false&with_reservations=true`
         + `&without_reservations=false&skip_places_information=false`
         + `&departureDate=${date}&project=enr${number ? '&trainNumber=' + number : ''}`;
 
-    return { fmtTime, egp, render, buildUrl };
+    return { fmtTime, egp, render, totalSeats, buildUrl };
 })();
