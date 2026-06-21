@@ -437,11 +437,6 @@
         </a>
     </section>
 
-    {{-- خدمات في الوجهة (شركاء) --}}
-    @if (config('affiliate.enabled') && $terminal)
-        <x-destination-services :name="$terminal->name_ar"/>
-    @endif
-
     {{-- التوافر اللحظي الرسمي — يُجلب تلقائيًا عند فتح الصفحة --}}
     @if ($origin?->enr_id && $terminal?->enr_id)
         <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5">
