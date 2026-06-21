@@ -13,7 +13,7 @@
         <label class="text-sm font-medium">تاريخ الرحلة:</label>
         <input type="date" id="trip-date" value="{{ now()->addDay()->toDateString() }}"
             class="rounded-lg border border-slate-300 px-3 py-1.5">
-        <span class="text-xs text-slate-400">المحمّل أسعاره معلّم بـ ✅</span>
+        <span class="inline-flex items-center gap-1 text-xs text-slate-400">المحمّل أسعاره معلّم بـ <x-icon name="check" class="w-4 h-4 text-emerald-600"/></span>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
@@ -33,7 +33,13 @@
                         <td class="p-3 font-bold">{{ $t['number'] }}</td>
                         <td class="p-3 text-slate-600">{{ $t['type'] }}</td>
                         <td class="p-3 text-slate-500 text-xs">{{ $t['from_name'] }} ← {{ $t['to_name'] }}</td>
-                        <td class="p-3 status">{!! $t['has_fares'] ? '<span class="text-emerald-600">✅</span>' : '<span class="text-slate-300">—</span>' !!}</td>
+                        <td class="p-3 status">
+                            @if ($t['has_fares'])
+                                <x-icon name="check" class="w-4 h-4 text-emerald-600"/>
+                            @else
+                                <span class="text-slate-300">—</span>
+                            @endif
+                        </td>
                         <td class="p-3">
                             @if ($t['from_enr'] && $t['to_enr'])
                                 <button class="fetch-btn bg-rail-600 hover:bg-rail-700 text-white text-xs rounded-lg px-3 py-1.5"
@@ -59,6 +65,7 @@
         const SEARCH_URL = @json($searchUrl);
         const IMPORT_URL = "{{ route('sync.import', $token) }}";
         const CSRF = "{{ csrf_token() }}";
+        const CHECK = '<svg viewBox="0 0 24 24" class="w-4 h-4 inline text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 
         document.querySelectorAll('.fetch-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -96,8 +103,8 @@
                             body: JSON.stringify(data),
                         });
                         const result = await imp.json();
-                        savedMsg = `✅ تم حفظ ${result.saved} سعر في الموقع`;
-                        status.innerHTML = '<span class="text-emerald-600">✅</span>';
+                        savedMsg = `${CHECK} تم حفظ ${result.saved} سعر في الموقع`;
+                        status.innerHTML = CHECK;
                     } catch (e) {
                         savedMsg = 'تعذّر الحفظ، لكن البيانات معروضة بالأسفل.';
                     }

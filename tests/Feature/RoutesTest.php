@@ -14,8 +14,8 @@ it('renders the home page', function () {
         ->assertSee('قطارات مصر');
 });
 
-it('renders the live page', function () {
-    $this->get(route('live'))->assertOk()->assertSee('القطر فين دلوقتي');
+it('renders the report page', function () {
+    $this->get(route('report'))->assertOk()->assertSee('بلّغ عن خطأ');
 });
 
 it('renders the fines page', function () {
@@ -27,11 +27,23 @@ it('renders a train detail page', function () {
     $this->get(route('trains.show', $train))->assertOk()->assertSee('جدول المحطات');
 });
 
-it('returns a train position as json', function () {
-    $train = Train::first();
-    $this->getJson(route('trains.position', $train))
-        ->assertOk()
-        ->assertJsonStructure(['status', 'message', 'is_estimate']);
+it('stores a submitted report', function () {
+    $this->post(route('report.store'), [
+        'type' => 'schedule',
+        'train_number' => '948',
+        'message' => 'ميعاد القيام غلط من بنها',
+    ])->assertRedirect(route('report'))->assertSessionHas('status');
+
+    $this->assertDatabaseHas('reports', [
+        'type' => 'schedule',
+        'train_number' => '948',
+        'status' => 'new',
+    ]);
+});
+
+it('validates report submissions', function () {
+    $this->post(route('report.store'), ['type' => 'invalid', 'message' => 'x'])
+        ->assertSessionHasErrors(['type', 'message']);
 });
 
 it('searches for trains between two stations', function () {

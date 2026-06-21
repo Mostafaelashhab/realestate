@@ -6,9 +6,9 @@
     {{-- ترحيب --}}
     <section class="bg-linear-to-l from-rail-700 to-rail-600 text-white rounded-3xl p-5 mb-4 shadow-lg shadow-rail-700/20">
         <h1 class="text-2xl font-extrabold mb-1">رايح فين؟</h1>
-        <p class="text-rail-50/90 text-sm">مواعيد وأسعار قطارات مصر، وتتبع مكان القطر لحظيًا.</p>
-        <div class="mt-3 inline-flex items-center gap-2 bg-white/15 rounded-full px-3 py-1 text-xs font-bold">
-            🚆 {{ number_format($trainCount) }} قطار على الشبكة
+        <p class="text-rail-50/90 text-sm">مواعيد وأسعار قطارات مصر في مكان واحد.</p>
+        <div class="mt-3 inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 text-xs font-bold">
+            <x-icon name="train" class="w-4 h-4"/> {{ number_format($trainCount) }} قطار على الشبكة
         </div>
     </section>
 
@@ -26,14 +26,14 @@
             </datalist>
 
             <div class="relative">
-                <span class="absolute top-1/2 -translate-y-1/2 start-3 text-rail-600">●</span>
+                <x-icon name="dot" class="absolute top-1/2 -translate-y-1/2 start-3 w-3 h-3 text-rail-600"/>
                 <input list="stations-list" id="from_name" autocomplete="off" placeholder="محطة القيام" required
                     class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 focus:ring-2 focus:ring-rail-600 focus:border-rail-600 focus:bg-white transition">
                 <input type="hidden" name="from" id="from">
             </div>
 
             <div class="relative">
-                <span class="absolute top-1/2 -translate-y-1/2 start-3 text-amber-500">📍</span>
+                <x-icon name="pin" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-amber-500"/>
                 <input list="stations-list" id="to_name" autocomplete="off" placeholder="محطة الوصول" required
                     class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 focus:ring-2 focus:ring-rail-600 focus:border-rail-600 focus:bg-white transition">
                 <input type="hidden" name="to" id="to">
@@ -78,15 +78,19 @@
 
     {{-- اختصارات --}}
     <section class="grid grid-cols-2 gap-3">
-        <a href="{{ route('live') }}" class="bg-white rounded-3xl shadow-sm p-4 active:scale-95 transition">
-            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-emerald-50 text-2xl mb-2">📍</div>
-            <h3 class="font-bold text-sm">القطر فين دلوقتي</h3>
-            <p class="text-xs text-slate-500 mt-0.5">موقع تقديري لحظي لكل قطار</p>
-        </a>
         <a href="{{ route('fines') }}" class="bg-white rounded-3xl shadow-sm p-4 active:scale-95 transition">
-            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-amber-50 text-2xl mb-2">⚖️</div>
+            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-amber-50 text-amber-600 mb-2">
+                <x-icon name="scale" class="w-6 h-6"/>
+            </div>
             <h3 class="font-bold text-sm">الغرامات</h3>
             <p class="text-xs text-slate-500 mt-0.5">المخالفات وقيمة كل غرامة</p>
+        </a>
+        <a href="{{ route('report') }}" class="bg-white rounded-3xl shadow-sm p-4 active:scale-95 transition">
+            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-rail-50 text-rail-600 mb-2">
+                <x-icon name="flag" class="w-6 h-6"/>
+            </div>
+            <h3 class="font-bold text-sm">بلّغ عن خطأ</h3>
+            <p class="text-xs text-slate-500 mt-0.5">ميعاد أو سعر غلط أو مشكلة</p>
         </a>
     </section>
 @endsection
