@@ -19,26 +19,80 @@ window.EnrLive = (() => {
 
     const egp = (piasters) => (piasters / 100).toLocaleString('ar-EG') + ' ج.م';
 
+    const seatLegend = `
+        <div class="flex justify-center gap-4 mt-2 text-[10px] text-slate-400">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> متاح</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> محجوز</span>
+        </div>`;
+
+    // مخطط العربة بالمواقع الحقيقية (topLeft.x/y) — يعرض ٢ أو ٤ في الصف حسب العربة تلقائيًا.
+    const seatPlan = (pts) => {
+        const xs = pts.map(p => p.topLeft.x);
+        const ys = pts.map(p => p.topLeft.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+        // أصغر فرق بين الإحداثيات = مسافة الشبكة (pitch) لضبط الحجم بلا تداخل.
+        const minGap = (vals) => {
+            const u = [...new Set(vals)].sort((a, b) => a - b);
+            let g = Infinity;
+            for (let i = 1; i < u.length; i++) g = Math.min(g, u[i] - u[i - 1]);
+            return isFinite(g) && g > 0 ? g : 1;
+        };
+        const SEAT = 30, GAP = 8;
+        const scale = (SEAT + GAP) / Math.min(minGap(xs), minGap(ys));
+        const W = (maxX - minX) * scale + SEAT;
+        const H = (maxY - minY) * scale + SEAT;
+
+        const seats = pts.map(p => {
+            const isSeat = (p.params?.kind ?? 'seat') === 'seat';
+            const ok = isSeat && p.available && !p.sold && !p.locked;
+            const left = (p.topLeft.x - minX) * scale;
+            const top = (p.topLeft.y - minY) * scale;
+            const price = Math.round((p.cost || 0) / 100);
+            const cushion = !isSeat ? 'bg-slate-100 text-slate-300'
+                : ok ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400';
+            const backSide = p.params?.dir === 'right' ? 'right-0.5' : 'left-0.5';
+            const backColor = ok ? 'bg-emerald-700' : 'bg-slate-300';
+            const title = `${isSeat ? 'مقعد ' : ''}${p.number} — ${ok ? 'متاح' : (isSeat ? 'محجوز' : (p.params?.kind || ''))}${price && isSeat ? ' — ' + price + ' ج.م' : ''}`;
+            return `<div class="absolute" style="left:${left}px;top:${top}px;width:${SEAT}px;height:${SEAT}px" title="${title}">
+                <div class="relative w-full h-full rounded-md grid place-items-center ${cushion}">
+                    ${isSeat ? `<span class="absolute inset-y-1 w-1 rounded ${backColor} ${backSide}"></span>` : ''}
+                    <span class="text-[9px] font-bold leading-none ${ok ? '' : (isSeat ? 'line-through' : '')}">${p.number}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        return `
+            <div class="mt-3">
+                <div class="overflow-x-auto pb-2">
+                    <div class="relative mx-auto bg-slate-50 border-2 border-slate-200 rounded-2xl p-3" style="width:${Math.round(W + 24)}px">
+                        <div class="relative" style="width:${Math.round(W)}px;height:${Math.round(H)}px">${seats}</div>
+                    </div>
+                </div>
+                ${seatLegend}
+            </div>`;
+    };
+
+    // مقعد بسيط (احتياطي لو الهيئة ما رجّعتش إحداثيات).
+    const seatChip = (p) => {
+        const ok = p.available && !p.sold && !p.locked;
+        const price = Math.round((p.cost || 0) / 100);
+        const cushion = ok ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400';
+        return `<div class="flex flex-col items-center justify-center w-10 rounded-lg py-1 ${cushion}" title="مقعد ${p.number} — ${ok ? 'متاح' : 'محجوز'}${price ? ' — ' + price + ' ج' : ''}">
+            <span class="text-[10px] font-bold leading-none ${ok ? '' : 'line-through'}">${p.number}</span>
+        </div>`;
+    };
+
     const seatMap = (places) => {
         if (!places || !places.length) return '';
-        const chips = places
-            .slice()
-            .sort((a, b) => (+a.number) - (+b.number))
-            .map(p => {
-                const ok = p.available && !p.sold && !p.locked;
-                const cls = ok ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400';
-                const price = Math.round((p.cost || 0) / 100);
-                return `<div class="flex flex-col items-center justify-center min-w-[2.6rem] px-1.5 py-1 rounded-lg ${cls}" title="${ok ? 'متاح' : 'محجوز'}">
-                    <span class="text-[11px] font-bold leading-none ${ok ? '' : 'line-through'}">${p.number}</span>
-                    <span class="text-[9px] leading-none mt-0.5 opacity-90">${price} ج</span>
-                </div>`;
-            }).join('');
-        return `
-            <div class="flex flex-wrap gap-1 mt-2">${chips}</div>
-            <div class="flex gap-3 mt-2 text-[10px] text-slate-400">
-                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> متاح</span>
-                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-100 inline-block"></span> محجوز</span>
-            </div>`;
+        const positioned = places.filter(p => p.topLeft && typeof p.topLeft.x === 'number' && typeof p.topLeft.y === 'number');
+
+        if (positioned.length) return seatPlan(positioned);
+
+        // احتياطي: شبكة بسيطة بترتيب الأرقام.
+        const chips = places.slice().sort((a, b) => (+a.number) - (+b.number)).map(seatChip).join('');
+        return `<div class="mt-3"><div class="flex flex-wrap gap-1.5 justify-center">${chips}</div>${seatLegend}</div>`;
     };
 
     const trip = (step) => {
