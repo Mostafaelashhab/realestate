@@ -108,7 +108,7 @@
                     });
                     const result = await imp.json();
                     saved = result.saved ?? 0;
-                    savedMsg = `${CHECK} تم حفظ ${saved} سعر في الموقع`;
+                    savedMsg = `${CHECK} تم حفظ ${saved} سعر و${result.times ?? 0} ميعاد في الموقع`;
                     status.innerHTML = CHECK;
                 } catch (e) {
                     savedMsg = 'تعذّر الحفظ، لكن البيانات معروضة بالأسفل.';

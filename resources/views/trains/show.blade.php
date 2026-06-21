@@ -274,12 +274,7 @@
             <p class="text-sm text-slate-500 mb-3">الأسعار الرسمية لهذا المسار غير محمّلة بعد — اعرفها من زر الحجز.</p>
         @endif
 
-        <a href="{{ \App\Support\EgyptRailReference::bookingUrl($origin?->booking_name, $terminal?->booking_name, now()->toDateString()) }}"
-            target="_blank" rel="noopener"
-            class="mt-4 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl px-4 py-3 transition">
-            <x-icon name="ticket" class="w-5 h-5"/>
-            احجز على الموقع الرسمي لهيئة السكة الحديد
-        </a>
+   
 
         <a href="{{ route('report', ['type' => 'price', 'train' => $train->number]) }}"
             class="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">

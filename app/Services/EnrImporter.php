@@ -7,6 +7,7 @@ use App\Models\Station;
 use App\Models\Train;
 use App\Support\CacheVer;
 use App\Support\EgyptRailReference;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -63,9 +64,10 @@ class EnrImporter
 
         $saved = 0;
         $skipped = 0;
+        $times = 0;
         $trains = [];
 
-        DB::transaction(function () use ($items, $classMap, &$saved, &$skipped, &$trains) {
+        DB::transaction(function () use ($items, $classMap, &$saved, &$skipped, &$times, &$trains) {
             foreach ($items as $item) {
                 $step = $item['steps'][0] ?? null;
                 if (! $step) {
@@ -113,13 +115,36 @@ class EnrImporter
                     $train->update(['official_type' => $description]);
                 }
 
+                // مزامنة مواعيد طرفي المسار من نظام الهيئة (أدقّ من المصدر الأساسي).
+                $times += $this->syncTimes($train, $from, $to, $step['fromDate'] ?? null, $step['finishDate'] ?? null);
+
                 $trains[$train->id] = $train->number;
             }
         });
 
         CacheVer::bump('catalog');
 
-        return ['saved' => $saved, 'skipped' => $skipped, 'trains' => array_values($trains)];
+        return ['saved' => $saved, 'skipped' => $skipped, 'times' => $times, 'trains' => array_values($trains)];
+    }
+
+    /**
+     * يحدّث مواعيد قيام محطة الركوب ووصول محطة النزول من توقيت الهيئة الدقيق.
+     * يرجّع عدد الحقول المحدّثة.
+     */
+    private function syncTimes(Train $train, Station $from, Station $to, ?string $fromDate, ?string $finishDate): int
+    {
+        $updated = 0;
+
+        if ($fromDate) {
+            $updated += $train->stops()->where('station_id', $from->id)
+                ->update(['departure_time' => Carbon::parse($fromDate)->format('H:i:s')]);
+        }
+        if ($finishDate) {
+            $updated += $train->stops()->where('station_id', $to->id)
+                ->update(['arrival_time' => Carbon::parse($finishDate)->format('H:i:s')]);
+        }
+
+        return $updated;
     }
 
     /** يكتشف نوع الرد (محطات/بحث) ويستورده. */
