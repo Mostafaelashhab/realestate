@@ -4,14 +4,17 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TrainController;
 use App\Http\Controllers\TripShareController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
@@ -25,6 +28,10 @@ Route::get('/trip/{trip}', [TripShareController::class, 'show'])->name('trip.sho
 Route::get('/trip/{trip}/state', [TripShareController::class, 'state'])->name('trip.state');
 Route::post('/trip/{trip}/ping', [TripShareController::class, 'ping'])->middleware('throttle:120,1')->name('trip.ping');
 Route::post('/trip/{trip}/stop', [TripShareController::class, 'stop'])->name('trip.stop');
+
+// اشتراكات إشعارات الويب (Push).
+Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:30,1')->name('push.subscribe');
+Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
 
 // الإبلاغ عن خطأ في ميعاد أو سعر أو مشكلة عامة.
 Route::get('/report', [ReportController::class, 'create'])->name('report');

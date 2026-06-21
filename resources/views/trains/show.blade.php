@@ -83,6 +83,23 @@
                 <div class="text-sm text-slate-500 truncate">{{ $terminal?->name_ar }}</div>
             </div>
         </div>
+
+        @if (config('push.vapid_public'))
+            <button id="notify-btn" type="button"
+                class="mt-4 w-full flex items-center justify-center gap-2 text-sm font-bold text-rail-700 bg-rail-50 hover:bg-rail-100 rounded-2xl px-4 py-2.5 transition">
+                <x-icon name="alert" class="w-4 h-4"/> نبّهني قبل ميعاد القطار
+            </button>
+            <script>
+                (() => {
+                    const btn = document.getElementById('notify-btn');
+                    btn.addEventListener('click', async () => {
+                        btn.disabled = true; btn.textContent = 'جاري التفعيل…';
+                        const ok = window.QMPush && await window.QMPush.subscribe(@json($train->number));
+                        btn.textContent = ok ? 'هنبّهك قبل الميعاد ✓' : 'تعذّر تفعيل التنبيه';
+                    });
+                })();
+            </script>
+        @endif
     </section>
 
     {{-- مشاركة الرحلة لحظيًا مع الأهل --}}
@@ -333,6 +350,11 @@
             ميعاد غلط؟ بلّغنا
         </a>
     </section>
+
+    {{-- خدمات في الوجهة (شركاء) --}}
+    @if (config('affiliate.enabled') && $terminal)
+        <x-destination-services :name="$terminal->name_ar"/>
+    @endif
 
     {{-- التوافر اللحظي الرسمي — يُجلب تلقائيًا عند فتح الصفحة --}}
     @if ($origin?->enr_id && $terminal?->enr_id)

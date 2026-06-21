@@ -1,5 +1,5 @@
 // Service Worker — قطارات مصر PWA
-const VERSION = 'v1';
+const VERSION = 'v8';
 const CACHE = `qm-${VERSION}`;
 const OFFLINE_URL = '/';
 
@@ -24,6 +24,30 @@ self.addEventListener('activate', (event) => {
             Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
         ).then(() => self.clients.claim())
     );
+});
+
+// إشعارات الويب
+self.addEventListener('push', (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch (e) {}
+    const title = data.title || 'قطارات مصر';
+    event.waitUntil(self.registration.showNotification(title, {
+        body: data.body || '',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        dir: 'rtl',
+        lang: 'ar',
+        data: { url: data.url || '/' },
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const url = event.notification.data?.url || '/';
+    event.waitUntil(clients.matchAll({ type: 'window' }).then((wins) => {
+        for (const w of wins) { if (w.url.includes(url) && 'focus' in w) return w.focus(); }
+        return clients.openWindow(url);
+    }));
 });
 
 self.addEventListener('fetch', (event) => {

@@ -4,6 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if (config('push.vapid_public'))
+        <meta name="vapid-key" content="{{ config('push.vapid_public') }}">
+    @endif
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b6340">
@@ -12,6 +15,7 @@
     {{-- Open Graph / المعاينة عند المشاركة --}}
     @php $ogDesc = trim($__env->yieldContent('og_desc', 'مواعيد وأسعار قطارات مصر، والمقاعد المتاحة، في مكان واحد.')); @endphp
     <meta name="description" content="{{ $ogDesc }}">
+    <link rel="canonical" href="{{ url()->current() }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="قطارات مصر">
     <meta property="og:locale" content="ar_EG">

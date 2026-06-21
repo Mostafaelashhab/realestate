@@ -67,6 +67,34 @@
             });
         }
 
+        // إشعارات الويب (تُفعَّل لما يكون مفتاح VAPID مضبوطًا)
+        const vapid = document.querySelector('meta[name=vapid-key]')?.content;
+        const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+        const b64ToU8 = (s) => {
+            const pad = '='.repeat((4 - s.length % 4) % 4);
+            const b = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(b);
+            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+        };
+        window.QMPush = {
+            supported: () => 'serviceWorker' in navigator && 'PushManager' in window && !!vapid,
+            async subscribe(trainNumber) {
+                if (!this.supported()) return false;
+                const perm = await Notification.requestPermission();
+                if (perm !== 'granted') return false;
+                const reg = await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(vapid) });
+                const j = sub.toJSON();
+                await fetch('/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({ endpoint: j.endpoint, keys: j.keys, train_number: trainNumber || null }),
+                });
+                return true;
+            },
+        };
+
         // 2) بانر التثبيت
         const banner = document.getElementById('pwa-banner');
         const installBtn = document.getElementById('pwa-install');
