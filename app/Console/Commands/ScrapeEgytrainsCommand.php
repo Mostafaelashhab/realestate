@@ -84,6 +84,8 @@ class ScrapeEgytrainsCommand extends Command
         // إزالة المحطات التي لم تعد مرتبطة بأي قطار.
         $pruned = Station::doesntHave('stops')->delete();
 
+        \App\Support\CacheVer::bump('catalog');
+
         $this->info("تم الحفظ: {$saved} | فشل/تخطّي: {$failed} | محطات محذوفة: {$pruned}");
         $this->line('المحطات: '.Station::count().' | القطارات: '.Train::count());
 

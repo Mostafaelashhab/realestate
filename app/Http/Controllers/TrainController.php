@@ -60,21 +60,21 @@ class TrainController extends Controller
                 ->values()
             : collect();
 
-        // الأسعار الرسمية لكامل مسار القطار (إن وُجدت من الاستيراد).
+        // كل أسعار القطار تُكاش مرة واحدة (تتغيّر فقط عند الاستيراد) ونشتق منها.
+        $trainFares = \Illuminate\Support\Facades\Cache::remember(
+            \App\Support\CacheVer::key('catalog', "train:{$train->id}:fares"),
+            now()->addHours(12),
+            fn () => Fare::where('train_id', $train->id)->orderBy('price_piasters')->get()
+        );
+
+        // الأسعار الرسمية للمسار المعروض.
         $fares = ($origin && $terminal)
-            ? Fare::where('train_id', $train->id)
-                ->where('from_station_id', $origin->id)
-                ->where('to_station_id', $terminal->id)
-                ->orderBy('price_piasters')
-                ->get()
+            ? $trainFares->where('from_station_id', $origin->id)->where('to_station_id', $terminal->id)->values()
             : collect();
 
         // سعر التذكرة من كل محطة حتى الوجهة (أرخص درجة) — لعرضه جنب كل محطة في الجدول.
         $stationFares = $terminal
-            ? Fare::where('train_id', $train->id)
-                ->where('to_station_id', $terminal->id)
-                ->orderBy('price_piasters')
-                ->get()
+            ? $trainFares->where('to_station_id', $terminal->id)
                 ->groupBy('from_station_id')
                 ->map(fn ($group) => (int) round($group->first()->price))
             : collect();

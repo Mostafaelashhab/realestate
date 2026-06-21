@@ -6,9 +6,11 @@ use App\Models\Station;
 use App\Models\Train;
 use App\Services\NearestStationSuggester;
 use App\Services\RouteFinder;
+use App\Support\CacheVer;
 use App\Support\Format;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /** صفحة المسار (SEO): رابط دائم بالـ slug + محتوى مفهرس + FAQ + روابط داخلية. */
 class RouteController extends Controller
@@ -18,7 +20,13 @@ class RouteController extends Controller
         abort_if($from->id === $to->id, 404);
 
         $date = $request->filled('date') ? Carbon::parse($request->input('date')) : Carbon::today();
-        $results = $finder->results($from, $to, $date);
+
+        // نتائج المسار شبه ثابتة (تتغيّر مع الأسعار/الجداول فقط) — تُكاش ساعتين لكل (مسار+يوم).
+        $results = Cache::remember(
+            CacheVer::key('catalog', "route:{$from->id}:{$to->id}:{$date->toDateString()}"),
+            now()->addHours(2),
+            fn () => $finder->results($from, $to, $date)
+        );
         $summary = $finder->summary($results);
         $suggestions = $results->isEmpty() ? $suggester->suggest($from, $to) : null;
         $stations = Station::orderBy('name_ar')->get();

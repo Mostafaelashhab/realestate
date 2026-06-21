@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Station;
 use App\Models\Train;
+use App\Support\CacheVer;
 use Illuminate\Support\Facades\Cache;
 
 class SitemapController extends Controller
@@ -11,7 +12,7 @@ class SitemapController extends Controller
     /** خريطة الموقع: الصفحات الثابتة + القطارات + المحطات + صفحات المسارات (SEO). */
     public function index()
     {
-        $urls = Cache::remember('sitemap:v1', now()->addHours(24), function () {
+        $urls = Cache::remember(CacheVer::key('catalog', 'sitemap'), now()->addHours(24), function () {
             $urls = [
                 ['loc' => route('home'), 'priority' => '1.0', 'freq' => 'daily'],
                 ['loc' => route('fines'), 'priority' => '0.4', 'freq' => 'monthly'],

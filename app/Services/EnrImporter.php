@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Fare;
 use App\Models\Station;
 use App\Models\Train;
+use App\Support\CacheVer;
 use App\Support\EgyptRailReference;
 use Illuminate\Support\Facades\DB;
 
@@ -49,6 +50,8 @@ class EnrImporter
                 }
             }
         });
+
+        CacheVer::bump('catalog');
 
         return ['linked' => $linked, 'created' => $created];
     }
@@ -113,6 +116,8 @@ class EnrImporter
                 $trains[$train->id] = $train->number;
             }
         });
+
+        CacheVer::bump('catalog');
 
         return ['saved' => $saved, 'skipped' => $skipped, 'trains' => array_values($trains)];
     }
