@@ -126,5 +126,40 @@
                 <path d="m21 21-4.3-4.3"/>
             </g>
             @break
+
+        @case('star')
+            <path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"
+                fill="currentColor" stroke="none"/>
+            @break
+
+        @case('clock-history')
+            <g {!! $stroke !!}>
+                <path d="M3 3v5h5"/>
+                <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                <path d="M12 7v5l3 2"/>
+            </g>
+            @break
+
+        @case('share')
+            <g {!! $stroke !!}>
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <path d="m8.6 13.5 6.8 4M15.4 6.5 8.6 10.5"/>
+            </g>
+            @break
+
+        @case('moon')
+            <g {!! $stroke !!}>
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+            </g>
+            @break
+
+        @case('sun')
+            <g {!! $stroke !!}>
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/>
+            </g>
+            @break
     @endswitch
 </svg>

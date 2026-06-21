@@ -3,9 +3,36 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b6340">
     <title>@yield('title', 'قطارات مصر') — قطارات مصر</title>
+
+    {{-- Open Graph / المعاينة عند المشاركة --}}
+    @php $ogDesc = trim($__env->yieldContent('og_desc', 'مواعيد وأسعار قطارات مصر، والمقاعد المتاحة، في مكان واحد.')); @endphp
+    <meta name="description" content="{{ $ogDesc }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="قطارات مصر">
+    <meta property="og:locale" content="ar_EG">
+    <meta property="og:title" content="@yield('og_title', 'قطارات مصر — مواعيد وأسعار')">
+    <meta property="og:description" content="{{ $ogDesc }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ url('/icons/icon-512.png') }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="@yield('og_title', 'قطارات مصر — مواعيد وأسعار')">
+    <meta name="twitter:description" content="{{ $ogDesc }}">
+    <meta name="twitter:image" content="{{ url('/icons/icon-512.png') }}">
+
+    {{-- الوضع الليلي: نطبّقه قبل الرسم لتفادي الوميض --}}
+    <script>
+        try {
+            const t = localStorage.getItem('qm:theme');
+            if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        } catch (e) { }
+    </script>
 
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
@@ -29,17 +56,17 @@
         <header class="sticky top-0 z-30 bg-linear-to-l from-rail-800 to-rail-600 text-white">
             <div class="px-4 pb-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 @php $isHome = request()->routeIs('home'); @endphp
-                @unless ($isHome)
-                    <a href="{{ url()->previous() }}"
-                        class="shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
-                        <x-icon name="chevron-right" class="w-5 h-5" />
-                    </a>
-                @endunless
+
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-extrabold text-lg">
                     <x-icon name="train" class="w-7 h-7" />
                     <span>قطارات مصر</span>
                 </a>
-                <span class="ms-auto text-[11px] bg-white/15 rounded-full px-2.5 py-1">@yield('badge', 'مصر')</span>
+                <button id="theme-toggle" type="button" aria-label="الوضع الليلي"
+                    class="ms-auto shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
+                    <x-icon name="moon" class="w-5 h-5 dark:hidden" />
+                    <x-icon name="sun" class="w-5 h-5 hidden dark:block" />
+                </button>
+                <span class="text-[11px] bg-white/15 rounded-full px-2.5 py-1">@yield('badge', 'مصر')</span>
             </div>
         </header>
 

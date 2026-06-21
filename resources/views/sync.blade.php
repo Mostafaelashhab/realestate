@@ -16,6 +16,13 @@
         <span class="inline-flex items-center gap-1 text-xs text-slate-400">المحمّل أسعاره معلّم بـ <x-icon name="check" class="w-4 h-4 text-emerald-600"/></span>
     </div>
 
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-4 flex items-center gap-3 flex-wrap">
+        <button id="sync-all" class="bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold rounded-lg px-4 py-2">مزامنة الكل</button>
+        <button id="sync-stop" hidden class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-lg px-4 py-2">إيقاف</button>
+        <label class="text-xs text-slate-600 flex items-center gap-1.5"><input type="checkbox" id="skip-done" checked class="accent-rail-600"> تخطّي المحمّل مسبقًا</label>
+        <span id="sync-progress" class="text-sm text-slate-500 ms-auto"></span>
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
@@ -67,58 +74,100 @@
         const CSRF = "{{ csrf_token() }}";
         const CHECK = '<svg viewBox="0 0 24 24" class="w-4 h-4 inline text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 
-        document.querySelectorAll('.fetch-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const row = btn.closest('tr');
-                const id = row.dataset.row;
-                const status = row.querySelector('.status');
-                const detail = document.querySelector(`[data-detail="${id}"]`);
-                const content = detail.querySelector('.detail-content');
-                const date = document.getElementById('trip-date').value;
-                btn.disabled = true;
-                btn.textContent = '...';
+        // مزامنة قطار واحد. showDetail=false في المزامنة الجماعية لتفادي ثقل الـ DOM.
+        async function syncRow(btn, showDetail = true) {
+            const row = btn.closest('tr');
+            const id = row.dataset.row;
+            const status = row.querySelector('.status');
+            const date = document.getElementById('trip-date').value;
+            btn.disabled = true;
+            btn.textContent = '...';
 
-                const url = EnrLive.buildUrl(SEARCH_URL, {
-                    from: btn.dataset.from, to: btn.dataset.to, number: btn.dataset.number, date,
-                });
+            const url = EnrLive.buildUrl(SEARCH_URL, {
+                from: btn.dataset.from, to: btn.dataset.to, number: btn.dataset.number, date,
+            });
 
-                try {
-                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    const data = await res.json();
+            try {
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
 
-                    if (!Array.isArray(data) || !data.length) {
-                        status.innerHTML = '<span class="text-amber-600">لا رحلات</span>';
-                        btn.textContent = 'إعادة';
-                        btn.disabled = false;
-                        return;
-                    }
-
-                    // حفظ الأسعار/النوع في الموقع
-                    let savedMsg = '';
-                    try {
-                        const imp = await fetch(IMPORT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                            body: JSON.stringify(data),
-                        });
-                        const result = await imp.json();
-                        savedMsg = `${CHECK} تم حفظ ${result.saved} سعر في الموقع`;
-                        status.innerHTML = CHECK;
-                    } catch (e) {
-                        savedMsg = 'تعذّر الحفظ، لكن البيانات معروضة بالأسفل.';
-                    }
-
-                    content.innerHTML = `<div class="text-xs text-emerald-700 mb-2">${savedMsg}</div>` + EnrLive.render(data);
-                    detail.classList.remove('hidden');
-                    btn.textContent = 'تحديث';
-                    btn.disabled = false;
-                } catch (e) {
-                    status.innerHTML = `<span class="text-red-600">خطأ: ${e.message}</span>`;
+                if (!Array.isArray(data) || !data.length) {
+                    status.innerHTML = '<span class="text-amber-600 text-xs">لا رحلات</span>';
                     btn.textContent = 'إعادة';
                     btn.disabled = false;
+                    return 'empty';
                 }
-            });
+
+                let saved = 0, savedMsg = '';
+                try {
+                    const imp = await fetch(IMPORT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                    const result = await imp.json();
+                    saved = result.saved ?? 0;
+                    savedMsg = `${CHECK} تم حفظ ${saved} سعر في الموقع`;
+                    status.innerHTML = CHECK;
+                } catch (e) {
+                    savedMsg = 'تعذّر الحفظ، لكن البيانات معروضة بالأسفل.';
+                }
+
+                if (showDetail) {
+                    const detail = document.querySelector(`[data-detail="${id}"]`);
+                    const content = detail.querySelector('.detail-content');
+                    content.innerHTML = `<div class="text-xs text-emerald-700 mb-2">${savedMsg}</div>` + EnrLive.render(data);
+                    detail.classList.remove('hidden');
+                }
+                btn.textContent = 'تحديث';
+                btn.disabled = false;
+                return 'saved';
+            } catch (e) {
+                status.innerHTML = `<span class="text-red-600 text-xs">خطأ</span>`;
+                btn.textContent = 'إعادة';
+                btn.disabled = false;
+                return 'error';
+            }
+        }
+
+        document.querySelectorAll('.fetch-btn').forEach(btn => {
+            btn.addEventListener('click', () => syncRow(btn, true));
         });
+
+        // مزامنة الكل: تسلسلي مع مهلة بسيطة بين القطارات، وإمكانية الإيقاف.
+        let stopFlag = false;
+        const allBtn = document.getElementById('sync-all');
+        const stopBtn = document.getElementById('sync-stop');
+        const prog = document.getElementById('sync-progress');
+
+        allBtn.addEventListener('click', async () => {
+            const skipDone = document.getElementById('skip-done').checked;
+            const targets = [...document.querySelectorAll('.fetch-btn')]
+                .filter(b => !skipDone || !b.closest('tr').querySelector('.status svg'));
+
+            if (!targets.length) { prog.textContent = 'مفيش قطارات تتزامن.'; return; }
+
+            stopFlag = false;
+            allBtn.hidden = true;
+            stopBtn.hidden = false;
+            let done = 0, saved = 0, empty = 0, err = 0;
+
+            for (const b of targets) {
+                if (stopFlag) break;
+                b.closest('tr').scrollIntoView({ block: 'center', behavior: 'smooth' });
+                const r = await syncRow(b, false);
+                done++;
+                if (r === 'saved') saved++; else if (r === 'empty') empty++; else err++;
+                prog.textContent = `${done}/${targets.length} — حُفظ ${saved} · بلا رحلات ${empty} · أخطاء ${err}`;
+                await new Promise(res => setTimeout(res, 400));
+            }
+
+            stopBtn.hidden = true;
+            allBtn.hidden = false;
+            prog.textContent += stopFlag ? ' — تم الإيقاف' : ' — اكتمل ✓';
+        });
+
+        stopBtn.addEventListener('click', () => { stopFlag = true; });
     </script>
 @endsection

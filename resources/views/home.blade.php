@@ -3,6 +3,55 @@
 @section('title', 'مواعيد وأسعار القطارات')
 
 @section('content')
+    {{-- العروض/البانرات --}}
+    @if ($promos->isNotEmpty())
+        @php
+            $promoStyles = [
+                'rail' => 'bg-rail-50 text-rail-900 ring-rail-200',
+                'amber' => 'bg-amber-50 text-amber-900 ring-amber-200',
+                'sky' => 'bg-sky-50 text-sky-900 ring-sky-200',
+            ];
+        @endphp
+        <div class="space-y-2 mb-4">
+            @foreach ($promos as $promo)
+                <div class="promo-banner rounded-2xl ring-1 p-3 flex items-center gap-3 {{ $promoStyles[$promo->variant] ?? $promoStyles['rail'] }}"
+                    data-promo="{{ $promo->id }}" hidden>
+                    @if ($promo->url)
+                        <a href="{{ $promo->url }}" target="_blank" rel="noopener" class="flex-1 min-w-0">
+                            <p class="font-bold text-sm">{{ $promo->title }}</p>
+                            @if ($promo->body)<p class="text-xs mt-0.5 opacity-80">{{ $promo->body }}</p>@endif
+                        </a>
+                    @else
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-sm">{{ $promo->title }}</p>
+                            @if ($promo->body)<p class="text-xs mt-0.5 opacity-80">{{ $promo->body }}</p>@endif
+                        </div>
+                    @endif
+                    <button type="button" class="promo-dismiss w-7 h-7 grid place-items-center rounded-lg hover:bg-black/5 shrink-0" aria-label="إغلاق">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+            @endforeach
+        </div>
+        <script>
+            (() => {
+                const KEY = 'qm:promo-dismissed';
+                let dismissed = [];
+                try { dismissed = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
+                document.querySelectorAll('.promo-banner').forEach(el => {
+                    const id = el.dataset.promo;
+                    if (dismissed.includes(id)) return;
+                    el.hidden = false;
+                    el.querySelector('.promo-dismiss').addEventListener('click', () => {
+                        el.hidden = true;
+                        dismissed.push(id);
+                        try { localStorage.setItem(KEY, JSON.stringify(dismissed.slice(-50))); } catch (e) {}
+                    });
+                });
+            })();
+        </script>
+    @endif
+
     {{-- ترحيب --}}
     <section class="relative overflow-hidden bg-linear-to-br from-rail-800 via-rail-700 to-rail-600 text-white rounded-3xl p-6 mb-5 shadow-xl shadow-rail-800/25">
         {{-- زخرفة قضبان خفيفة --}}
@@ -165,6 +214,62 @@
             </button>
         </form>
     </section>
+
+    {{-- وجهات شائعة --}}
+    @if ($popular->isNotEmpty())
+        <section class="mb-4">
+            <h3 class="text-xs font-bold text-slate-500 mb-2">وجهات شائعة</h3>
+            <div class="flex flex-wrap gap-2">
+                @foreach ($popular as $p)
+                    <a href="{{ route('search', ['from' => $p['from']->id, 'to' => $p['to']->id, 'date' => now()->toDateString()]) }}"
+                        class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">
+                        <span>{{ $p['from']->name_ar }}</span>
+                        <x-icon name="arrow-left" class="w-3.5 h-3.5 text-slate-400"/>
+                        <span>{{ $p['to']->name_ar }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    {{-- المفضلة + آخر بحث (من التخزين المحلي) --}}
+    <section id="qm-quick" hidden class="mb-4 space-y-4"></section>
+
+    <script>
+        (() => {
+            const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
+            const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const box = document.getElementById('qm-quick');
+            const fav = get('qm:fav'), recent = get('qm:recent');
+            let html = '';
+
+            const chip = (href, inner) =>
+                `<a href="${href}" class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">${inner}</a>`;
+            const card = (title, icon, chips) =>
+                `<div><h3 class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">${icon} ${title}</h3><div class="flex flex-wrap gap-2">${chips}</div></div>`;
+
+            const STAR = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-amber-500" fill="currentColor"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>';
+            const HIST = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>';
+            const ARROW = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6 7-7-7 7-7"/></svg>';
+
+            if (fav.length) {
+                const chips = fav.map(f =>
+                    chip(esc(f.url), `${STAR}<span class="font-bold">قطار ${esc(f.number)}</span>${f.label ? `<span class="text-xs text-slate-400">${esc(f.label)}</span>` : ''}`)
+                ).join('');
+                html += card('قطاراتك المفضلة', STAR, chips);
+            }
+
+            if (recent.length) {
+                const chips = recent.map(r =>
+                    chip(`/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date)}`,
+                        `<span>${esc(r.fromName)}</span>${ARROW}<span>${esc(r.toName)}</span>`)
+                ).join('');
+                html += card('آخر عمليات البحث', HIST, chips);
+            }
+
+            if (html) { box.innerHTML = html; box.hidden = false; }
+        })();
+    </script>
 
     {{-- اختصارات --}}
     <section class="grid grid-cols-2 gap-3">

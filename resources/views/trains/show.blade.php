@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', "قطار {$train->number}")
+@section('og_title', "قطار {$train->number}" . ($origin && $terminal ? " — {$origin->name_ar} ← {$terminal->name_ar}" : ''))
+@section('og_desc', trim((\App\Support\Format::time($depart) ? \App\Support\Format::time($depart).' ← '.\App\Support\Format::time($arrive).' · ' : '') . ($duration ? $duration.' · ' : '') . 'مواعيد وأسعار رحلتك على قطارات مصر.'))
 
 @section('content')
     {{-- هوية القطار --}}
@@ -12,8 +14,45 @@
                 <x-icon name="check" class="w-3.5 h-3.5"/> مؤكد التشغيل
             </span>
         @endif
-    
+
+        <div class="ms-auto flex items-center gap-1.5">
+            <button type="button" data-share
+                data-share-title="قطار {{ $train->number }}@if ($origin && $terminal) — {{ $origin->name_ar }} ← {{ $terminal->name_ar }}@endif"
+                aria-label="مشاركة"
+                class="w-9 h-9 grid place-items-center rounded-full ring-1 ring-slate-200 text-slate-400 hover:bg-rail-50 hover:text-rail-600 transition">
+                <x-icon name="share" class="w-5 h-5"/>
+            </button>
+            <button id="fav-btn" type="button" aria-label="إضافة للمفضلة"
+                class="w-9 h-9 grid place-items-center rounded-full ring-1 ring-slate-200 text-slate-300 hover:bg-amber-50 transition">
+                <x-icon name="star" class="w-5 h-5"/>
+            </button>
+        </div>
     </div>
+
+    <script>
+        (() => {
+            const KEY = 'qm:fav';
+            const num = @json($train->number);
+            const label = @json(trim(($origin?->name_ar ? $origin->name_ar.' ← '.$terminal?->name_ar : ($train->type_label ?? ''))));
+            const url = @json(request()->getRequestUri());
+            const btn = document.getElementById('fav-btn');
+            const get = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } };
+            const isFav = () => get().some(f => f.number === num);
+            const paint = () => {
+                const on = isFav();
+                btn.classList.toggle('text-amber-500', on);
+                btn.classList.toggle('ring-amber-200', on);
+                btn.classList.toggle('text-slate-300', !on);
+            };
+            btn.addEventListener('click', () => {
+                let list = get();
+                list = isFav() ? list.filter(f => f.number !== num) : [{ number: num, label, url }, ...list].slice(0, 12);
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+                paint();
+            });
+            paint();
+        })();
+    </script>
 
     {{-- ملخّص الرحلة --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
@@ -45,6 +84,158 @@
             </div>
         </div>
     </section>
+
+    {{-- مشاركة الرحلة لحظيًا مع الأهل --}}
+    <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
+        <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="share" class="w-5 h-5 text-rail-600"/> شارك رحلتك لحظيًا</h2>
+        <p class="text-xs text-slate-400 mb-3">الأهل هيتابعوا مكانك الحقيقي على الخريطة طول الرحلة (من GPS موبايلك).</p>
+
+        <div id="trip-idle">
+            <button id="trip-start" type="button"
+                class="w-full flex items-center justify-center gap-2 bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white font-bold rounded-2xl px-4 py-3 transition">
+                <x-icon name="pin" class="w-5 h-5"/> ابدأ مشاركة موقعي
+            </button>
+        </div>
+
+        <div id="trip-active" hidden>
+            <div class="flex items-center gap-2 text-sm text-rail-700 font-bold mb-3">
+                <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rail-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rail-600"></span></span>
+                بتشارك موقعك دلوقتي
+                <span id="trip-since" class="text-xs font-normal text-slate-400"></span>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+                <input id="trip-link" readonly class="flex-1 min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                <button id="trip-share" type="button" class="shrink-0 bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold rounded-xl px-4 py-2 transition">شارك</button>
+            </div>
+            <div class="flex flex-col items-center gap-1 mb-3">
+                <div id="trip-qr" class="bg-white p-2 rounded-xl ring-1 ring-slate-200"></div>
+                <span class="text-[11px] text-slate-400">الأهل يمسحوا الكود للمتابعة</span>
+            </div>
+            <button id="trip-stop" type="button" class="w-full text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-2xl px-4 py-2.5 transition">إيقاف المشاركة</button>
+        </div>
+
+        <p id="trip-err" hidden class="text-sm text-red-600 mt-2"></p>
+    </section>
+
+    <script>
+        (() => {
+            const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+            const KEY = 'qm:activeTrip';
+            const META = {
+                train_number: @json($train->number),
+                from_name: @json($origin?->name_ar),
+                to_name: @json($terminal?->name_ar),
+                eta: @json(\App\Support\Format::time($arrive)),
+                to_lat: @json($terminal?->lat),
+                to_lng: @json($terminal?->lng),
+            };
+            const idle = document.getElementById('trip-idle');
+            const active = document.getElementById('trip-active');
+            const linkInput = document.getElementById('trip-link');
+            const sinceEl = document.getElementById('trip-since');
+            const errEl = document.getElementById('trip-err');
+            const startBtn = document.getElementById('trip-start');
+            const stopBtn = document.getElementById('trip-stop');
+            const shareBtn = document.getElementById('trip-share');
+            const startHtml = startBtn.innerHTML;
+
+            let watchId = null, current = null;
+            const err = (m) => { errEl.textContent = m; errEl.hidden = false; };
+            const post = (url, body) => fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            let qrLoaded = null;
+            function ensureQr() {
+                if (window.QRCode) return Promise.resolve();
+                if (qrLoaded) return qrLoaded;
+                qrLoaded = new Promise((res, rej) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js';
+                    s.onload = res; s.onerror = rej;
+                    document.head.appendChild(s);
+                });
+                return qrLoaded;
+            }
+            function renderQr(url) {
+                const el = document.getElementById('trip-qr');
+                ensureQr().then(() => {
+                    el.innerHTML = '';
+                    new QRCode(el, { text: url, width: 132, height: 132, colorDark: '#0b1220', colorLight: '#ffffff' });
+                }).catch(() => { el.parentElement.hidden = true; });
+            }
+
+            function showActive(share) {
+                current = share;
+                linkInput.value = share.url;
+                idle.hidden = true; active.hidden = false; errEl.hidden = true;
+                renderQr(share.url);
+            }
+            function showIdle() {
+                current = null;
+                if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                idle.hidden = false; active.hidden = true;
+                startBtn.disabled = false; startBtn.innerHTML = startHtml;
+            }
+            function sendPing(pos) {
+                if (!current) return;
+                sinceEl.textContent = '· آخر تحديث: الآن';
+                post(`/trip/${current.token}/ping`, {
+                    owner_token: current.owner_token,
+                    lat: pos.coords.latitude, lng: pos.coords.longitude, speed: pos.coords.speed ?? null,
+                }).catch(() => {});
+            }
+            function startWatch() {
+                watchId = navigator.geolocation.watchPosition(sendPing,
+                    () => err('لازم تسمح بالوصول لموقعك عشان المشاركة تشتغل.'),
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+            }
+
+            startBtn.addEventListener('click', () => {
+                errEl.hidden = true;
+                if (!navigator.geolocation) { err('جهازك مايدعمش تحديد الموقع.'); return; }
+                startBtn.disabled = true; startBtn.textContent = 'جاري التفعيل…';
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    try {
+                        const share = await (await post('{{ route('trip.start') }}', META)).json();
+                        localStorage.setItem(KEY, JSON.stringify(share));
+                        showActive(share);
+                        sendPing(pos);
+                        startWatch();
+                    } catch (e) { err('تعذّر بدء المشاركة، جرّب تاني.'); showIdle(); }
+                }, () => { err('لازم تسمح بالوصول لموقعك.'); showIdle(); },
+                { enableHighAccuracy: true, timeout: 20000 });
+            });
+
+            stopBtn.addEventListener('click', async () => {
+                if (current) { try { await post(`/trip/${current.token}/stop`, { owner_token: current.owner_token }); } catch (e) {} }
+                localStorage.removeItem(KEY);
+                showIdle();
+            });
+
+            shareBtn.addEventListener('click', async () => {
+                const data = { title: 'تابع رحلتي لحظيًا', text: 'تابع مكاني في القطار:', url: linkInput.value };
+                try {
+                    if (navigator.share) await navigator.share(data);
+                    else { await navigator.clipboard.writeText(data.url); shareBtn.textContent = 'اتنسخ ✓'; setTimeout(() => shareBtn.textContent = 'شارك', 1500); }
+                } catch (e) {}
+            });
+
+            // استئناف مشاركة شغّالة بعد إعادة تحميل الصفحة
+            (async () => {
+                let saved;
+                try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+                if (!saved || !saved.token) return;
+                try {
+                    const st = await fetch(`/trip/${saved.token}/state`).then(r => r.json());
+                    if (st.active) { showActive(saved); startWatch(); }
+                    else localStorage.removeItem(KEY);
+                } catch (e) {}
+            })();
+        })();
+    </script>
 
     {{-- الدرجات والأسعار الرسمية --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
@@ -112,14 +303,14 @@
                         @endphp
                         <tr class="border-b border-slate-50 {{ $edge ? 'text-rail-800' : '' }}">
                             <td class="py-2.5 font-medium">
-                                <span class="inline-flex items-center gap-1.5">
+                                <a href="{{ route('stations.show', $stop->station) }}" class="inline-flex items-center gap-1.5 hover:text-rail-600 transition">
                                     @if ($loop->first)
                                         <x-icon name="dot" class="w-2 h-2 text-rail-600"/>
                                     @elseif ($loop->last)
                                         <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/>
                                     @endif
                                     {{ $stop->station->name_ar }}
-                                </span>
+                                </a>
                             </td>
                             <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->arrival_time) ?? '—' }}</td>
                             <td class="py-2.5 whitespace-nowrap">{{ \App\Support\Format::time($stop->departure_time) ?? '—' }}</td>

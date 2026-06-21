@@ -15,4 +15,10 @@ class Report extends Model
         'price' => 'سعر غلط',
         'other' => 'مشكلة أخرى',
     ];
+
+    public const STATUSES = [
+        'new' => 'جديد',
+        'reviewed' => 'تمت المراجعة',
+        'resolved' => 'تم الحل',
+    ];
 }

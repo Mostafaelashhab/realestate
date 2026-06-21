@@ -22,7 +22,43 @@
     </div>
 </div>
 
+<div id="qm-toast" hidden
+    class="fixed left-1/2 -translate-x-1/2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 bg-slate-900 text-white text-sm rounded-full px-4 py-2 shadow-lg"></div>
+
 <script>
+    // مشاركة (Web Share API) مع بديل نسخ الرابط
+    (() => {
+        const toast = document.getElementById('qm-toast');
+        let t;
+        const showToast = (msg) => {
+            if (!toast) return;
+            toast.textContent = msg; toast.hidden = false;
+            clearTimeout(t); t = setTimeout(() => { toast.hidden = true; }, 2000);
+        };
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-share]');
+            if (!btn) return;
+            const data = { title: btn.dataset.shareTitle || document.title, text: btn.dataset.shareText || '', url: btn.dataset.shareUrl || location.href };
+            try {
+                if (navigator.share) { await navigator.share(data); return; }
+                await navigator.clipboard.writeText(data.url);
+                showToast('اتنسخ الرابط ✓');
+            } catch (err) { /* أُلغي أو فشل */ }
+        });
+    })();
+
+    // تبديل الوضع الليلي
+    (() => {
+        const btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const dark = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('qm:theme', dark ? 'dark' : 'light'); } catch (e) {}
+            const meta = document.querySelector('meta[name=theme-color]');
+            if (meta) meta.content = dark ? '#0b1220' : '#0b6340';
+        });
+    })();
+
     (() => {
         // 1) تسجيل الـ Service Worker
         if ('serviceWorker' in navigator) {
