@@ -17,9 +17,9 @@ class EgyptRailwaySeeder extends Seeder
 {
     public function run(): void
     {
-        $stations = $this->seedStations();
-        $this->seedCairoAlexandria($stations);
-        $this->seedCairoAswan($stations);
+        // $stations = $this->seedStations();
+        // $this->seedCairoAlexandria($stations);
+        // $this->seedCairoAswan($stations);
         $this->seedFines();
     }
 
