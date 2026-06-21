@@ -25,35 +25,53 @@ window.EnrLive = (() => {
             <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> محجوز</span>
         </div>`;
 
-    // مخطط العربة بالمواقع الحقيقية (topLeft.x/y) — يعرض ٢ أو ٤ في الصف حسب العربة تلقائيًا.
-    const seatPlan = (pts) => {
-        const xs = pts.map(p => p.topLeft.x);
-        const ys = pts.map(p => p.topLeft.y);
-        const minX = Math.min(...xs), maxX = Math.max(...xs);
-        const minY = Math.min(...ys), maxY = Math.max(...ys);
-
-        // أصغر فرق بين الإحداثيات = مسافة الشبكة (pitch) لضبط الحجم بلا تداخل.
-        const minGap = (vals) => {
-            const u = [...new Set(vals)].sort((a, b) => a - b);
-            let g = Infinity;
-            for (let i = 1; i < u.length; i++) g = Math.min(g, u[i] - u[i - 1]);
-            return isFinite(g) && g > 0 ? g : 1;
+    // يجمّع إحداثيات متقاربة في خانات (يتجاهل ضوضاء ١-٢ بكسل) ويرجّع المراكز ودالة الفهرسة.
+    const clusterAxis = (values, tol) => {
+        const sorted = [...new Set(values)].sort((a, b) => a - b);
+        const centers = [];
+        let group = [sorted[0]];
+        for (let i = 1; i < sorted.length; i++) {
+            if (sorted[i] - sorted[i - 1] <= tol) group.push(sorted[i]);
+            else { centers.push(group.reduce((s, v) => s + v, 0) / group.length); group = [sorted[i]]; }
+        }
+        centers.push(group.reduce((s, v) => s + v, 0) / group.length);
+        const indexOf = (v) => {
+            let best = 0, bd = Infinity;
+            centers.forEach((c, i) => { const d = Math.abs(c - v); if (d < bd) { bd = d; best = i; } });
+            return best;
         };
-        const SEAT = 30, GAP = 8;
-        const scale = (SEAT + GAP) / Math.min(minGap(xs), minGap(ys));
-        const W = (maxX - minX) * scale + SEAT;
-        const H = (maxY - minY) * scale + SEAT;
+        return { centers, indexOf };
+    };
+
+    // مخطط العربة بالمواقع الحقيقية (topLeft.x/y) — يعرض ٢ أو ٤... في الصف حسب العربة تلقائيًا.
+    const seatPlan = (pts) => {
+        const xC = clusterAxis(pts.map(p => p.topLeft.x), 20); // أعمدة على طول العربة
+        const yC = clusterAxis(pts.map(p => p.topLeft.y), 20); // مقاعد عرضية (٢ / ٤ / ٥...)
+        const cols = xC.centers.length, rows = yC.centers.length;
+
+        // الممر = أكبر فجوة بين الصفوف العرضية (لو واضحة).
+        let aisleAfter = -1, maxGap = 0;
+        for (let i = 1; i < rows; i++) {
+            const g = yC.centers[i] - yC.centers[i - 1];
+            if (g > maxGap) { maxGap = g; aisleAfter = i - 1; }
+        }
+        const avgGap = rows > 1 ? (yC.centers[rows - 1] - yC.centers[0]) / (rows - 1) : 0;
+        if (maxGap < avgGap * 1.3) aisleAfter = -1;
+
+        const SEAT = 28, GX = 6, GY = 6, AISLE = 16;
+        const colW = SEAT + GX, rowH = SEAT + GY;
 
         const seats = pts.map(p => {
             const isSeat = (p.params?.kind ?? 'seat') === 'seat';
             const ok = isSeat && p.available && !p.sold && !p.locked;
-            const left = (p.topLeft.x - minX) * scale;
-            const top = (p.topLeft.y - minY) * scale;
+            const left = xC.indexOf(p.topLeft.x) * colW;
+            const row = yC.indexOf(p.topLeft.y);
+            const top = row * rowH + (aisleAfter >= 0 && row > aisleAfter ? AISLE : 0);
             const price = Math.round((p.cost || 0) / 100);
             const cushion = !isSeat ? 'bg-slate-100 text-slate-300'
                 : ok ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400';
-            const backSide = p.params?.dir === 'right' ? 'right-0.5' : 'left-0.5';
             const backColor = ok ? 'bg-emerald-700' : 'bg-slate-300';
+            const backSide = p.params?.dir === 'right' ? 'right-0.5' : 'left-0.5';
             const title = `${isSeat ? 'مقعد ' : ''}${p.number} — ${ok ? 'متاح' : (isSeat ? 'محجوز' : (p.params?.kind || ''))}${price && isSeat ? ' — ' + price + ' ج.م' : ''}`;
             return `<div class="absolute" style="left:${left}px;top:${top}px;width:${SEAT}px;height:${SEAT}px" title="${title}">
                 <div class="relative w-full h-full rounded-md grid place-items-center ${cushion}">
@@ -62,6 +80,9 @@ window.EnrLive = (() => {
                 </div>
             </div>`;
         }).join('');
+
+        const W = cols * colW - GX;
+        const H = rows * rowH - GY + (aisleAfter >= 0 ? AISLE : 0);
 
         return `
             <div class="mt-3">
