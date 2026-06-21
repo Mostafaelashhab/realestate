@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 // تذكير قبل ميعاد القطار (يتطلّب cron يشغّل: php artisan schedule:run كل دقيقة).
 Schedule::command('push:remind')->everyMinute()->withoutOverlapping();
+// تنبيه الركّاب الواقفين بالمقاعد المتاحة قبل القيام.
+Schedule::command('alerts:scan')->everyMinute()->withoutOverlapping();

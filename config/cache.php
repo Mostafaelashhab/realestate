@@ -129,8 +129,22 @@ return [
     | storage. By default, no PHP classes will be unserialized from your
     | cache to prevent gadget chain attacks if your APP_KEY is leaked.
     |
+    | We cache Eloquent results (محطات/قطارات/أسعار) on a self-owned database
+    | cache, so we allow exactly those classes instead of disabling the
+    | protection entirely. أي صنف يُكاش ولا يُذكر هنا سيُعيد نفس خطأ
+    | __PHP_Incomplete_Class عند القراءة — فأضِفه إلى القائمة.
+    |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        \Illuminate\Support\Collection::class,
+        \Illuminate\Database\Eloquent\Collection::class,
+        \App\Models\Station::class,
+        \App\Models\Train::class,
+        \App\Models\TrainStop::class,
+        \App\Models\Fare::class,
+        \Carbon\Carbon::class,
+        \Carbon\CarbonImmutable::class,
+    ],
 
 ];

@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StandingAlertController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TrainController;
@@ -27,6 +28,7 @@ Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lo
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');
 Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->name('trains.status');
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
+Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
 
 // مشاركة الرحلة لحظيًا مع الأهل.

@@ -188,6 +188,70 @@
         </script>
     </section>
 
+    {{-- تنبيه الراكب الواقف: المقاعد المتاحة قبل القيام --}}
+    @if (config('push.vapid_public'))
+        <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
+            <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="alert" class="w-5 h-5 text-amber-500"/> واقف ومعندكش مقعد؟</h2>
+            <p class="text-xs text-slate-400 mb-3">هنبّهك بالمقاعد اللي لسه متباعتش قبل قيام القطار من محطتك بـ ٥ دقائق — يمكن تلاقي مكان.</p>
+
+            <div id="sa-form" class="space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="text-xs text-slate-500">محطة ركوبك
+                        <select id="sa-from" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rail-500/30">
+                            @foreach ($scheduleStops as $s)
+                                <option value="{{ $s->station_id }}" @selected($origin && $s->station_id === $origin->id)>{{ $s->station->name_ar }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="text-xs text-slate-500">وجهتك
+                        <select id="sa-to" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rail-500/30">
+                            @foreach ($scheduleStops as $s)
+                                <option value="{{ $s->station_id }}" @selected($terminal && $s->station_id === $terminal->id)>{{ $s->station->name_ar }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                </div>
+                <button id="sa-activate" type="button"
+                    class="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-[.99] text-white font-bold rounded-2xl px-4 py-3 transition">
+                    <x-icon name="alert" class="w-5 h-5"/> فعّل تنبيه المقاعد
+                </button>
+            </div>
+            <p id="sa-msg" hidden class="text-sm font-bold mt-2"></p>
+        </section>
+
+        <script>
+            (() => {
+                const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+                const URL = @json(route('trains.standing', $train));
+                const btn = document.getElementById('sa-activate');
+                const msg = document.getElementById('sa-msg');
+                const fromSel = document.getElementById('sa-from');
+                const toSel = document.getElementById('sa-to');
+
+                btn.addEventListener('click', async () => {
+                    msg.hidden = true;
+                    if (fromSel.value === toSel.value) { msg.hidden = false; msg.className = 'text-sm font-bold mt-2 text-red-600'; msg.textContent = 'اختار محطتين مختلفتين.'; return; }
+                    btn.disabled = true; btn.textContent = 'جاري التفعيل…';
+                    const endpoint = window.QMPush && await window.QMPush.subscribe(@json($train->number));
+                    if (!endpoint) { msg.hidden = false; msg.className = 'text-sm font-bold mt-2 text-red-600'; msg.textContent = 'لازم تسمح بالإشعارات.'; btn.disabled = false; btn.textContent = 'فعّل تنبيه المقاعد'; return; }
+                    try {
+                        const res = await fetch(URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: JSON.stringify({ from_station_id: +fromSel.value, to_station_id: +toSel.value, endpoint }),
+                        });
+                        const j = await res.json();
+                        msg.hidden = false;
+                        msg.className = 'text-sm font-bold mt-2 ' + (res.ok ? 'text-rail-700' : 'text-red-600');
+                        msg.textContent = res.ok ? (j.message || 'تم تفعيل التنبيه ✓') : (j.error || 'تعذّر التفعيل.');
+                        if (res.ok) document.getElementById('sa-form').hidden = true;
+                    } catch (e) { msg.hidden = false; msg.className = 'text-sm font-bold mt-2 text-red-600'; msg.textContent = 'تعذّر التفعيل، جرّب تاني.'; }
+                    btn.disabled = false; btn.textContent = 'فعّل تنبيه المقاعد';
+                });
+            })();
+        </script>
+    @endif
+
     {{-- مشاركة الرحلة لحظيًا مع الأهل --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="share" class="w-5 h-5 text-rail-600"/> شارك رحلتك لحظيًا</h2>

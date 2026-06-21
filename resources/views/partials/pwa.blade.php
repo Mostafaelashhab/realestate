@@ -91,7 +91,7 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     body: JSON.stringify({ endpoint: j.endpoint, keys: j.keys, train_number: trainNumber || null }),
                 });
-                return true;
+                return j.endpoint; // الـ endpoint (truthy) عند النجاح
             },
         };
 
