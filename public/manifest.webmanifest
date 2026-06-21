@@ -1,0 +1,26 @@
+{
+    "name": "قطارات مصر — مواعيد وأسعار",
+    "short_name": "قطارات مصر",
+    "description": "مواعيد وأسعار قطارات مصر، والمقاعد المتاحة، في مكان واحد.",
+    "lang": "ar",
+    "dir": "rtl",
+    "start_url": "/?source=pwa",
+    "scope": "/",
+    "id": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f1f5f9",
+    "theme_color": "#0b6340",
+    "categories": ["travel", "navigation", "utilities"],
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "البحث عن قطار", "url": "/", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "الغرامات", "url": "/fines" },
+        { "name": "بلّغ عن خطأ", "url": "/report" }
+    ]
+}

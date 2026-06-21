@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0b6340">
     <title>@yield('title', 'قطارات مصر') — قطارات مصر</title>
+
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="قطارات مصر">
+
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=tajawal:400,500,700,800" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -13,11 +23,11 @@
 </head>
 
 <body class="bg-slate-100 text-slate-800 min-h-screen">
-    <div class="app-shell mx-auto max-w-xl min-h-screen bg-slate-100 flex flex-col relative shadow-xl">
+    <div class="app-shell w-full mx-auto max-w-xl min-h-screen bg-slate-100 flex flex-col relative shadow-xl">
 
         {{-- شريط علوي --}}
         <header class="sticky top-0 z-30 bg-linear-to-l from-rail-800 to-rail-600 text-white">
-            <div class="px-4 pt-3 pb-3 flex items-center gap-3">
+            <div class="px-4 pb-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 @php $isHome = request()->routeIs('home'); @endphp
                 @unless ($isHome)
                     <a href="{{ url()->previous() }}"
@@ -63,6 +73,8 @@
             </div>
         </nav>
     </div>
+
+    @include('partials.pwa')
 </body>
 
 </html>

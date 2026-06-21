@@ -23,3 +23,14 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# PWA: نوع المحتوى الصحيح للمانيفست + عدم تخزين الـ service worker طويلًا
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+<IfModule mod_headers.c>
+    <Files "sw.js">
+        Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </Files>
+</IfModule>

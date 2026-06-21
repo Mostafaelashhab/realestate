@@ -159,7 +159,7 @@
 
         <form action="{{ route('search') }}" method="GET" class="flex gap-2">
             <input type="text" name="number" inputmode="numeric" placeholder="رقم القطار (مثال: 936)" required
-                class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
+                class="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
             <button type="submit" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold rounded-2xl px-6 transition whitespace-nowrap">
                 اعرض
             </button>
