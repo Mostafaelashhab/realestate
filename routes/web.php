@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\EnrSnapshotController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PromoController;
@@ -29,6 +30,9 @@ Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->na
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
+
+// التقاط بيانات الهيئة من متصفّح المستخدم (تحديث الأسعار والمواعيد تلقائيًا).
+Route::post('/enr-snapshot', [EnrSnapshotController::class, 'store'])->middleware('throttle:30,1')->name('enr.snapshot');
 
 // اشتراكات إشعارات الويب (Push).
 Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:30,1')->name('push.subscribe');
