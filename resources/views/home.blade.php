@@ -229,6 +229,8 @@
         </form>
     </section>
 
+    @include('partials.permissions')
+
     {{-- وجهات شائعة --}}
     @if ($popular->isNotEmpty())
         <section class="mb-4">
