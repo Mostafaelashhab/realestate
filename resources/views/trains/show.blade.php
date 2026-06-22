@@ -5,13 +5,13 @@
 @section('og_desc', trim((\App\Support\Format::time($depart) ? \App\Support\Format::time($depart).' ← '.\App\Support\Format::time($arrive).' · ' : '') . ($duration ? $duration.' · ' : '') . 'مواعيد وأسعار رحلتك على قطارات مصر.'))
 
 @section('content')
-    {{-- هوية القطار --}}
-    <div class="flex items-center gap-2 mb-4 flex-wrap">
-        <span class="bg-rail-700 text-white text-sm font-bold px-3 py-1 rounded-lg">قطار {{ $train->number }}</span>
-        <span class="text-slate-600 text-sm">{{ $train->type_label }}</span>
+    {{-- هوية القطار (هيرو) --}}
+    <div class="bg-linear-to-l from-rail-800 to-rail-600 text-white rounded-3xl p-4 mb-4 flex items-center gap-2 flex-wrap shadow-lg shadow-rail-800/20">
+        <span class="bg-white/15 ring-1 ring-white/20 text-base font-extrabold px-3 py-1 rounded-lg">قطار {{ $train->number }}</span>
+        <span class="text-rail-50/90 text-sm">{{ $train->type_label }}</span>
         @if ($train->active)
-            <span class="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">
-                <x-icon name="check" class="w-3.5 h-3.5"/> مؤكد التشغيل
+            <span class="inline-flex items-center gap-1 text-xs bg-white/15 px-2 py-1 rounded-md">
+                <x-icon name="check" class="w-3.5 h-3.5"/> مؤكد
             </span>
         @endif
 
@@ -19,11 +19,11 @@
             <button type="button" data-share
                 data-share-title="قطار {{ $train->number }}@if ($origin && $terminal) — {{ $origin->name_ar }} ← {{ $terminal->name_ar }}@endif"
                 aria-label="مشاركة"
-                class="w-9 h-9 grid place-items-center rounded-full ring-1 ring-slate-200 text-slate-400 hover:bg-rail-50 hover:text-rail-600 transition">
+                class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 text-white transition">
                 <x-icon name="share" class="w-5 h-5"/>
             </button>
             <button id="fav-btn" type="button" aria-label="إضافة للمفضلة"
-                class="w-9 h-9 grid place-items-center rounded-full ring-1 ring-slate-200 text-slate-300 hover:bg-amber-50 transition">
+                class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 text-white/80 transition">
                 <x-icon name="star" class="w-5 h-5"/>
             </button>
         </div>
@@ -40,9 +40,8 @@
             const isFav = () => get().some(f => f.number === num);
             const paint = () => {
                 const on = isFav();
-                btn.classList.toggle('text-amber-500', on);
-                btn.classList.toggle('ring-amber-200', on);
-                btn.classList.toggle('text-slate-300', !on);
+                btn.classList.toggle('text-amber-400', on);
+                btn.classList.toggle('text-white/80', ! on);
             };
             btn.addEventListener('click', () => {
                 let list = get();

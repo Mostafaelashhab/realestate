@@ -76,9 +76,12 @@
                 </div>
                 <div class="flex-1 flex flex-col items-center text-slate-400">
                     <div class="text-xs">{{ $r['duration'] }}</div>
-                    <div class="w-full border-t border-dashed border-slate-300 my-1 relative">
-                        <x-icon name="dot" class="absolute -top-1.5 right-0 w-3 h-3 text-rail-500"/>
-                        <x-icon name="train" class="absolute -top-2.5 left-0 w-4 h-4 text-slate-400"/>
+                    <div class="w-full flex items-center gap-1 my-1.5">
+                        <x-icon name="dot" class="w-2.5 h-2.5 shrink-0 text-rail-500"/>
+                        <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                        <x-icon name="train" class="w-4 h-4 shrink-0 text-slate-400"/>
+                        <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                        <x-icon name="pin" class="w-3.5 h-3.5 shrink-0 text-amber-500"/>
                     </div>
                     <div class="text-xs">{{ $r['distance'] !== null ? $r['distance'].' كم' : '' }}</div>
                 </div>
