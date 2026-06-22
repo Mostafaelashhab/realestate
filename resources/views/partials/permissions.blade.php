@@ -1,5 +1,5 @@
 {{-- بطاقة طلب إذن الإشعارات (تُطلب بضغطة المستخدم — مش تلقائيًا) --}}
-@if (config('push.vapid_public'))
+@if (config('push.vapid_public') && auth()->check())
     <section id="perm-card" hidden class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 mb-4">
         <div class="flex items-start justify-between gap-2 mb-1">
             <h3 class="font-bold text-sm">فعّل التنبيهات</h3>

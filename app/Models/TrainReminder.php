@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TrainReminder extends Model
 {
     protected $fillable = [
-        'push_subscription_id', 'train_id', 'from_station_id', 'lead_minutes', 'notified_for', 'status',
+        'user_id', 'push_subscription_id', 'train_id', 'from_station_id', 'lead_minutes', 'notified_for', 'status',
     ];
 
     protected $casts = [

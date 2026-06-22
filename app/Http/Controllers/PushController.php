@@ -19,6 +19,7 @@ class PushController extends Controller
         PushSubscription::updateOrCreate(
             ['endpoint_hash' => hash('sha256', $data['endpoint'])],
             [
+                'user_id' => $request->user()?->id,
                 'endpoint' => $data['endpoint'],
                 'p256dh' => $data['keys']['p256dh'],
                 'auth' => $data['keys']['auth'],

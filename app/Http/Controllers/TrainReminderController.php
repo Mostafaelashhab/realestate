@@ -35,7 +35,7 @@ class TrainReminderController extends Controller
 
         TrainReminder::updateOrCreate(
             ['push_subscription_id' => $sub->id, 'train_id' => $train->id, 'from_station_id' => $fromId],
-            ['lead_minutes' => $data['lead_minutes'] ?? 60, 'status' => 'active', 'notified_for' => null]
+            ['user_id' => $request->user()?->id, 'lead_minutes' => $data['lead_minutes'] ?? 60, 'status' => 'active', 'notified_for' => null]
         );
 
         $time = Format::time($stop->departure_time ?? $stop->arrival_time);
@@ -48,9 +48,14 @@ class TrainReminderController extends Controller
 
     public function cancel(Request $request, TrainReminder $reminder)
     {
-        $endpoint = $request->input('endpoint');
-        $sub = $reminder->pushSubscription;
-        abort_if(! $endpoint || ! $sub || ! hash_equals($sub->endpoint_hash, hash('sha256', $endpoint)), 403);
+        $userId = $request->user()?->id;
+        $owns = $userId && $reminder->user_id === $userId;
+        if (! $owns) {
+            $endpoint = $request->input('endpoint');
+            $sub = $reminder->pushSubscription;
+            $owns = $endpoint && $sub && hash_equals($sub->endpoint_hash, hash('sha256', $endpoint));
+        }
+        abort_unless($owns, 403);
 
         $reminder->update(['status' => 'cancelled']);
 

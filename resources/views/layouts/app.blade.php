@@ -71,7 +71,20 @@
                     <x-icon name="moon" class="w-5 h-5 dark:hidden" />
                     <x-icon name="sun" class="w-5 h-5 hidden dark:block" />
                 </button>
-                <span class="text-[11px] bg-white/15 rounded-full px-2.5 py-1">@yield('badge', 'مصر')</span>
+                @auth
+                    <form action="{{ route('logout') }}" method="POST" class="shrink-0">
+                        @csrf
+                        <button type="submit" aria-label="تسجيل الخروج" title="خروج ({{ auth()->user()->name }})"
+                            class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
+                            <x-icon name="logout" class="w-5 h-5" />
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" aria-label="تسجيل الدخول"
+                        class="shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
+                        <x-icon name="user" class="w-5 h-5" />
+                    </a>
+                @endauth
             </div>
         </header>
 

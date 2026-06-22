@@ -85,6 +85,11 @@
         </div>
 
         @if (config('push.vapid_public'))
+            @guest
+                <a href="{{ route('login') }}" class="mt-4 w-full flex items-center justify-center gap-2 text-sm font-bold text-rail-700 bg-rail-50 hover:bg-rail-100 rounded-2xl px-4 py-2.5 transition">
+                    <x-icon name="user" class="w-4 h-4"/> سجّل دخول لتفعيل التنبيه قبل الميعاد
+                </a>
+            @else
             <button id="notify-btn" type="button"
                 class="mt-4 w-full flex items-center justify-center gap-2 text-sm font-bold text-rail-700 bg-rail-50 hover:bg-rail-100 rounded-2xl px-4 py-2.5 transition">
                 <x-icon name="alert" class="w-4 h-4"/> نبّهني قبل ميعاد القطار
@@ -108,6 +113,7 @@
                     });
                 })();
             </script>
+            @endguest
         @endif
     </section>
 
@@ -119,6 +125,11 @@
             <h2 class="font-bold mb-1 flex items-center gap-2"><x-icon name="alert" class="w-5 h-5 text-amber-500"/> واقف ومعندكش مقعد؟</h2>
             <p class="text-xs text-slate-400 mb-3">هنبّهك بالمقاعد اللي لسه متباعتش قبل قيام القطار من محطتك بـ ٥ دقائق — يمكن تلاقي مكان.</p>
 
+            @guest
+                <a href="{{ route('login') }}" class="w-full flex items-center justify-center gap-2 text-sm font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-2xl px-4 py-2.5 transition">
+                    <x-icon name="user" class="w-4 h-4"/> سجّل دخول لتفعيل تنبيه المقاعد
+                </a>
+            @else
             <div id="sa-form" class="space-y-2">
                 <div class="grid grid-cols-2 gap-2">
                     <label class="text-xs text-slate-500">محطة ركوبك
@@ -145,8 +156,10 @@
             <a href="{{ route('alerts.mine') }}" class="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
                 <x-icon name="chevron-right" class="w-3.5 h-3.5"/> شوف طلباتي
             </a>
+            @endguest
         </section>
 
+        @auth
         <script>
             (() => {
                 const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
@@ -178,6 +191,7 @@
                 });
             })();
         </script>
+        @endauth
     @endif
 
     {{-- الدرجات والأسعار الرسمية --}}

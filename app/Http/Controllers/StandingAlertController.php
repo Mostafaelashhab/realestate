@@ -53,6 +53,7 @@ class StandingAlertController extends Controller
                 'service_date' => $serviceDate->toDateString(),
             ],
             [
+                'user_id' => $request->user()?->id,
                 'to_station_id' => $data['to_station_id'],
                 'depart_at' => $departAt,
                 'status' => 'active',
@@ -66,16 +67,22 @@ class StandingAlertController extends Controller
         ]);
     }
 
-    /** قائمة تنبيهات الجهاز الحالي (حسب اشتراك الإشعارات). */
+    /** قائمة تنبيهات المستخدم (بحسابه لو مسجّل، وإلا حسب اشتراك الجهاز). */
     public function mine(Request $request)
     {
-        $endpoint = $request->input('endpoint');
-        $sub = $endpoint ? \App\Models\PushSubscription::where('endpoint_hash', hash('sha256', $endpoint))->first() : null;
-        if (! $sub) {
-            return response()->json(['alerts' => []]);
+        $userId = $request->user()?->id;
+        if ($userId) {
+            $scope = fn ($q) => $q->where('user_id', $userId);
+        } else {
+            $endpoint = $request->input('endpoint');
+            $sub = $endpoint ? \App\Models\PushSubscription::where('endpoint_hash', hash('sha256', $endpoint))->first() : null;
+            if (! $sub) {
+                return response()->json(['seatAlerts' => [], 'reminders' => []]);
+            }
+            $scope = fn ($q) => $q->where('push_subscription_id', $sub->id);
         }
 
-        $seatAlerts = StandingAlert::where('push_subscription_id', $sub->id)
+        $seatAlerts = $scope(StandingAlert::query())
             ->whereIn('status', ['active', 'notified'])
             ->where('depart_at', '>=', Carbon::now()->subDay())
             ->with(['train', 'fromStation', 'toStation'])
@@ -93,7 +100,7 @@ class StandingAlertController extends Controller
                 'status_label' => $a->status === 'notified' ? 'تم التنبيه' : 'مفعّل',
             ]);
 
-        $reminders = \App\Models\TrainReminder::where('push_subscription_id', $sub->id)
+        $reminders = $scope(\App\Models\TrainReminder::query())
             ->where('status', 'active')
             ->with(['train.stops.station', 'fromStation'])
             ->get()
@@ -116,16 +123,25 @@ class StandingAlertController extends Controller
         return response()->json(['seatAlerts' => $seatAlerts, 'reminders' => $reminders]);
     }
 
-    /** إلغاء تنبيه (يتأكد إنه لنفس الجهاز عبر الـ endpoint). */
+    /** إلغاء تنبيه (يملكه المستخدم بحسابه أو بجهازه عبر الـ endpoint). */
     public function cancel(Request $request, StandingAlert $alert)
     {
-        $endpoint = $request->input('endpoint');
-        $sub = $alert->pushSubscription;
-        abort_if(! $endpoint || ! $sub || ! hash_equals($sub->endpoint_hash, hash('sha256', $endpoint)), 403);
-
+        abort_unless($this->owns($request, $alert), 403);
         $alert->update(['status' => 'cancelled']);
 
         return response()->json(['ok' => true]);
+    }
+
+    private function owns(Request $request, $model): bool
+    {
+        $userId = $request->user()?->id;
+        if ($userId && $model->user_id === $userId) {
+            return true;
+        }
+        $endpoint = $request->input('endpoint');
+        $sub = $model->pushSubscription;
+
+        return $endpoint && $sub && hash_equals($sub->endpoint_hash, hash('sha256', $endpoint));
     }
 
     /** @return array{0: ?Carbon, 1: ?Carbon} [service_date, depart_at] */

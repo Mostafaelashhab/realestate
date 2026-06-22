@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StandingAlert extends Model
 {
     protected $fillable = [
-        'train_id', 'from_station_id', 'to_station_id', 'push_subscription_id',
+        'user_id', 'train_id', 'from_station_id', 'to_station_id', 'push_subscription_id',
         'service_date', 'depart_at', 'status', 'notified_at',
     ];
 

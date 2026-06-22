@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EnrSnapshotController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\HomeController;
@@ -19,6 +20,15 @@ use App\Http\Controllers\TrainStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// المصادقة
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+});
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::view('/favorites', 'favorites')->name('favorites');
@@ -29,10 +39,10 @@ Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lo
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');
 Route::get('/trains/{train}/status', [TrainStatusController::class, 'show'])->name('trains.status');
 Route::post('/trains/{train}/status', [TrainStatusController::class, 'store'])->middleware('throttle:6,1')->name('trains.status.store');
-Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware('throttle:10,1')->name('trains.standing');
+Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.standing');
 
 // تذكير بميعاد قطار.
-Route::post('/trains/{train}/reminder', [TrainReminderController::class, 'store'])->middleware('throttle:10,1')->name('trains.reminder');
+Route::post('/trains/{train}/reminder', [TrainReminderController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.reminder');
 Route::post('/reminders/{reminder}/cancel', [TrainReminderController::class, 'cancel'])->middleware('throttle:20,1')->name('reminders.cancel');
 
 // طلباتي: تنبيهات الجهاز (مواعيد + مقاعد).
@@ -45,7 +55,7 @@ Route::get('/stations/{station}', [StationController::class, 'show'])->name('sta
 Route::post('/enr-snapshot', [EnrSnapshotController::class, 'store'])->middleware('throttle:30,1')->name('enr.snapshot');
 
 // اشتراكات إشعارات الويب (Push).
-Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware('throttle:30,1')->name('push.subscribe');
+Route::post('/push/subscribe', [PushController::class, 'subscribe'])->middleware(['auth','throttle:30,1'])->name('push.subscribe');
 Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
 
 // الإبلاغ عن خطأ في ميعاد أو سعر أو مشكلة عامة.

@@ -7,8 +7,14 @@
         <x-icon name="alert" class="w-6 h-6 text-rail-700"/>
         <h1 class="text-xl font-bold">طلباتي</h1>
     </div>
-    <p class="text-sm text-slate-500 mb-4">التنبيهات اللي فعّلتها على هذا الجهاز.</p>
+    <p class="text-sm text-slate-500 mb-4">التنبيهات اللي فعّلتها بحسابك.</p>
 
+    @guest
+        <x-empty icon="user">
+            سجّل دخول عشان تشوف طلباتك وتفعّل التنبيهات.
+            <a href="{{ route('login') }}" class="block mt-3 mx-auto w-fit bg-rail-600 text-white font-bold rounded-2xl px-6 py-2.5">تسجيل الدخول</a>
+        </x-empty>
+    @else
     <div id="alerts-loading" class="text-sm text-slate-400">جاري التحميل…</div>
     <div id="alerts-wrap" class="space-y-6"></div>
 
@@ -79,9 +85,9 @@
             }
 
             (async () => {
+                // مسجّل دخول: نجيب طلباته بحسابه (الـ endpoint اختياري للإلغاء من نفس الجهاز).
                 const endpoint = window.QMPush ? await window.QMPush.endpoint() : null;
                 loading.hidden = true;
-                if (!endpoint) { empty.hidden = false; return; }
                 try {
                     const data = await (await post('{{ route('alerts.list') }}', { endpoint })).json();
                     render(data, endpoint);
@@ -89,4 +95,5 @@
             })();
         })();
     </script>
+    @endguest
 @endsection
