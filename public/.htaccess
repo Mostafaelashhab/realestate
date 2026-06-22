@@ -24,11 +24,22 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# PWA: نوع المحتوى الصحيح للمانيفست + عدم تخزين الـ service worker طويلًا
+# PWA: نوع المحتوى الصحيح للمانيفست
 <IfModule mod_mime.c>
     AddType application/manifest+json .webmanifest
 </IfModule>
+
+# ضغط النصوص (أسرع تحميل)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/javascript application/json image/svg+xml application/manifest+json
+</IfModule>
+
+# كاش طويل للأصول الثابتة (مبصومة بالهاش/الإصدار فآمنة) — تحميل فوري عند الزيارة التانية
 <IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2?|ttf|png|jpe?g|gif|svg|ico|webp)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # الـ service worker لازم يفضل طازة (يتحدّث فورًا) — لازم بعد الكتلة اللي فوق
     <Files "sw.js">
         Header set Cache-Control "no-cache, max-age=0, must-revalidate"
         Header set Service-Worker-Allowed "/"

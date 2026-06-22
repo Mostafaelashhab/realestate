@@ -430,19 +430,31 @@
                 btn.addEventListener('click', () => loadLive());
                 dateInput.addEventListener('change', () => loadLive());
 
-                // لو جاي من إشعار المقاعد (#live)، ننزل لقسم المقاعد المتاحة.
-                function maybeScroll() {
+                // نجلب التوافر اللحظي لمّا القسم يقرب من الشاشة فقط (أسرع تحميل + طلبات أقل).
+                let loaded = false;
+                const loadOnce = () => { if (!loaded) { loaded = true; loadLive(); } };
+                const section = document.getElementById('live');
+
+                function start() {
+                    if ('IntersectionObserver' in window && section) {
+                        const io = new IntersectionObserver((entries) => {
+                            if (entries.some((e) => e.isIntersecting)) { loadOnce(); io.disconnect(); }
+                        }, { rootMargin: '300px' });
+                        io.observe(section);
+                    } else {
+                        loadOnce();
+                    }
+                    // لو جاي من إشعار المقاعد (#live) ننزل للقسم (وده هيشغّل الجلب).
                     if (location.hash === '#live') {
-                        document.getElementById('live')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        loadOnce();
                     }
                 }
 
-                // app.js (EnrLive) يُحمّل كموديول مؤجّل، فننتظر اكتمال تحميله قبل الجلب التلقائي.
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => { loadLive(); maybeScroll(); });
+                    document.addEventListener('DOMContentLoaded', start);
                 } else {
-                    loadLive();
-                    maybeScroll();
+                    start();
                 }
             })();
         </script>
