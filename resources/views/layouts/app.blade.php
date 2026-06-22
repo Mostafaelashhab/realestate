@@ -28,15 +28,6 @@
     <meta name="twitter:description" content="{{ $ogDesc }}">
     <meta name="twitter:image" content="{{ url('/icons/icon-512.png') }}">
 
-    {{-- الوضع الليلي: نطبّقه قبل الرسم لتفادي الوميض --}}
-    <script>
-        try {
-            const t = localStorage.getItem('qm:theme');
-            if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
-        } catch (e) { }
-    </script>
 
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
@@ -66,11 +57,7 @@
                     <x-icon name="train" class="w-7 h-7" />
                     <span>قطارات مصر</span>
                 </a>
-                <button id="theme-toggle" type="button" aria-label="الوضع الليلي"
-                    class="ms-auto shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
-                    <x-icon name="moon" class="w-5 h-5 dark:hidden" />
-                    <x-icon name="sun" class="w-5 h-5 hidden dark:block" />
-                </button>
+
                 @auth
                     <form action="{{ route('logout') }}" method="POST" class="shrink-0">
                         @csrf
