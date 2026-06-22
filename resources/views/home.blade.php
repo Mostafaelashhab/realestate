@@ -287,6 +287,18 @@
         })();
     </script>
 
+    {{-- محفظة التذاكر --}}
+    <a href="{{ route('tickets') }}"
+        class="group flex items-center gap-3 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 mb-3 hover:ring-rail-200 active:scale-[.99] transition">
+        <div class="w-11 h-11 grid place-items-center rounded-2xl bg-rail-50 text-rail-600 shrink-0 group-hover:bg-rail-100 transition">
+            <x-icon name="ticket" class="w-6 h-6"/>
+        </div>
+        <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-sm flex items-center gap-1">محفظة تذاكري <x-icon name="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-rail-500 transition"/></h3>
+            <p class="text-xs text-slate-500 mt-0.5">احفظ صورة تذكرتك واعرضها بدون نت في المحطة</p>
+        </div>
+    </a>
+
     {{-- اختصارات --}}
     <section class="grid grid-cols-2 gap-3">
         <a href="{{ route('fines') }}" class="group bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-amber-200 active:scale-95 transition">

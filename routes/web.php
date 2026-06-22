@@ -32,6 +32,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::view('/favorites', 'favorites')->name('favorites');
+// محفظة تذاكري — تُحفظ على جهاز المستخدم (localStorage) وتعمل بدون نت.
+Route::view('/tickets', 'tickets')->name('tickets');
 // صفحة المسار (SEO) — رابط دائم بالـ slug.
 Route::get('/قطارات/{from}/{to}', [RouteController::class, 'show'])->name('route');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
