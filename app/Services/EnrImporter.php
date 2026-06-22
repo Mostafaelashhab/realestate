@@ -57,17 +57,21 @@ class EnrImporter
         return ['linked' => $linked, 'created' => $created];
     }
 
-    /** @return array{saved:int, skipped:int, trains:array<int,string>} */
-    public function importSearch(array $items): array
+    /**
+     * @param  bool  $allowCreate  ينشئ القطار لو مش موجود (للمشرف فقط، مش للالتقاط العام).
+     * @return array{saved:int, skipped:int, times:int, created:int, trains:array<int,string>}
+     */
+    public function importSearch(array $items, bool $allowCreate = false): array
     {
         $classMap = $this->buildClassMap($items);
 
         $saved = 0;
         $skipped = 0;
         $times = 0;
+        $created = 0;
         $trains = [];
 
-        DB::transaction(function () use ($items, $classMap, &$saved, &$skipped, &$times, &$trains) {
+        DB::transaction(function () use ($items, $classMap, $allowCreate, &$saved, &$skipped, &$times, &$created, &$trains) {
             foreach ($items as $item) {
                 $step = $item['steps'][0] ?? null;
                 if (! $step) {
@@ -76,7 +80,7 @@ class EnrImporter
                     continue;
                 }
 
-                $train = Train::where('number', (string) ($step['train']['name'] ?? ''))->first();
+                $number = trim((string) ($step['train']['name'] ?? ''));
                 $route = $step['route'] ?? [];
                 $fromEnr = $route[0]['id'] ?? null;
                 $toEnr = $route[count($route) - 1]['id'] ?? null;
@@ -84,11 +88,28 @@ class EnrImporter
                 $from = $fromEnr ? Station::where('enr_id', $fromEnr)->first() : null;
                 $to = $toEnr ? Station::where('enr_id', $toEnr)->first() : null;
 
-                if (! $train || ! $from || ! $to) {
+                if ($number === '' || ! $from || ! $to) {
                     $skipped++;
 
                     continue;
                 }
+
+                $train = Train::where('number', $number)->first();
+                if (! $train) {
+                    if (! $allowCreate) {
+                        $skipped++;
+
+                        continue;
+                    }
+                    $train = Train::create([
+                        'number' => $number, 'active' => true,
+                        'source' => 'enr', 'source_updated_at' => now()->toDateString(),
+                    ]);
+                    $created++;
+                }
+
+                // قطار جديد بلا محطات → ننشئ مساره من بيانات الهيئة.
+                $this->ensureStops($train, $route, $step['fromDate'] ?? null, $step['finishDate'] ?? null);
 
                 foreach (($item['classesCostMap'] ?? []) as $classId => $priceP) {
                     $class = $classMap[$classId] ?? ['ar' => 'درجة', 'code' => (string) $classId];
@@ -124,7 +145,33 @@ class EnrImporter
 
         CacheVer::bump('catalog');
 
-        return ['saved' => $saved, 'skipped' => $skipped, 'times' => $times, 'trains' => array_values($trains)];
+        return ['saved' => $saved, 'skipped' => $skipped, 'times' => $times, 'created' => $created, 'trains' => array_values($trains)];
+    }
+
+    /**
+     * ينشئ محطات القطار من مسار الهيئة (لو القطار لسه بلا محطات).
+     * المحطات المطابقة بالـ enr_id فقط، مرتّبة، وبتوقيت الطرفين من الهيئة.
+     */
+    private function ensureStops(Train $train, array $route, ?string $fromDate, ?string $finishDate): void
+    {
+        if ($train->stops()->exists() || count($route) < 2) {
+            return;
+        }
+
+        $count = count($route);
+        $order = 1;
+        foreach ($route as $i => $node) {
+            $station = isset($node['id']) ? Station::where('enr_id', $node['id'])->first() : null;
+            if (! $station) {
+                continue;
+            }
+            $train->stops()->create([
+                'station_id' => $station->id,
+                'stop_order' => $order++,
+                'departure_time' => ($i === 0 && $fromDate) ? Carbon::parse($fromDate)->format('H:i:s') : null,
+                'arrival_time' => ($i === $count - 1 && $finishDate) ? Carbon::parse($finishDate)->format('H:i:s') : null,
+            ]);
+        }
     }
 
     /**

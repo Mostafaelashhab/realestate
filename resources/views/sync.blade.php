@@ -23,6 +23,26 @@
         <span id="sync-progress" class="text-sm text-slate-500 ms-auto"></span>
     </div>
 
+    {{-- إضافة قطار جديد برقمه + جلب كل بياناته من الهيئة --}}
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <h2 class="font-bold text-sm mb-1">إضافة قطار برقمه</h2>
+        <p class="text-xs text-slate-400 mb-3">اكتب رقم القطار واختر مساره (من → إلى) والتاريخ، ونجيب كل بياناته من الهيئة (مواعيد، درجات، أسعار، مقاعد). لو القطار مش موجود هيتضاف تلقائيًا بمحطاته.</p>
+        <div class="flex flex-wrap gap-2 items-center">
+            <input id="add-number" inputmode="numeric" placeholder="رقم القطار" class="w-28 rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+            <select id="add-from" class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm max-w-[10rem]">
+                <option value="">من…</option>
+                @foreach ($stations as $s)<option value="{{ $s->enr_id }}">{{ $s->name_ar }}</option>@endforeach
+            </select>
+            <select id="add-to" class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm max-w-[10rem]">
+                <option value="">إلى…</option>
+                @foreach ($stations as $s)<option value="{{ $s->enr_id }}">{{ $s->name_ar }}</option>@endforeach
+            </select>
+            <input type="date" id="add-date" value="{{ now()->addDay()->toDateString() }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+            <button id="add-btn" class="bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold rounded-lg px-4 py-1.5">جيب وأضف</button>
+        </div>
+        <div id="add-result" class="text-sm mt-3"></div>
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
@@ -169,5 +189,43 @@
         });
 
         stopBtn.addEventListener('click', () => { stopFlag = true; });
+
+        // إضافة قطار برقمه: نجيب من الهيئة (متصفّح) ونرسل للاستيراد (ينشئ القطار لو جديد).
+        document.getElementById('add-btn').addEventListener('click', async () => {
+            const number = document.getElementById('add-number').value.trim();
+            const from = document.getElementById('add-from').value;
+            const to = document.getElementById('add-to').value;
+            const date = document.getElementById('add-date').value;
+            const out = document.getElementById('add-result');
+            const addBtn = document.getElementById('add-btn');
+
+            if (!number || !from || !to || from === to) {
+                out.innerHTML = '<span class="text-amber-600">اكتب رقم القطار واختر محطتين مختلفتين.</span>';
+                return;
+            }
+            addBtn.disabled = true; addBtn.textContent = '...';
+            out.textContent = 'جاري الجلب من الهيئة…';
+
+            try {
+                const res = await fetch(EnrLive.buildUrl(SEARCH_URL, { from, to, number, date }), { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!Array.isArray(data) || !data.length) {
+                    out.innerHTML = '<span class="text-amber-600">الهيئة مرجّعتش رحلات للرقم/المسار/التاريخ ده. اتأكد منهم.</span>';
+                } else {
+                    const imp = await fetch(IMPORT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: JSON.stringify(data),
+                    });
+                    const r = await imp.json();
+                    const added = r.created ? ` — وأُضيف ${r.created} قطار جديد ✓` : '';
+                    out.innerHTML = `<div class="text-emerald-700 mb-2">${CHECK} حُفظ ${r.saved} سعر و${r.times} ميعاد${added}</div>` + EnrLive.render(data);
+                }
+            } catch (e) {
+                out.innerHTML = `<span class="text-red-600">تعذّر الجلب: ${e.message}</span>`;
+            }
+            addBtn.disabled = false; addBtn.textContent = 'جيب وأضف';
+        });
     </script>
 @endsection

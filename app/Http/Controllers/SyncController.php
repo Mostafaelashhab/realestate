@@ -36,9 +36,14 @@ class SyncController extends Controller
                 ];
             });
 
+        // محطات لها كود ENR (لاستخدامها في فورم إضافة قطار جديد).
+        $stations = \App\Models\Station::whereNotNull('enr_id')->orderBy('name_ar')
+            ->get(['id', 'name_ar', 'enr_id']);
+
         return view('sync', [
             'token' => $token,
             'trains' => $trains,
+            'stations' => $stations,
             'searchUrl' => config('enr.search_url'),
         ]);
     }
@@ -52,7 +57,7 @@ class SyncController extends Controller
             return response()->json(['error' => 'بيانات غير صالحة'], 422);
         }
 
-        return response()->json($importer->importSearch($payload));
+        return response()->json($importer->importSearch($payload, allowCreate: true));
     }
 
     private function authorizeToken(string $token): void
