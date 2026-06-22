@@ -65,10 +65,12 @@ class PushRemindCommand extends Command
             }
 
             $station = $stop->station?->name_ar ?? '';
+            $minsLeft = (int) round($now->diffInMinutes($departAt, false));
+            $left = $minsLeft > 0 ? " (بعد ~{$minsLeft} دقيقة)" : '';
             $res = $sender->send(
                 $targets,
                 "قطار {$train->number} قرّب يقوم",
-                "القيام من {$station} الساعة ".Format::time($dep),
+                "القيام من {$station} الساعة ".Format::time($dep).$left,
                 route('trains.show', $train),
             );
             $sent += $res['sent'];
