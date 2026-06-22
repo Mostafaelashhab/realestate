@@ -63,6 +63,24 @@
         });
     })();
 
+    // إلغاء تنبيه (زر data-cancel-alert) — يعيد التحميل بعد النجاح
+    (() => {
+        const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+        document.addEventListener('click', async (e) => {
+            const b = e.target.closest('[data-cancel-alert]');
+            if (!b) return;
+            b.disabled = true; b.textContent = '...';
+            try {
+                const res = await fetch(b.dataset.cancelAlert, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: '{}',
+                });
+                if (res.ok) location.reload(); else { b.disabled = false; b.textContent = 'إلغاء'; }
+            } catch (err) { b.disabled = false; b.textContent = 'إلغاء'; }
+        });
+    })();
+
     // تبديل الوضع الليلي
     (() => {
         const btn = document.getElementById('theme-toggle');

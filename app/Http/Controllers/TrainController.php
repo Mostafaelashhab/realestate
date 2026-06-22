@@ -81,9 +81,22 @@ class TrainController extends Controller
 
         $liveStatus = \App\Models\TrainStatusReport::summaryFor($train->id);
 
+        // تنبيهات المستخدم المفعّلة لهذا القطار/المسار (لإظهار حالة "مفعّل" بدل زر التفعيل).
+        $myReminder = null;
+        $myStandingAlert = null;
+        if ($userId = $request->user()?->id) {
+            $myReminder = \App\Models\TrainReminder::where('user_id', $userId)
+                ->where('train_id', $train->id)->where('from_station_id', $origin?->id)
+                ->where('status', 'active')->first();
+            $myStandingAlert = \App\Models\StandingAlert::where('user_id', $userId)
+                ->where('train_id', $train->id)->where('from_station_id', $origin?->id)
+                ->where('to_station_id', $terminal?->id)->where('status', 'active')->first();
+        }
+
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
-            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares', 'liveStatus'
+            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares', 'liveStatus',
+            'myReminder', 'myStandingAlert'
         ));
     }
 

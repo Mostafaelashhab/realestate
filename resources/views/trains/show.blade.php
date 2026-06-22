@@ -89,6 +89,11 @@
                 <a href="{{ route('login') }}" class="mt-4 w-full flex items-center justify-center gap-2 text-sm font-bold text-rail-700 bg-rail-50 hover:bg-rail-100 rounded-2xl px-4 py-2.5 transition">
                     <x-icon name="user" class="w-4 h-4"/> سجّل دخول لتفعيل التنبيه قبل الميعاد
                 </a>
+            @elseif ($myReminder)
+                <div class="mt-4 w-full flex items-center justify-between gap-2 text-sm font-bold text-rail-700 bg-rail-50 rounded-2xl px-4 py-2.5">
+                    <span class="flex items-center gap-2"><x-icon name="check" class="w-4 h-4"/> تنبيه الميعاد مفعّل</span>
+                    <button type="button" data-cancel-alert="{{ route('reminders.cancel', $myReminder) }}" class="text-xs font-bold text-red-600 hover:underline">إلغاء</button>
+                </div>
             @else
             <button id="notify-btn" type="button"
                 class="mt-4 w-full flex items-center justify-center gap-2 text-sm font-bold text-rail-700 bg-rail-50 hover:bg-rail-100 rounded-2xl px-4 py-2.5 transition">
@@ -129,6 +134,14 @@
                 <a href="{{ route('login') }}" class="w-full flex items-center justify-center gap-2 text-sm font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-2xl px-4 py-2.5 transition">
                     <x-icon name="user" class="w-4 h-4"/> سجّل دخول لتفعيل تنبيه المقاعد
                 </a>
+            @elseif ($myStandingAlert)
+                <div class="w-full flex items-center justify-between gap-2 text-sm font-bold text-amber-700 bg-amber-50 rounded-2xl px-4 py-2.5">
+                    <span class="flex items-center gap-2"><x-icon name="check" class="w-4 h-4"/> تنبيه المقاعد مفعّل</span>
+                    <button type="button" data-cancel-alert="{{ route('alerts.cancel', $myStandingAlert) }}" class="text-xs font-bold text-red-600 hover:underline">إلغاء</button>
+                </div>
+                <a href="{{ route('alerts.mine') }}" class="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
+                    <x-icon name="chevron-right" class="w-3.5 h-3.5"/> شوف طلباتي
+                </a>
             @else
             <div id="sa-form" class="space-y-2">
                 <div class="grid grid-cols-2 gap-2">
@@ -165,6 +178,7 @@
                 const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
                 const URL = @json(route('trains.standing', $train));
                 const btn = document.getElementById('sa-activate');
+                if (!btn) return; // التنبيه مفعّل بالفعل — مفيش فورم
                 const msg = document.getElementById('sa-msg');
                 const fromSel = document.getElementById('sa-from');
                 const toSel = document.getElementById('sa-to');
