@@ -41,6 +41,13 @@
 <div id="qm-toast" hidden
     class="fixed left-1/2 -translate-x-1/2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 bg-slate-900 text-white text-sm rounded-full px-4 py-2 shadow-lg"></div>
 
+{{-- شريط «غير متصل» — يظهر تلقائيًا لما النت يقطع --}}
+<div id="qm-offline" hidden
+    class="fixed inset-x-0 top-0 z-60 bg-amber-500 text-white text-xs font-bold text-center px-3 py-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] flex items-center justify-center gap-1.5">
+    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
+    إنت غير متصل بالنت — بتشوف نسخة محفوظة
+</div>
+
 <script>
     // مشاركة (Web Share API) مع بديل نسخ الرابط
     (() => {
@@ -91,6 +98,16 @@
             const meta = document.querySelector('meta[name=theme-color]');
             if (meta) meta.content = dark ? '#0b1220' : '#0b6340';
         });
+    })();
+
+    // شريط «غير متصل»: يظهر/يختفي مع حالة الاتصال
+    (() => {
+        const bar = document.getElementById('qm-offline');
+        if (!bar) return;
+        const sync = () => { bar.hidden = navigator.onLine; };
+        addEventListener('online', sync);
+        addEventListener('offline', sync);
+        sync();
     })();
 
     (() => {

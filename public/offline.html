@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b6340">
+    <title>غير متصل — قطارات مصر</title>
+    <link rel="icon" href="/favicon.ico?v=7" sizes="any">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: "Tajawal", system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .card {
+            width: 100%;
+            max-width: 24rem;
+        }
+        .badge {
+            width: 96px; height: 96px;
+            margin: 0 auto 1.25rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, #0b6340, #11a06a);
+            display: grid; place-items: center;
+            box-shadow: 0 12px 30px -8px rgba(11, 99, 64, .5);
+        }
+        .badge svg { width: 52px; height: 52px; color: #fff; }
+        h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: .5rem; }
+        p { color: #64748b; line-height: 1.7; font-size: .95rem; margin-bottom: 1.5rem; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+            width: 100%;
+            background: #0b6340; color: #fff;
+            font-weight: 800; font-size: 1rem;
+            border: 0; border-radius: 1rem;
+            padding: .95rem 1rem;
+            cursor: pointer;
+            transition: background .15s, transform .1s;
+            box-shadow: 0 10px 24px -8px rgba(11, 99, 64, .45);
+        }
+        .btn:hover { background: #0a5436; }
+        .btn:active { transform: scale(.98); }
+        .hint {
+            margin-top: 1rem; font-size: .8rem; color: #94a3b8;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #0b1220; color: #e2e8f0; }
+            p { color: #94a3b8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="3" width="16" height="13" rx="3"/>
+                <path d="M4 11h16M9 16l-2.5 4M15 16l2.5 4"/>
+                <circle cx="8.5" cy="13" r="1"/><circle cx="15.5" cy="13" r="1"/>
+            </svg>
+        </div>
+        <h1>إنت غير متصل بالنت</h1>
+        <p>الصفحة دي لسه ما اتفتحتش قبل كده، فمش متخزّنة على جهازك.<br>الصفحات اللي زرتها قبل كده بتشتغل عادي من غير نت.</p>
+        <button class="btn" onclick="location.reload()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            حاول تاني
+        </button>
+        <a href="/" class="hint">↩ الرجوع للرئيسية</a>
+    </div>
+    <script>
+        // أول ما النت يرجع، نعيد التحميل تلقائيًا.
+        addEventListener('online', () => location.reload());
+    </script>
+</body>
+</html>

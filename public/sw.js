@@ -1,11 +1,12 @@
 // Service Worker — قطارات مصر PWA
-const VERSION = 'v11';
+const VERSION = 'v12';
 const CACHE = `qm-${VERSION}`;
-const OFFLINE_URL = '/';
+const OFFLINE_URL = '/offline.html';
 
-// أصول أساسية تُخزّن مسبقًا (الأيقونات + المانيفست + الصفحة الرئيسية كاحتياطي).
+// أصول أساسية تُخزّن مسبقًا (الأيقونات + المانيفست + صفحة عدم الاتصال).
 const PRECACHE = [
     '/',
+    '/offline.html',
     '/manifest.webmanifest',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
