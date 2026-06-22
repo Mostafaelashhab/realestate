@@ -3,7 +3,7 @@
     class="fixed inset-x-0 z-40 px-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))]">
     <div class="mx-auto max-w-xl">
         <div class="bg-white rounded-2xl shadow-xl ring-1 ring-slate-200 p-3 flex items-center gap-3">
-            <img src="/icons/icon-192.png?v=2" alt="" class="w-11 h-11 rounded-xl shrink-0">
+            <img src="/icons/icon-192.png?v=6" alt="" class="w-11 h-11 rounded-xl shrink-0">
             <div class="min-w-0 flex-1">
                 <p class="font-bold text-sm leading-tight">ثبّت تطبيق قطارات مصر</p>
                 <p id="pwa-banner-text" class="text-xs text-slate-500 mt-0.5">وصول أسرع وبدون متصفّح، زي أي تطبيق.</p>
@@ -25,7 +25,7 @@
 {{-- نافذة تثبيت التطبيق (أندرويد/كروم) --}}
 <div id="pwa-modal" hidden class="fixed inset-0 z-50 grid place-items-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center">
-        <img src="/icons/icon-192.png?v=2" alt="" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-md">
+        <img src="/icons/icon-192.png?v=6" alt="" class="w-20 h-20 rounded-2xl mx-auto mb-3 shadow-md">
         <h3 class="text-lg font-extrabold mb-1">ثبّت تطبيق قطارات مصر</h3>
         <p class="text-sm text-slate-500 mb-5 leading-relaxed">وصول أسرع، يشتغل بدون نت، وتنبيهات بمواعيد قطارك — زي أي تطبيق على شاشتك.</p>
         <button id="pwa-modal-install" type="button"
