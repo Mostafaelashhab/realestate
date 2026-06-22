@@ -27,7 +27,7 @@ class AlertsScanCommand extends Command
         StandingAlert::where('status', 'active')->where('depart_at', '<', Carbon::now())->update(['status' => 'expired']);
 
         $due = StandingAlert::where('status', 'active')
-            ->whereBetween('depart_at', [Carbon::now(), Carbon::now()->addMinutes(5)])
+            ->whereBetween('depart_at', [Carbon::now(), Carbon::now()->addMinutes(8)])
             ->with(['train', 'fromStation', 'toStation', 'pushSubscription'])
             ->get()
             ->groupBy(fn ($a) => $a->train_id.'-'.$a->from_station_id.'-'.$a->to_station_id);
@@ -38,7 +38,10 @@ class AlertsScanCommand extends Command
             $a = $group->first();
             $body = $this->bodyFor($enrSeats, $a);
             $title = "قطار {$a->train->number} — مقاعد متاحة؟";
-            $url = route('trains.show', ['train' => $a->train, 'from' => $a->from_station_id, 'to' => $a->to_station_id]);
+            $url = route('trains.show', [
+                'train' => $a->train, 'from' => $a->from_station_id,
+                'to' => $a->to_station_id, 'date' => $a->service_date->toDateString(),
+            ]).'#live';
 
             foreach ($group as $alert) {
                 // نبعت لكل أجهزة المستخدم (بحسابه)، أو للاشتراك المربوط لو ضيف.

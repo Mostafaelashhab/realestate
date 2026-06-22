@@ -302,7 +302,7 @@
 
     {{-- التوافر اللحظي الرسمي — يُجلب تلقائيًا عند فتح الصفحة --}}
     @if ($origin?->enr_id && $terminal?->enr_id)
-        <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5">
+        <section id="live" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 scroll-mt-20">
             <h2 class="font-bold mb-1">المواعيد والمقاعد المتاحة (لحظي)</h2>
             <p class="text-xs text-slate-400 mb-3">مباشرة - مواعيد دقيقة، عربات، درجات، أسعار، ومقاعد متاحة.</p>
 
@@ -322,6 +322,9 @@
                 const btn = document.getElementById('live-btn');
                 const out = document.getElementById('live-result');
                 const dateInput = document.getElementById('live-date');
+                // لو جاي من إشعار/رابط بتاريخ محدد، نستخدمه.
+                const _qDate = new URLSearchParams(location.search).get('date');
+                if (_qDate && /^\d{4}-\d{2}-\d{2}$/.test(_qDate)) dateInput.value = _qDate;
                 const SEARCH_URL = @json(config('enr.search_url'));
                 const TO = @json($terminal->enr_id);
                 const NUMBER = @json($train->number);
@@ -428,11 +431,19 @@
                 btn.addEventListener('click', () => loadLive());
                 dateInput.addEventListener('change', () => loadLive());
 
+                // لو جاي من إشعار المقاعد (#live)، ننزل لقسم المقاعد المتاحة.
+                function maybeScroll() {
+                    if (location.hash === '#live') {
+                        document.getElementById('live')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+
                 // app.js (EnrLive) يُحمّل كموديول مؤجّل، فننتظر اكتمال تحميله قبل الجلب التلقائي.
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => loadLive());
+                    document.addEventListener('DOMContentLoaded', () => { loadLive(); maybeScroll(); });
                 } else {
                     loadLive();
+                    maybeScroll();
                 }
             })();
         </script>
