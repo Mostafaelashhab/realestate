@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\PushSubscription;
+use App\Services\WebPushSender;
 use Illuminate\Http\Request;
 
 class PushController extends Controller
 {
-    public function subscribe(Request $request)
+    public function subscribe(Request $request, WebPushSender $sender)
     {
         $data = $request->validate([
             'endpoint' => ['required', 'string', 'max:1000'],
@@ -16,7 +17,7 @@ class PushController extends Controller
             'train_number' => ['nullable', 'string', 'max:20'],
         ]);
 
-        PushSubscription::updateOrCreate(
+        $sub = PushSubscription::updateOrCreate(
             ['endpoint_hash' => hash('sha256', $data['endpoint'])],
             [
                 'user_id' => $request->user()?->id,
@@ -26,6 +27,11 @@ class PushController extends Controller
                 'train_number' => $data['train_number'] ?? null,
             ]
         );
+
+        // إشعار ترحيب فوري عند أول اشتراك — تأكيد للمستخدم إن الإشعارات شغّالة.
+        if ($sub->wasRecentlyCreated) {
+            $sender->send(collect([$sub]), 'تم تفعيل الإشعارات ✓', 'هنبّهك بمواعيد قطارك والمقاعد المتاحة.', '/');
+        }
 
         return response()->json(['ok' => true]);
     }

@@ -33,17 +33,20 @@ class WebPushSender
         ]]);
 
         $payload = json_encode(['title' => $title, 'body' => $body, 'url' => $url], JSON_UNESCAPED_UNICODE);
-        $byEndpoint = [];
 
         foreach ($subscriptions as $s) {
-            $byEndpoint[$s->endpoint] = $s;
-            $webPush->queueNotification(
-                Subscription::create([
-                    'endpoint' => $s->endpoint,
-                    'keys' => ['p256dh' => $s->p256dh, 'auth' => $s->auth],
-                ]),
-                $payload
-            );
+            try {
+                $webPush->queueNotification(
+                    Subscription::create([
+                        'endpoint' => $s->endpoint,
+                        'keys' => ['p256dh' => $s->p256dh, 'auth' => $s->auth],
+                    ]),
+                    $payload
+                );
+            } catch (\Throwable $e) {
+                // اشتراك تالف (مفاتيح غير صالحة) — نتجاهله بدل ما نكسر الدفعة.
+                continue;
+            }
         }
 
         $sent = 0;
