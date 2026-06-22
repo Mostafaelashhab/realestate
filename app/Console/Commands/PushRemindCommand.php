@@ -34,8 +34,18 @@ class PushRemindCommand extends Command
 
         foreach ($reminders as $r) {
             $train = $r->train;
-            $sub = $r->pushSubscription;
-            if (! $train || ! $sub || ! $train->runsOnDay($now->dayOfWeek)) {
+            if (! $train || ! $train->runsOnDay($now->dayOfWeek)) {
+                continue;
+            }
+
+            // نبعت لكل أجهزة المستخدم (بحسابه)، أو للاشتراك المربوط لو ضيف.
+            $targets = $r->user_id
+                ? \App\Models\PushSubscription::where('user_id', $r->user_id)->get()
+                : collect();
+            if ($targets->isEmpty() && $r->pushSubscription) {
+                $targets = collect([$r->pushSubscription]);
+            }
+            if ($targets->isEmpty()) {
                 continue;
             }
 
@@ -56,7 +66,7 @@ class PushRemindCommand extends Command
 
             $station = $stop->station?->name_ar ?? '';
             $res = $sender->send(
-                collect([$sub]),
+                $targets,
                 "قطار {$train->number} قرّب يقوم",
                 "القيام من {$station} الساعة ".Format::time($dep),
                 route('trains.show', $train),

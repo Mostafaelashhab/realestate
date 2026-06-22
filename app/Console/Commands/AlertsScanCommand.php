@@ -41,10 +41,17 @@ class AlertsScanCommand extends Command
             $url = route('trains.show', ['train' => $a->train, 'from' => $a->from_station_id, 'to' => $a->to_station_id]);
 
             foreach ($group as $alert) {
-                if (! $alert->pushSubscription) {
+                // نبعت لكل أجهزة المستخدم (بحسابه)، أو للاشتراك المربوط لو ضيف.
+                $targets = $alert->user_id
+                    ? \App\Models\PushSubscription::where('user_id', $alert->user_id)->get()
+                    : collect();
+                if ($targets->isEmpty() && $alert->pushSubscription) {
+                    $targets = collect([$alert->pushSubscription]);
+                }
+                if ($targets->isEmpty()) {
                     continue;
                 }
-                $r = $sender->send(collect([$alert->pushSubscription]), $title, $body, $url);
+                $r = $sender->send($targets, $title, $body, $url);
                 $sent += $r['sent'];
             }
 
