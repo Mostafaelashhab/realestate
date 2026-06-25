@@ -358,13 +358,10 @@
                 const LOGIN_URL = @json(route('login'));
                 const PREMIUM_URL = @json(route('premium'));
 
-                // زر «نبّهني أول ما يفضى كرسي» — يظهر لما القطار مكتمل.
+                // زر «نبّهني أول ما يفضى كرسي» — يظهر لما القطار مكتمل (مجاني لأي مسجّل).
                 function seatWatchCta() {
                     if (!IS_AUTH) {
                         return `<a href="${LOGIN_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold px-4 py-3 transition">🔔 سجّل عشان نبّهك أول ما يفضى كرسي</a>`;
-                    }
-                    if (!IS_PREMIUM) {
-                        return `<a href="${PREMIUM_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-linear-to-l from-amber-500 to-amber-600 text-white text-sm font-extrabold px-4 py-3 transition shadow-lg shadow-amber-500/25">⭐ فعّل Premium: نبّهنا أول ما يفضى كرسي</a>`;
                     }
                     return `<button type="button" data-seatwatch class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white text-sm font-bold px-4 py-3 transition">🔔 نبّهني أول ما يفضى كرسي</button>`;
                 }

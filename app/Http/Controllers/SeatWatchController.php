@@ -8,13 +8,10 @@ use Illuminate\Http\Request;
 
 class SeatWatchController extends Controller
 {
-    /** إنشاء مراقبة مقاعد (Premium فقط). */
+    /** إنشاء مراقبة مقاعد (مجانية لأي مستخدم مسجّل). */
     public function store(Request $request, Train $train)
     {
         $user = $request->user();
-        if (! $user->isPremium()) {
-            return response()->json(['error' => 'premium', 'message' => 'الميزة دي للمشتركين Premium.'], 403);
-        }
 
         $data = $request->validate([
             'from_enr' => ['required', 'string', 'max:40'],
