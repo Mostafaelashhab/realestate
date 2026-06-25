@@ -17,6 +17,9 @@
 @endpush
 
 @section('content')
+    @php
+        $stationsJs = $stations->map(fn ($s) => ['id' => $s->id, 'name' => $s->name_ar, 'lat' => $s->lat, 'lng' => $s->lng])->values();
+    @endphp
     {{-- العروض/البانرات --}}
     @if ($promos->isNotEmpty())
         @php
@@ -115,6 +118,10 @@
                     <input type="text" data-search="from" placeholder="دوّر على محطة…" autocomplete="off"
                         class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
                 </div>
+                <button type="button" id="near-btn" class="inline-flex items-center gap-1.5 text-xs font-bold text-rail-700 hover:text-rail-800 mb-2">
+                    <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/> أقرب محطة ليّ
+                </button>
+                <p id="near-msg" hidden class="text-xs text-amber-600 mb-2"></p>
                 <ul data-list="from" class="max-h-64 overflow-y-auto"></ul>
             </div>
 
@@ -177,7 +184,7 @@
 
         <script>
             (() => {
-                const STATIONS = @json($stations->map(fn ($s) => ['id' => $s->id, 'name' => $s->name_ar])->values());
+                const STATIONS = @json($stationsJs);
                 // تطبيع عربي بسيط (همزات/تاء مربوطة/ألف مقصورة/تشكيل) لبحث أفضل.
                 const norm = (s) => s.replace(/[إأآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[ً-ْٰ]/g, '').trim();
                 const TODAY = @json(now()->toDateString());
@@ -254,6 +261,40 @@
                 paintDays();
 
                 renderList(fromList, '', '', pickFrom);
+
+                // أقرب محطة ليك (تحديد موقع مرة واحدة، من غير تتبّع).
+                const nearBtn = document.getElementById('near-btn');
+                const nearMsg = document.getElementById('near-msg');
+                const nearLabel = nearBtn.innerHTML;
+                const withCoords = STATIONS.filter(s => s.lat && s.lng);
+                const haversine = (la1, lo1, la2, lo2) => {
+                    const toR = (x) => x * Math.PI / 180, R = 6371;
+                    const dLa = toR(la2 - la1), dLo = toR(lo2 - lo1);
+                    const a = Math.sin(dLa / 2) ** 2 + Math.cos(toR(la1)) * Math.cos(toR(la2)) * Math.sin(dLo / 2) ** 2;
+                    return 2 * R * Math.asin(Math.sqrt(a));
+                };
+                const fmtKm = (km) => km < 1 ? Math.round(km * 1000) + ' م' : km.toFixed(km < 10 ? 1 : 0) + ' كم';
+                nearBtn.addEventListener('click', () => {
+                    nearMsg.hidden = true;
+                    if (!navigator.geolocation || !withCoords.length) { nearMsg.textContent = 'تحديد الموقع مش متاح دلوقتي.'; nearMsg.hidden = false; return; }
+                    nearBtn.disabled = true; nearBtn.textContent = 'بنحدد مكانك…';
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude: la, longitude: lo } = pos.coords;
+                        const near = withCoords
+                            .map(s => ({ ...s, km: haversine(la, lo, +s.lat, +s.lng) }))
+                            .sort((a, b) => a.km - b.km).slice(0, 8);
+                        fromList.innerHTML = near.map(s =>
+                            `<li><button type="button" data-id="${s.id}" data-name="${s.name}" class="w-full text-start px-3 py-2.5 rounded-xl text-sm hover:bg-rail-50 active:bg-rail-100 transition flex items-center justify-between gap-2">
+                                <span>${s.name}</span><span class="text-xs text-slate-400 shrink-0">${fmtKm(s.km)}</span></button></li>`
+                        ).join('');
+                        fromList.onclick = (e) => { const b = e.target.closest('[data-id]'); if (b) pickFrom(b.dataset.id, b.dataset.name); };
+                        nearBtn.disabled = false; nearBtn.innerHTML = nearLabel;
+                    }, (err) => {
+                        nearMsg.textContent = err.code === 1 ? 'لازم تسمح بالوصول لمكانك.' : 'تعذّر تحديد مكانك، حاول تاني.';
+                        nearMsg.hidden = false;
+                        nearBtn.disabled = false; nearBtn.innerHTML = nearLabel;
+                    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+                });
 
                 document.getElementById('search-form').addEventListener('submit', (e) => {
                     if (!fromHidden.value || !toHidden.value) { e.preventDefault(); go(!fromHidden.value ? 1 : 2); }
