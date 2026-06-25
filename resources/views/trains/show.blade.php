@@ -183,13 +183,13 @@
             function progressBar(est) {
                 const pct = (est.frac * 100).toFixed(1);
                 const train = `<svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8"/><path d="M7 16l-2 4m12-4l2 4"/></svg>`;
-                return `<div class="mt-4 mb-1">
+                return `<div class="mt-6 mb-1">
                         <div class="relative h-1.5 rounded-full bg-rail-100">
                             <div class="absolute inset-y-0 rounded-full bg-rail-500" style="inset-inline-start:0;inline-size:${pct}%"></div>
                             <span class="absolute -top-3 grid place-items-center w-8 h-8 rounded-full bg-rail-600 text-white ring-4 ring-white shadow-md"
                                 style="inset-inline-start:calc(${pct}% - 16px)">${train}</span>
                         </div>
-                        <div class="flex justify-between items-start mt-2.5 gap-2">
+                        <div class="flex justify-between items-start mt-5 gap-2">
                             <span class="inline-flex items-center gap-1 text-xs font-bold text-rail-700 truncate max-w-[45%]">
                                 <span class="w-2 h-2 rounded-full bg-rail-600 shrink-0"></span>${esc(est.cur)}
                             </span>
