@@ -116,32 +116,66 @@ window.EnrLive = (() => {
         return `<div class="mt-3"><div class="flex flex-wrap gap-1.5 justify-center">${chips}</div>${seatLegend}</div>`;
     };
 
+    // شريحة إحصائية صغيرة
+    const stat = (icon, text) => `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 rounded-full px-2.5 py-1 whitespace-nowrap">${icon} ${text}</span>`;
+
+    // كارت عربة واحدة
+    const coachCard = (sp) => {
+        const cc = sp.coachClass || {};
+        const cls = cc.localizationMap?.ar || cc.shortName || 'درجة';
+        const avail = (sp.availableSeats || []).length;
+        const availBadge = avail
+            ? `<span class="text-xs font-bold bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-1 whitespace-nowrap">${avail} متاح</span>`
+            : `<span class="text-xs font-bold bg-red-50 text-red-600 rounded-full px-2.5 py-1 whitespace-nowrap">مكتمل</span>`;
+        return `
+            <div class="bg-white rounded-2xl border border-slate-200 p-3.5 mb-2.5">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-xs font-bold bg-rail-50 text-rail-700 rounded-lg px-2 py-1 whitespace-nowrap">عربة ${sp.name ?? '—'}</span>
+                        <span class="text-sm font-medium text-slate-700 truncate">${cls}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-sm font-extrabold text-rail-800 whitespace-nowrap">${egp(sp.cost)}</span>
+                        ${availBadge}
+                    </div>
+                </div>
+                ${seatMap(sp.places)}
+            </div>`;
+    };
+
     const trip = (step) => {
         const t = step.train || {};
-        const coaches = (t.servicePoints || []).map(sp => {
-            const cc = sp.coachClass || {};
-            const cls = cc.localizationMap?.ar || cc.shortName || 'درجة';
-            const avail = (sp.availableSeats || []).length;
-            return `
-                <div class="bg-white rounded-lg border border-slate-200 p-3 mb-2">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <div class="font-medium">عربة ${sp.name ?? '—'} · <span class="text-rail-700">${cls}</span></div>
-                        <div class="text-sm">${egp(sp.cost)} · <span class="${avail ? 'text-emerald-700' : 'text-red-600'}">${avail} مقعد متاح</span></div>
-                    </div>
-                    ${seatMap(sp.places)}
-                </div>`;
-        }).join('');
+        const coaches = (t.servicePoints || []).map(coachCard).join('');
+        const seats = step.availableSeats || 0;
 
         return `
             <div class="mb-4">
-                <div class="flex items-center gap-4 flex-wrap text-sm mb-3 bg-white rounded-lg border border-slate-200 p-3">
-                    <span class="font-bold text-lg">${fmtTime(step.fromDate)}</span>
-                    <span class="text-slate-400">←</span>
-                    <span class="font-bold text-lg">${fmtTime(step.finishDate)}</span>
-                    <span class="inline-flex items-center gap-1 text-slate-500">${ICN.clock} ${step.duration} د</span>
-                    <span class="inline-flex items-center gap-1 text-slate-500">${ICN.ruler} ${step.totalDistance} كم</span>
-                    <span class="inline-flex items-center gap-1 text-slate-500">${ICN.seat} ${step.availableSeats} مقعد متاح</span>
-                    <span class="inline-flex items-center gap-1 text-slate-500">${ICN.station} ${(step.route || []).length} محطة</span>
+                <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="text-center min-w-0">
+                            <div class="text-xl font-extrabold leading-none">${fmtTime(step.fromDate)}</div>
+                            <div class="text-[11px] text-slate-400 mt-1">قيام</div>
+                        </div>
+                        <div class="flex-1 flex flex-col items-center px-1">
+                            <span class="text-[11px] text-slate-400 mb-1">${step.duration} د</span>
+                            <div class="w-full flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rail-600 shrink-0"></span>
+                                <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                                <span class="text-rail-500 shrink-0">${ICN.seat}</span>
+                                <span class="flex-1 border-t border-dashed border-slate-300"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                            </div>
+                        </div>
+                        <div class="text-center min-w-0">
+                            <div class="text-xl font-extrabold leading-none">${fmtTime(step.finishDate)}</div>
+                            <div class="text-[11px] text-slate-400 mt-1">وصول</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 justify-center mt-3 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 whitespace-nowrap font-bold ${seats ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}">${ICN.seat} ${seats} مقعد متاح</span>
+                        ${stat(ICN.ruler, `${step.totalDistance} كم`)}
+                        ${stat(ICN.station, `${(step.route || []).length} محطة`)}
+                    </div>
                 </div>
                 ${coaches || '<p class="text-sm text-slate-400">لا توجد تفاصيل عربات.</p>'}
             </div>`;

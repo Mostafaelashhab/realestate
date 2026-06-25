@@ -317,7 +317,7 @@
                 // محطات قيام أبعد على نفس القطار (الأقرب فالأبعد).
                 const ALTS = @json($boardingAlternatives);
 
-                const errBox = (msg) => `<p class="text-sm text-red-600">${msg} جرّب زر «تحديث» أو الحجز بالأعلى.</p>`;
+                const errBox = (msg) => `<div class="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">${msg} جرّب زر «تحديث» تاني.</div>`;
                 const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
 
                 // إرسال رد الهيئة للموقع لتحديث المواعيد/الأسعار — مرّة كل ساعة لكل (مسار+تاريخ).
