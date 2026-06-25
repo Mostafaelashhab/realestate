@@ -60,6 +60,17 @@ class TrainController extends Controller
                 ->values()
             : collect();
 
+        // كل محطات القطار اللي ليها كود ENR (لاختيار محطة قيام/وصول مختلفة عند الكراسي).
+        $routeStops = $train->stops
+            ->filter(fn ($s) => $s->station?->enr_id)
+            ->sortBy('stop_order')
+            ->map(fn ($s) => [
+                'enr' => (string) $s->station->enr_id,
+                'name' => $s->station->name_ar,
+                'order' => $s->stop_order,
+            ])
+            ->values();
+
         // كل أسعار القطار تُكاش مرة واحدة (تتغيّر فقط عند الاستيراد) ونشتق منها.
         $trainFares = \Illuminate\Support\Facades\Cache::remember(
             \App\Support\CacheVer::key('catalog', "train:{$train->id}:fares"),
@@ -95,7 +106,7 @@ class TrainController extends Controller
 
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
-            'depart', 'arrive', 'duration', 'boardingAlternatives', 'stationFares', 'liveStatus',
+            'depart', 'arrive', 'duration', 'boardingAlternatives', 'routeStops', 'stationFares', 'liveStatus',
             'myReminder', 'myStandingAlert'
         ));
     }

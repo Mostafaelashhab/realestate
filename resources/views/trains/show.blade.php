@@ -281,6 +281,32 @@
             <p class="text-xs text-slate-400 mt-1 mb-3">مباشر من نظام الهيئة — مواعيد دقيقة، عربات، درجات، أسعار، ومقاعد فاضية.
             </p>
 
+            {{-- اختيار محطة القيام والوصول (لجلب توافر قطعة مختلفة من المسار) --}}
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label for="live-from" class="block text-[11px] text-slate-400 mb-1">من محطة</label>
+                    <div class="relative">
+                        <x-icon name="dot" class="absolute top-1/2 -translate-y-1/2 start-2.5 w-2.5 h-2.5 text-rail-600 pointer-events-none"/>
+                        <select id="live-from" class="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 ps-7 pe-3 py-2 text-sm font-medium focus:bg-white focus:border-rail-400 focus:outline-none">
+                            @foreach ($routeStops as $s)
+                                <option value="{{ $s['enr'] }}" @selected($origin?->enr_id == $s['enr'])>{{ $s['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="live-to" class="block text-[11px] text-slate-400 mb-1">إلى محطة</label>
+                    <div class="relative">
+                        <x-icon name="pin" class="absolute top-1/2 -translate-y-1/2 start-2.5 w-3 h-3 text-amber-500 pointer-events-none"/>
+                        <select id="live-to" class="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 ps-7 pe-3 py-2 text-sm font-medium focus:bg-white focus:border-rail-400 focus:outline-none">
+                            @foreach ($routeStops as $s)
+                                <option value="{{ $s['enr'] }}" @selected($terminal?->enr_id == $s['enr'])>{{ $s['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center gap-2 flex-wrap mb-3">
                 <div class="relative flex-1 min-w-40">
                     <x-icon name="calendar"
@@ -301,14 +327,18 @@
                 const btn = document.getElementById('live-btn');
                 const out = document.getElementById('live-result');
                 const dateInput = document.getElementById('live-date');
+                const fromSel = document.getElementById('live-from');
+                const toSel = document.getElementById('live-to');
                 // لو جاي من إشعار/رابط بتاريخ محدد، نستخدمه.
                 const _qDate = new URLSearchParams(location.search).get('date');
                 if (_qDate && /^\d{4}-\d{2}-\d{2}$/.test(_qDate)) dateInput.value = _qDate;
                 const SEARCH_URL = @json(config('enr.search_url'));
-                const TO = @json($terminal->enr_id);
                 const NUMBER = @json($train->number);
                 const ORIGIN_ENR = @json($origin->enr_id);
-                const ORIGIN_NAME = @json($origin->name_ar);
+                const TERMINAL_ENR = @json($terminal->enr_id);
+                const ROUTE = @json($routeStops); // [{enr,name,order}] لترتيب المحطات
+                const orderOf = (enr) => ROUTE.find(s => s.enr === enr)?.order;
+                const nameOf = (enr) => ROUTE.find(s => s.enr === enr)?.name ?? '';
                 const SKELETON = '<div class="animate-pulse space-y-3">' +
                     '<div class="bg-white rounded-lg border border-slate-200 p-3">' +
                     '<div class="flex gap-2 mb-3"><div class="h-5 w-14 bg-slate-200 rounded"></div><div class="h-5 w-14 bg-slate-200 rounded"></div><div class="h-5 w-20 bg-slate-200 rounded"></div></div>' +
@@ -355,14 +385,21 @@
                                 </div>`;
                 }
 
-                async function loadLive(fromEnr, fromName) {
+                async function loadLive() {
                     if (typeof EnrLive === 'undefined') {
                         out.innerHTML = errBox('تعذّر تحميل أداة العرض.');
                         return;
                     }
 
-                    const from = fromEnr || ORIGIN_ENR;
-                    const name = fromName || ORIGIN_NAME;
+                    const from = fromSel.value, to = toSel.value;
+                    const name = nameOf(from), toName = nameOf(to);
+                    const fo = orderOf(from), too = orderOf(to);
+
+                    // لازم محطة القيام تبقى قبل محطة الوصول في المسار.
+                    if (fo == null || too == null || fo >= too) {
+                        out.innerHTML = errBox('اختار محطة قيام قبل محطة الوصول.');
+                        return;
+                    }
 
                     btn.disabled = true;
                     btn.textContent = 'جاري الجلب…';
@@ -373,13 +410,14 @@
                     const timer = setTimeout(() => controller.abort(), 25000);
 
                     try {
-                        const url = EnrLive.buildUrl(SEARCH_URL, { from, to: TO, number: NUMBER, date: dateInput.value });
+                        const url = EnrLive.buildUrl(SEARCH_URL, { from, to, number: NUMBER, date: dateInput.value });
                         const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         const data = await res.json();
 
-                        const heading = fromEnr
-                            ? `<p class="text-sm text-rail-700 font-bold mb-2">التوافر من ${name} (محطة أبعد)</p>`
+                        // عنوان يوضّح القطعة المعروضة لو مختلفة عن المسار الافتراضي.
+                        const heading = (from !== ORIGIN_ENR || to !== TERMINAL_ENR)
+                            ? `<p class="text-sm text-rail-700 font-bold mb-2">التوافر: ${name} ← ${toName}</p>`
                             : '';
                         let html = heading + EnrLive.render(data);
 
@@ -394,8 +432,9 @@
                         // نلتقط البيانات (مواعيد + أسعار) لتحديث الموقع تلقائيًا — مرة كل ساعة لكل مسار.
                         if (hasTrips) snapshot(data, from);
 
+                        // اختيار محطة قيام أبعد من الاقتراح: نظبط القائمة ونعيد الجلب.
                         out.querySelectorAll('.alt-board').forEach(b =>
-                            b.addEventListener('click', () => loadLive(b.dataset.altEnr, b.dataset.altName)));
+                            b.addEventListener('click', () => { selectFrom(b.dataset.altEnr); loadLive(); }));
                     } catch (e) {
                         out.innerHTML = errBox(e.name === 'AbortError'
                             ? 'انتهت مهلة الاتصال .'
@@ -407,8 +446,20 @@
                     }
                 }
 
+                // يضبط قيمة قائمة محطة القيام (يضيف الخيار لو مش موجود).
+                function selectFrom(enr) {
+                    if (![...fromSel.options].some(o => o.value === enr)) {
+                        const o = document.createElement('option');
+                        o.value = enr; o.textContent = nameOf(enr) || enr;
+                        fromSel.appendChild(o);
+                    }
+                    fromSel.value = enr;
+                }
+
                 btn.addEventListener('click', () => loadLive());
                 dateInput.addEventListener('change', () => loadLive());
+                fromSel.addEventListener('change', () => loadLive());
+                toSel.addEventListener('change', () => loadLive());
 
                 // نجلب التوافر اللحظي لمّا القسم يقرب من الشاشة فقط (أسرع تحميل + طلبات أقل).
                 let loaded = false;
