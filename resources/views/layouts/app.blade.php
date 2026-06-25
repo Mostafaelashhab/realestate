@@ -46,6 +46,42 @@
 </head>
 
 <body class="bg-slate-100 text-slate-800 min-h-screen">
+    {{-- شاشة بداية (تظهر عند فتح التطبيق المثبّت فقط) --}}
+    <div id="qm-splash" style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:linear-gradient(135deg,#0b5036,#11a06a);transition:opacity .45s ease">
+        <div style="text-align:center;color:#fff">
+            <svg viewBox="0 0 260 130" style="width:150px;height:auto;margin:0 auto;animation:qmBob 1.5s ease-in-out infinite" fill="none" aria-hidden="true">
+                <ellipse cx="140" cy="112" rx="92" ry="7" fill="#000" fill-opacity=".15"/>
+                <rect x="58" y="28" width="160" height="10" rx="5" fill="#fff" fill-opacity=".85"/>
+                <rect x="42" y="34" width="190" height="62" rx="18" fill="#fff"/>
+                <g fill="#0a4a31"><rect x="70" y="46" width="26" height="22" rx="6"/><rect x="104" y="46" width="26" height="22" rx="6"/><rect x="138" y="46" width="26" height="22" rx="6"/><rect x="172" y="46" width="40" height="22" rx="6"/></g>
+                <rect x="42" y="80" width="190" height="6" fill="#0a4a31" fill-opacity=".12"/>
+                <circle cx="52" cy="84" r="5" fill="#f59e0b"/>
+                <g fill="#0a4a31"><circle cx="80" cy="100" r="11"/><circle cx="190" cy="100" r="11"/></g>
+                <g fill="#fff"><circle cx="80" cy="100" r="4"/><circle cx="190" cy="100" r="4"/></g>
+            </svg>
+            <p style="font-weight:800;font-size:1.3rem;margin-top:.5rem">قطارات مصر</p>
+            <div style="margin:1.1rem auto 0;width:120px;height:4px;border-radius:9px;background:rgba(255,255,255,.25);overflow:hidden">
+                <span style="display:block;height:100%;width:45%;background:#fff;border-radius:9px;animation:qmSlide 1.1s ease-in-out infinite"></span>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes qmBob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+        @keyframes qmSlide { 0% { transform: translateX(160%) } 100% { transform: translateX(-260%) } }
+    </style>
+    <script>
+        (() => {
+            const s = document.getElementById('qm-splash');
+            const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+            // مايظهرش في المتصفّح، ولا يتكرر في نفس الجلسة (عشان التنقّل بين الصفحات).
+            if (!standalone || sessionStorage.getItem('qm:splash')) { s.style.display = 'none'; return; }
+            try { sessionStorage.setItem('qm:splash', '1'); } catch (e) {}
+            const hide = () => { s.style.opacity = '0'; setTimeout(() => s.remove(), 450); };
+            addEventListener('load', () => setTimeout(hide, 600));
+            setTimeout(hide, 3000); // أمان
+        })();
+    </script>
+
     <div class="app-shell w-full mx-auto max-w-xl min-h-screen bg-slate-100 flex flex-col relative shadow-xl">
 
         {{-- شريط علوي --}}
