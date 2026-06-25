@@ -28,21 +28,47 @@
 @endpush
 
 @section('content')
-    <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <div>
-            <h1 class="text-xl font-bold">قطارات {{ $from->name_ar }} <span class="text-slate-400">←</span> {{ $to->name_ar }}</h1>
-            <p class="text-sm text-slate-500">{{ $date->translatedFormat('l j F Y') }} — {{ $results->count() }} قطار</p>
+    {{-- هيرو المسار --}}
+    <section class="relative overflow-hidden bg-linear-to-br from-rail-800 via-rail-700 to-rail-600 text-white rounded-3xl p-5 mb-4 shadow-xl shadow-rail-800/25">
+        <svg class="absolute -top-8 -start-10 w-44 h-44 text-white/10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M20 0v100M40 0v100M60 0v100M80 0v100"/>
+            <path d="M0 30h100M0 55h100M0 80h100" stroke-dasharray="6 8"/>
+        </svg>
+        <h1 class="sr-only">قطارات {{ $from->name_ar }} إلى {{ $to->name_ar }} — {{ $date->translatedFormat('j F Y') }}</h1>
+        <div class="relative">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-xs font-bold bg-white/15 ring-1 ring-white/20 rounded-full px-3 py-1">{{ $results->count() }} قطار</span>
+                <span class="text-xs text-rail-50/80">{{ $date->translatedFormat('l j F') }}</span>
+                <div class="ms-auto flex items-center gap-1.5">
+                    <button type="button" data-share data-share-title="قطارات {{ $from->name_ar }} ← {{ $to->name_ar }}" aria-label="مشاركة"
+                        class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 active:scale-90 transition">
+                        <x-icon name="share" class="w-4 h-4"/>
+                    </button>
+                    <a href="{{ route('home') }}" aria-label="بحث جديد"
+                        class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 active:scale-90 transition">
+                        <x-icon name="search" class="w-4 h-4"/>
+                    </a>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex-1 min-w-0 text-center">
+                    <div class="text-lg font-extrabold truncate">{{ $from->name_ar }}</div>
+                    <div class="text-[11px] text-rail-50/70 mt-0.5">قيام</div>
+                </div>
+                <div class="flex items-center gap-1 w-24 sm:w-32 shrink-0">
+                    <x-icon name="dot" class="w-2.5 h-2.5 shrink-0 text-white"/>
+                    <span class="flex-1 border-t-2 border-dashed border-white/40"></span>
+                    <x-icon name="train" class="w-4 h-4 shrink-0 text-white"/>
+                    <span class="flex-1 border-t-2 border-dashed border-white/40"></span>
+                    <x-icon name="pin" class="w-3.5 h-3.5 shrink-0 text-amber-300"/>
+                </div>
+                <div class="flex-1 min-w-0 text-center">
+                    <div class="text-lg font-extrabold truncate">{{ $to->name_ar }}</div>
+                    <div class="text-[11px] text-rail-50/70 mt-0.5">وصول</div>
+                </div>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button type="button" data-share data-share-title="قطارات {{ $from->name_ar }} ← {{ $to->name_ar }}"
-                class="w-9 h-9 grid place-items-center rounded-full ring-1 ring-slate-200 text-slate-400 hover:bg-rail-50 hover:text-rail-600 transition">
-                <x-icon name="share" class="w-4 h-4"/>
-            </button>
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-1 text-sm text-rail-700 hover:underline">
-                <x-icon name="refresh" class="w-4 h-4"/> بحث جديد
-            </a>
-        </div>
-    </div>
+    </section>
 
     {{-- مقدمة وصفية (SEO) --}}
     @if ($summary['count'])
