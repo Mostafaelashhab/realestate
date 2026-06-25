@@ -184,26 +184,50 @@
                 const firstDep = eff[0].out, lastArr = eff[eff.length - 1].in;
                 if (lastArr <= firstDep) return null; // رحلة عابرة لمنتصف الليل — نتجنّب تقدير غلط
                 const now = cairoNowMin();
-                if (now < firstDep) {
-                    const diff = firstDep - now;
-                    return { text: `لسه ما قامش — بيقوم ${fmtMin(firstDep)}`, sub: `بعد ~${diff} دقيقة من ${eff[0].name}` };
-                }
-                if (now >= lastArr) return { text: 'المفروض الرحلة خلصت', sub: `الوصول حوالي ${fmtMin(lastArr)}` };
+                const from = eff[0].name, to = eff[eff.length - 1].name;
+                const frac = Math.max(0, Math.min(1, (now - firstDep) / (lastArr - firstDep)));
+                const wrap = (o) => ({ frac, from, to, ...o });
+
+                if (now < firstDep) return wrap({ text: `لسه ما قامش — بيقوم ${fmtMin(firstDep)}`, sub: `بعد ~${firstDep - now} دقيقة من ${from}` });
+                if (now >= lastArr) return wrap({ text: 'المفروض الرحلة خلصت', sub: `الوصول حوالي ${fmtMin(lastArr)}` });
                 for (let i = 0; i < eff.length; i++) {
-                    if (now >= eff[i].in && now <= eff[i].out) return { text: `المفروض دلوقتي في محطة ${eff[i].name}`, sub: '' };
+                    if (now >= eff[i].in && now <= eff[i].out) return wrap({ text: `المفروض دلوقتي في محطة ${eff[i].name}`, sub: '' });
                     if (i < eff.length - 1 && now > eff[i].out && now < eff[i + 1].in)
-                        return { text: `المفروض دلوقتي بين ${eff[i].name} و ${eff[i + 1].name}`, sub: `الوصول ${eff[i + 1].name} ${fmtMin(eff[i + 1].in)}` };
+                        return wrap({ text: `بين ${eff[i].name} و ${eff[i + 1].name}`, sub: `الوصول ${eff[i + 1].name} ${fmtMin(eff[i + 1].in)}` });
                 }
-                return { text: 'القطار في الطريق', sub: '' };
+                return wrap({ text: 'القطار في الطريق', sub: '' });
+            }
+
+            // شريط تقدّم المسار + القطر في مكانه التقديري
+            function progressBar(est) {
+                const pct = (est.frac * 100).toFixed(1);
+                return `<div class="mt-3 mb-1">
+                    <div class="relative h-1.5 rounded-full bg-rail-100">
+                        <div class="absolute inset-y-0 rounded-full bg-rail-500" style="inset-inline-start:0;inline-size:${pct}%"></div>
+                        <span class="absolute -top-2.5 grid place-items-center w-7 h-7 rounded-full bg-rail-600 text-white ring-4 ring-white shadow"
+                            style="inset-inline-start:calc(${pct}% - 14px)">
+                            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8"/><path d="M7 16l-2 4m12-4l2 4"/></svg>
+                        </span>
+                    </div>
+                    <div class="flex justify-between mt-2 text-[11px] text-slate-500">
+                        <span class="truncate max-w-[45%]">${esc(est.from)}</span>
+                        <span class="truncate max-w-[45%] text-amber-600">${esc(est.to)}</span>
+                    </div>
+                </div>`;
             }
 
             function render(s) {
                 if (!s || !s.count) {
                     const est = scheduleEstimate();
                     if (est) {
-                        summaryEl.innerHTML = `<div class="rounded-2xl bg-rail-50 border border-rail-200 p-3">
-                            <div class="flex items-center gap-2"><span class="text-lg leading-none">🚆</span><span class="font-extrabold text-rail-800">${esc(est.text)}</span></div>
-                            <p class="text-xs text-rail-700/70 mt-1">تقدير حسب الجدول — مش بلاغ فعلي${est.sub ? ' · ' + esc(est.sub) : ''}</p>
+                        summaryEl.innerHTML = `<div class="rounded-2xl bg-rail-50 border border-rail-200 p-3.5">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">حسب الجدول</span>
+                                <span class="font-extrabold text-rail-800">${esc(est.text)}</span>
+                            </div>
+                            ${progressBar(est)}
+                            ${est.sub ? `<p class="text-xs text-rail-700/70 mt-1">${esc(est.sub)}</p>` : ''}
+                            <p class="text-[11px] text-slate-400 mt-1.5">تقدير من مواعيد الجدول — مش تتبّع فعلي. لو ركبت القطر، بلّغ تحت 👇</p>
                         </div>`;
                     } else {
                         summaryEl.innerHTML = '<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-500">لسه مفيش بلاغات في آخر ٣ ساعات — كن أول واحد يبلّغ.</div>';
@@ -213,8 +237,8 @@
                 const c = STYLE[s.status] || STYLE.on_time;
                 const notes = (s.recent || []).filter(r => r.note).slice(0, 3)
                     .map(r => `<li class="text-xs text-slate-500">• ${esc(r.note)} <span class="text-slate-400">(${esc(r.ago)})</span></li>`).join('');
-                summaryEl.innerHTML = `<div class="rounded-2xl ${c[0]} border ${c[2]} p-3">
-                    <div class="flex items-center gap-2"><span class="text-lg leading-none">${c[3]}</span><span class="font-extrabold ${c[1]}">${esc(s.headline)}</span></div>
+                summaryEl.innerHTML = `<div class="rounded-2xl ${c[0]} border ${c[2]} p-3.5">
+                    <div class="flex items-center gap-2"><span class="grid place-items-center w-7 h-7 rounded-full bg-white/70 text-base ${c[1]}">${c[3]}</span><span class="font-extrabold text-base ${c[1]}">${esc(s.headline)}</span></div>
                     <p class="text-xs ${c[1]} opacity-80 mt-1">بناءً على ${s.count} بلاغ · آخر بلاغ ${esc(s.last_ago)}</p>
                     ${notes ? `<ul class="mt-2 space-y-0.5">${notes}</ul>` : ''}
                 </div>`;
