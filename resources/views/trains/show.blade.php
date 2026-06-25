@@ -385,6 +385,29 @@
                                 </div>`;
                 }
 
+                // حالة فارغة: القطار مش شغّال في اليوم ده (إجازة/يوم إجازته) + اقتراح أيام قريبة.
+                function dayChip(offset) {
+                    const d = new Date(dateInput.value + 'T00:00');
+                    if (isNaN(d)) return '';
+                    d.setDate(d.getDate() + offset);
+                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    let label;
+                    try { label = new Intl.DateTimeFormat('ar-EG', { weekday: 'long', day: 'numeric', month: 'short' }).format(d); }
+                    catch (e) { label = iso; }
+                    return `<button type="button" data-go-date="${iso}"
+                        class="border border-rail-200 bg-rail-50 hover:bg-rail-100 text-rail-800 text-sm font-bold rounded-xl px-3 py-1.5 transition">${label}</button>`;
+                }
+                function emptyState() {
+                    return `<div class="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-center">
+                        <div class="w-14 h-14 mx-auto mb-3 grid place-items-center rounded-2xl bg-white text-slate-300 ring-1 ring-slate-200">
+                            <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8M7 16l-2 4m12-4l2 4"/></svg>
+                        </div>
+                        <p class="font-bold text-slate-700">القطار ده مش شغّال في اليوم ده</p>
+                        <p class="text-sm text-slate-500 mt-1 leading-relaxed">ممكن يكون إجازة أو يوم إجازته، فمفيش رحلات على نظام الهيئة — حتى لو ميعاده لسه ماجاش. جرّب يوم تاني:</p>
+                        <div class="flex flex-wrap gap-2 justify-center mt-3">${[1, 2, 3].map(dayChip).join('')}</div>
+                    </div>`;
+                }
+
                 async function loadLive() {
                     if (typeof EnrLive === 'undefined') {
                         out.innerHTML = errBox('تعذّر تحميل أداة العرض.');
@@ -419,11 +442,12 @@
                         const heading = (from !== ORIGIN_ENR || to !== TERMINAL_ENR)
                             ? `<p class="text-sm text-rail-700 font-bold mb-2">التوافر: ${name} ← ${toName}</p>`
                             : '';
-                        let html = heading + EnrLive.render(data);
 
-                        // نقترح محطات أبعد فقط لو فيه رحلات فعلاً لكن كلها بدون مقاعد —
-                        // مش لما القطار يكون معاده عدّى أو مش شغّال في اليوم ده (لا رحلات أصلًا).
+                        // الهيئة بترجّع فاضي لو القطار مش شغّال في اليوم ده (إجازة مثلًا) — حتى لو الميعاد ماجاش.
                         const hasTrips = Array.isArray(data) && data.some(i => i.steps && i.steps[0]);
+                        let html = heading + (hasTrips ? EnrLive.render(data) : emptyState());
+
+                        // نقترح محطات أبعد فقط لو فيه رحلات فعلاً لكن كلها بدون مقاعد.
                         if (hasTrips && EnrLive.totalSeats(data) === 0) {
                             html += suggestFarther(name, from);
                         }
@@ -435,6 +459,10 @@
                         // اختيار محطة قيام أبعد من الاقتراح: نظبط القائمة ونعيد الجلب.
                         out.querySelectorAll('.alt-board').forEach(b =>
                             b.addEventListener('click', () => { selectFrom(b.dataset.altEnr); loadLive(); }));
+
+                        // أزرار «جرّب يوم تاني» في الحالة الفارغة.
+                        out.querySelectorAll('[data-go-date]').forEach(b =>
+                            b.addEventListener('click', () => { dateInput.value = b.dataset.goDate; loadLive(); }));
                     } catch (e) {
                         out.innerHTML = errBox(e.name === 'AbortError'
                             ? 'انتهت مهلة الاتصال .'
