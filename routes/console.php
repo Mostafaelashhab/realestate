@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('push:remind')->everyMinute()->withoutOverlapping();
 // تنبيه الركّاب الواقفين بالمقاعد المتاحة قبل القيام.
 Schedule::command('alerts:scan')->everyMinute()->withoutOverlapping();
+// مراقبة المقاعد (Premium): تنبيه أول ما يفضى كرسي.
+Schedule::command('seats:watch')->everyThreeMinutes()->withoutOverlapping();

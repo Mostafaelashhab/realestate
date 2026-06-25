@@ -10,6 +10,7 @@ use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeatWatchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StandingAlertController;
 use App\Http\Controllers\StationController;
@@ -41,6 +42,11 @@ Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, '
 // تذكير بميعاد قطار.
 Route::post('/trains/{train}/reminder', [TrainReminderController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.reminder');
 Route::post('/reminders/{reminder}/cancel', [TrainReminderController::class, 'cancel'])->middleware('throttle:20,1')->name('reminders.cancel');
+
+// مراقبة المقاعد (Premium): نبّهني أول ما يفضى كرسي.
+Route::post('/trains/{train}/seat-watch', [SeatWatchController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('trains.seatwatch');
+Route::post('/seat-watch/{watch}/cancel', [SeatWatchController::class, 'cancel'])->middleware(['auth', 'throttle:20,1'])->name('seatwatch.cancel');
+Route::view('/premium', 'premium')->name('premium');
 
 Route::get('/stations/{station}', [StationController::class, 'show'])->name('stations.show');
 

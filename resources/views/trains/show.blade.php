@@ -269,6 +269,7 @@
     </section>
 
     {{-- التوافر اللحظي الرسمي — يُجلب تلقائيًا عند فتح الصفحة --}}
+    @php $isAuth = auth()->check(); $isPremium = (bool) auth()->user()?->isPremium(); @endphp
     @if ($origin?->enr_id && $terminal?->enr_id)
         <section id="live" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5 scroll-mt-20">
             <h2 class="font-bold flex items-center gap-2">
@@ -349,6 +350,42 @@
 
                 const errBox = (msg) => `<div class="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">${msg} جرّب زر «تحديث» تاني.</div>`;
                 const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
+
+                // مراقبة المقاعد (Premium)
+                const IS_AUTH = @json($isAuth);
+                const IS_PREMIUM = @json($isPremium);
+                const SEATWATCH_URL = @json(route('trains.seatwatch', $train));
+                const LOGIN_URL = @json(route('login'));
+                const PREMIUM_URL = @json(route('premium'));
+
+                // زر «نبّهني أول ما يفضى كرسي» — يظهر لما القطار مكتمل.
+                function seatWatchCta() {
+                    if (!IS_AUTH) {
+                        return `<a href="${LOGIN_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold px-4 py-3 transition">🔔 سجّل عشان نبّهك أول ما يفضى كرسي</a>`;
+                    }
+                    if (!IS_PREMIUM) {
+                        return `<a href="${PREMIUM_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-linear-to-l from-amber-500 to-amber-600 text-white text-sm font-extrabold px-4 py-3 transition shadow-lg shadow-amber-500/25">⭐ فعّل Premium: نبّهنا أول ما يفضى كرسي</a>`;
+                    }
+                    return `<button type="button" data-seatwatch class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white text-sm font-bold px-4 py-3 transition">🔔 نبّهني أول ما يفضى كرسي</button>`;
+                }
+
+                async function onSeatWatch(btn) {
+                    btn.disabled = true; btn.textContent = 'جاري التفعيل…';
+                    try {
+                        const res = await fetch(SEATWATCH_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: JSON.stringify({
+                                from_enr: fromSel.value, to_enr: toSel.value,
+                                from_name: nameOf(fromSel.value), to_name: nameOf(toSel.value),
+                                date: dateInput.value,
+                            }),
+                        });
+                        if (res.status === 403) { location.href = PREMIUM_URL; return; }
+                        if (!res.ok) throw new Error();
+                        btn.outerHTML = '<div class="mt-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold px-4 py-3 text-center">✓ تمام! هنبّهك أول ما يفضى كرسي على المسار ده.</div>';
+                    } catch (e) { btn.disabled = false; btn.textContent = '🔔 نبّهني أول ما يفضى كرسي'; }
+                }
 
                 // إرسال رد الهيئة للموقع لتحديث المواعيد/الأسعار — مرّة كل ساعة لكل (مسار+تاريخ).
                 function snapshot(data, from) {
@@ -447,8 +484,9 @@
                         const hasTrips = Array.isArray(data) && data.some(i => i.steps && i.steps[0]);
                         let html = heading + (hasTrips ? EnrLive.render(data) : emptyState());
 
-                        // نقترح محطات أبعد فقط لو فيه رحلات فعلاً لكن كلها بدون مقاعد.
+                        // لو فيه رحلات لكن كلها بدون مقاعد: نبّهني أول ما يفضى كرسي + اقتراح محطات أبعد.
                         if (hasTrips && EnrLive.totalSeats(data) === 0) {
+                            html += seatWatchCta();
                             html += suggestFarther(name, from);
                         }
                         out.innerHTML = html;
@@ -459,6 +497,12 @@
                         // اختيار محطة قيام أبعد من الاقتراح: نظبط القائمة ونعيد الجلب.
                         out.querySelectorAll('.alt-board').forEach(b =>
                             b.addEventListener('click', () => { selectFrom(b.dataset.altEnr); loadLive(); }));
+
+                        // تفعيل مراقبة المقاعد.
+                        out.querySelectorAll('[data-seatwatch]').forEach(b =>
+                            b.addEventListener('click', () => onSeatWatch(b)));
+
+                        // أزرار «جرّب يوم تاني» في الحالة الفارغة.
 
                         // أزرار «جرّب يوم تاني» في الحالة الفارغة.
                         out.querySelectorAll('[data-go-date]').forEach(b =>
