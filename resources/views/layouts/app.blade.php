@@ -84,9 +84,9 @@
         @php
             $tabs = [
                 ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
-                ['route' => 'tickets', 'icon' => 'ticket', 'label' => 'تذاكري', 'on' => request()->routeIs('tickets')],
-                ['route' => 'alerts.mine', 'icon' => 'alert', 'label' => 'تنبيهاتي', 'on' => request()->routeIs('alerts.mine')],
                 ['route' => 'favorites', 'icon' => 'star', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
+                ['route' => 'alerts.mine', 'icon' => 'alert', 'label' => 'تنبيهاتي', 'on' => request()->routeIs('alerts.mine')],
+                ['route' => 'fines', 'icon' => 'scale', 'label' => 'الغرامات', 'on' => request()->routeIs('fines')],
                 ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ', 'on' => request()->routeIs('report')],
             ];
         @endphp
