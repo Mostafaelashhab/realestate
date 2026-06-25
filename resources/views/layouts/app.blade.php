@@ -51,15 +51,13 @@
         {{-- شريط علوي --}}
         <header class="sticky top-0 z-30 bg-linear-to-l from-rail-800 to-rail-600 text-white">
             <div class="px-4 pb-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-                @php $isHome = request()->routeIs('home'); @endphp
-
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-extrabold text-lg">
                     <x-icon name="train" class="w-7 h-7" />
                     <span>قطارات مصر</span>
                 </a>
 
                 @auth
-                    <form action="{{ route('logout') }}" method="POST" class="shrink-0">
+                    <form action="{{ route('logout') }}" method="POST" class="ms-auto shrink-0">
                         @csrf
                         <button type="submit" aria-label="تسجيل الخروج" title="خروج ({{ auth()->user()->name }})"
                             class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
@@ -68,7 +66,7 @@
                     </form>
                 @else
                     <a href="{{ route('login') }}" aria-label="تسجيل الدخول"
-                        class="shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
+                        class="ms-auto shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 transition">
                         <x-icon name="user" class="w-5 h-5" />
                     </a>
                 @endauth
