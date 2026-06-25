@@ -316,51 +316,58 @@
                 <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
             @endif
         </h2>
-        <div class="overflow-x-auto -mx-1 mt-3">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="text-slate-400 border-b border-slate-200 text-right">
-                        <th class="py-2 font-medium px-1">المحطة</th>
-                        <th class="py-2 font-medium px-1">
-                            <span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3.5 h-3.5"/> الوصول</span>
-                        </th>
-                        <th class="py-2 font-medium px-1">القيام</th>
-                        <th class="py-2 font-medium px-1 whitespace-nowrap text-rail-700">السعر حتى {{ $terminal?->name_ar }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($scheduleStops as $stop)
-                        @php
-                            $edge = $loop->first || $loop->last;
-                            $stationFare = $loop->last ? null : $stationFares->get($stop->station_id);
-                        @endphp
-                        <tr class="border-b border-slate-50 {{ $edge ? 'font-bold text-rail-800' : '' }}">
-                            <td class="py-2.5 px-1 font-medium">
-                                <a href="{{ route('stations.show', $stop->station) }}" class="inline-flex items-center gap-1.5 hover:text-rail-600 transition">
-                                    @if ($loop->first)
-                                        <x-icon name="dot" class="w-2 h-2 text-rail-600 shrink-0"/>
-                                    @elseif ($loop->last)
-                                        <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500 shrink-0"/>
-                                    @else
-                                        <span class="w-2 h-2 rounded-full border border-slate-300 shrink-0"></span>
-                                    @endif
-                                    {{ $stop->station->name_ar }}
-                                </a>
-                            </td>
-                            <td class="py-2.5 px-1 whitespace-nowrap text-slate-600">{{ \App\Support\Format::time($stop->arrival_time) ?? '—' }}</td>
-                            <td class="py-2.5 px-1 whitespace-nowrap text-slate-600">{{ \App\Support\Format::time($stop->departure_time) ?? '—' }}</td>
-                            <td class="py-2.5 px-1 whitespace-nowrap">
-                                @if ($stationFare !== null)
-                                    <span class="font-bold text-rail-700">{{ number_format($stationFare) }}</span> <span class="text-xs text-slate-400">ج.م</span>
-                                @else
-                                    <span class="text-slate-300">—</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        <p class="text-xs text-slate-400 mt-1 mb-1">السعر = حتى {{ $terminal?->name_ar }}</p>
+
+        <ol class="mt-3">
+            @foreach ($scheduleStops as $stop)
+                @php
+                    $isFirst = $loop->first;
+                    $isLast = $loop->last;
+                    $stationFare = $isLast ? null : $stationFares->get($stop->station_id);
+                    $arr = \App\Support\Format::time($stop->arrival_time);
+                    $dep = \App\Support\Format::time($stop->departure_time);
+                @endphp
+                <li class="flex items-stretch gap-3">
+                    {{-- العمود الزمني (نقطة المحطة + الخط الواصل) --}}
+                    <div class="relative flex flex-col items-center w-5 shrink-0">
+                        @if ($isFirst)
+                            <span class="mt-1.5 w-4 h-4 rounded-full bg-rail-600 ring-4 ring-rail-100 shrink-0"></span>
+                        @elseif ($isLast)
+                            <span class="mt-1 text-amber-500 shrink-0"><x-icon name="pin" class="w-5 h-5"/></span>
+                        @else
+                            <span class="mt-2 w-2.5 h-2.5 rounded-full bg-white border-2 border-rail-300 shrink-0"></span>
+                        @endif
+                        @unless ($isLast)
+                            <span class="w-0.5 flex-1 bg-rail-200 my-1"></span>
+                        @endunless
+                    </div>
+
+                    {{-- بيانات المحطة --}}
+                    <div class="flex-1 min-w-0 pb-5">
+                        <div class="flex items-start justify-between gap-2">
+                            <a href="{{ route('stations.show', $stop->station) }}"
+                                class="font-bold {{ $isFirst || $isLast ? 'text-rail-800' : 'text-slate-700' }} hover:text-rail-600 transition truncate">
+                                {{ $stop->station->name_ar }}
+                            </a>
+                            @if ($stationFare !== null)
+                                <span class="shrink-0 text-xs font-bold bg-rail-50 text-rail-700 rounded-lg px-2 py-1 whitespace-nowrap">{{ number_format($stationFare) }} ج.م</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-x-4 mt-1 text-xs text-slate-500">
+                            @if ($arr)
+                                <span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3.5 h-3.5 text-slate-400"/> وصول <b class="text-slate-700">{{ $arr }}</b></span>
+                            @endif
+                            @if ($dep)
+                                <span>قيام <b class="text-slate-700">{{ $dep }}</b></span>
+                            @endif
+                            @unless ($arr || $dep)
+                                <span class="text-slate-300">— الميعاد غير متاح</span>
+                            @endunless
+                        </div>
+                    </div>
+                </li>
+            @endforeach
+        </ol>
 
         <a href="{{ route('report', ['type' => 'schedule', 'train' => $train->number]) }}"
             class="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
