@@ -97,7 +97,7 @@
         })();
     </script>
 
-    {{-- حالة القطر من الركّاب (crowdsourced) — مع تقدير من الجدول لو مفيش بلاغات --}}
+    {{-- فين القطر دلوقتي — تقدير حسب الجدول (وقت القاهرة) --}}
     @php
         $statusStops = $scheduleStops->map(function ($s) {
             $arr = $s->arrival_time ? \Illuminate\Support\Carbon::parse($s->arrival_time) : null;
@@ -111,61 +111,21 @@
     @endphp
     <section id="status" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <div class="flex items-center justify-between gap-2">
-            <h2 class="font-bold flex items-center gap-2"><x-icon name="alert" class="w-5 h-5 text-rail-600"/> حالة القطر دلوقتي</h2>
-            <span class="text-xs text-slate-400 whitespace-nowrap">من الركّاب · آخر ٣ ساعات</span>
+            <h2 class="font-bold flex items-center gap-2"><x-icon name="train" class="w-5 h-5 text-rail-600"/> فين القطر دلوقتي؟</h2>
+            <span class="text-xs text-slate-400 whitespace-nowrap">تقدير حسب الجدول</span>
         </div>
 
         <div id="status-summary" class="mt-3">
             <div class="animate-pulse h-14 bg-slate-100 rounded-2xl"></div>
         </div>
-
-        {{-- بلاغ سريع --}}
-        <div class="mt-4 border-t border-slate-100 pt-4">
-            <p class="text-sm font-medium mb-2">ركبت القطر ده؟ بلّغ غيرك:</p>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" data-report="on_time"
-                    class="report-btn inline-flex items-center gap-1.5 border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-sm font-bold rounded-xl px-3.5 py-2 transition">
-                    <x-icon name="check" class="w-4 h-4"/> في الموعد
-                </button>
-                <button type="button" data-report="delayed"
-                    class="report-btn inline-flex items-center gap-1.5 border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 text-sm font-bold rounded-xl px-3.5 py-2 transition">
-                    <x-icon name="clock" class="w-4 h-4"/> متأخر
-                </button>
-                <button type="button" data-report="cancelled"
-                    class="report-btn inline-flex items-center gap-1.5 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-sm font-bold rounded-xl px-3.5 py-2 transition">
-                    <x-icon name="alert" class="w-4 h-4"/> اتلغى/وقف
-                </button>
-            </div>
-
-            <div id="delay-row" hidden class="mt-3 flex items-center gap-2 flex-wrap">
-                <input id="delay-min" type="number" min="0" max="600" inputmode="numeric" placeholder="التأخير بالدقايق"
-                    class="w-36 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-rail-400 focus:outline-none">
-                <input id="status-note" maxlength="200" placeholder="ملاحظة (اختياري)"
-                    class="flex-1 min-w-40 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:border-rail-400 focus:outline-none">
-                <button id="delay-send" type="button"
-                    class="bg-rail-600 hover:bg-rail-700 active:scale-95 text-white text-sm font-bold rounded-xl px-4 py-2 transition">إرسال</button>
-            </div>
-            <p id="status-msg" hidden class="text-sm mt-2"></p>
-        </div>
     </section>
 
     <script>
         (() => {
-            const SHOW_URL = @json(route('trains.status', $train));
-            const STORE_URL = @json(route('trains.status.store', $train));
-            const CSRF = document.querySelector('meta[name=csrf-token]')?.content;
             const summaryEl = document.getElementById('status-summary');
-            const delayRow = document.getElementById('delay-row');
-            const msgEl = document.getElementById('status-msg');
             const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-            const STYLE = {
-                on_time: ['bg-emerald-50', 'text-emerald-800', 'border-emerald-200', '✓'],
-                delayed: ['bg-amber-50', 'text-amber-800', 'border-amber-200', '⏱'],
-                cancelled: ['bg-red-50', 'text-red-700', 'border-red-200', '✕'],
-            };
-
-            // — تقدير مكان القطر حسب الجدول (وقت القاهرة الحالي) — بديل لما مفيش بلاغات —
+            // — تقدير مكان القطر حسب الجدول (وقت القاهرة الحالي) —
             const STOPS = @json($statusStops);
             function cairoNowMin() {
                 try {
@@ -216,81 +176,26 @@
                 </div>`;
             }
 
-            function render(s) {
-                if (!s || !s.count) {
-                    const est = scheduleEstimate();
-                    if (est) {
-                        summaryEl.innerHTML = `<div class="rounded-2xl bg-rail-50 border border-rail-200 p-3.5">
-                            <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">حسب الجدول</span>
-                                <span class="font-extrabold text-rail-800">${esc(est.text)}</span>
-                            </div>
-                            ${progressBar(est)}
-                            ${est.sub ? `<p class="text-xs text-rail-700/70 mt-1">${esc(est.sub)}</p>` : ''}
-                            <p class="text-[11px] text-slate-400 mt-1.5">تقدير من مواعيد الجدول — مش تتبّع فعلي. لو ركبت القطر، بلّغ تحت 👇</p>
-                        </div>`;
-                    } else {
-                        summaryEl.innerHTML = '<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-500">لسه مفيش بلاغات في آخر ٣ ساعات — كن أول واحد يبلّغ.</div>';
-                    }
+            function render() {
+                const est = scheduleEstimate();
+                if (!est) {
+                    summaryEl.innerHTML = '<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-500">مواعيد الجدول مش كافية لتقدير مكان القطر دلوقتي.</div>';
                     return;
                 }
-                const c = STYLE[s.status] || STYLE.on_time;
-                const notes = (s.recent || []).filter(r => r.note).slice(0, 3)
-                    .map(r => `<li class="text-xs text-slate-500">• ${esc(r.note)} <span class="text-slate-400">(${esc(r.ago)})</span></li>`).join('');
-                summaryEl.innerHTML = `<div class="rounded-2xl ${c[0]} border ${c[2]} p-3.5">
-                    <div class="flex items-center gap-2"><span class="grid place-items-center w-7 h-7 rounded-full bg-white/70 text-base ${c[1]}">${c[3]}</span><span class="font-extrabold text-base ${c[1]}">${esc(s.headline)}</span></div>
-                    <p class="text-xs ${c[1]} opacity-80 mt-1">بناءً على ${s.count} بلاغ · آخر بلاغ ${esc(s.last_ago)}</p>
-                    ${notes ? `<ul class="mt-2 space-y-0.5">${notes}</ul>` : ''}
+                summaryEl.innerHTML = `<div class="rounded-2xl bg-rail-50 border border-rail-200 p-3.5">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">حسب الجدول</span>
+                        <span class="font-extrabold text-rail-800">${esc(est.text)}</span>
+                    </div>
+                    ${progressBar(est)}
+                    ${est.sub ? `<p class="text-xs text-rail-700/70 mt-1">${esc(est.sub)}</p>` : ''}
+                    <p class="text-[11px] text-slate-400 mt-1.5">تقدير من مواعيد الجدول — مش تتبّع فعلي.</p>
                 </div>`;
             }
 
-            function showMsg(text, ok = true) {
-                msgEl.textContent = text;
-                msgEl.className = 'text-sm mt-2 ' + (ok ? 'text-emerald-700' : 'text-red-600');
-                msgEl.hidden = false;
-            }
-
-            async function send(status, extra = {}) {
-                try {
-                    const res = await fetch(STORE_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: JSON.stringify({ status, ...extra }),
-                    });
-                    if (res.status === 429) { showMsg('بلّغت كتير في وقت قصير — استنى شوية.', false); return; }
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    render(await res.json());
-                    delayRow.hidden = true;
-                    document.getElementById('delay-min').value = '';
-                    document.getElementById('status-note').value = '';
-                    showMsg('شكرًا! بلاغك اتسجّل ✓');
-                } catch (e) { showMsg('تعذّر إرسال البلاغ، حاول تاني.', false); }
-            }
-
-            document.querySelectorAll('.report-btn').forEach(b => b.addEventListener('click', () => {
-                const status = b.dataset.report;
-                msgEl.hidden = true;
-                if (status === 'delayed') {
-                    delayRow.hidden = !delayRow.hidden;
-                    if (!delayRow.hidden) document.getElementById('delay-min').focus();
-                    return;
-                }
-                delayRow.hidden = true;
-                send(status);
-            }));
-
-            document.getElementById('delay-send').addEventListener('click', () => {
-                const min = document.getElementById('delay-min').value;
-                const note = document.getElementById('status-note').value.trim();
-                send('delayed', {
-                    delay_minutes: min !== '' ? Number(min) : null,
-                    note: note || null,
-                });
-            });
-
-            // تحميل الملخّص الحالي (لايف، من غير كاش)
-            fetch(SHOW_URL, { headers: { 'Accept': 'application/json' } })
-                .then(r => r.ok ? r.json() : null).then(render).catch(() => render(null));
+            render();
+            // نحدّث المكان كل دقيقة طول ما الصفحة مفتوحة
+            setInterval(render, 60000);
         })();
     </script>
 
