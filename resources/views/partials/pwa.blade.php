@@ -41,6 +41,14 @@
 <div id="qm-toast" hidden
     class="fixed left-1/2 -translate-x-1/2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 bg-slate-900 text-white text-sm rounded-full px-4 py-2 shadow-lg"></div>
 
+{{-- لودر التنقّل بين الصفحات — يظهر أثناء تحميل الصفحة التالية --}}
+<div id="qm-loader" hidden class="fixed inset-0 z-60 grid place-items-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-3">
+        <span class="block w-11 h-11 rounded-full border-4 border-rail-200 border-t-rail-600 animate-spin"></span>
+        <span class="text-sm font-bold text-rail-700">لحظة…</span>
+    </div>
+</div>
+
 {{-- شريط «غير متصل» — يظهر تلقائيًا لما النت يقطع --}}
 <div id="qm-offline" hidden
     class="fixed inset-x-0 top-0 z-60 bg-amber-500 text-white text-xs font-bold text-center px-3 py-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] flex items-center justify-center gap-1.5">
@@ -98,6 +106,47 @@
             const meta = document.querySelector('meta[name=theme-color]');
             if (meta) meta.content = dark ? '#0b1220' : '#0b6340';
         });
+    })();
+
+    // لودر التنقّل: يظهر عند الضغط على أي رابط داخلي (أو إرسال فورم) أثناء تحميل الصفحة التالية
+    (() => {
+        const loader = document.getElementById('qm-loader');
+        if (!loader) return;
+        let timer, safety;
+        const show = () => {
+            timer = setTimeout(() => { loader.hidden = false; }, 150);
+            // أمان: لو التنقّل اتلغى لأي سبب، نخفي اللودر بدل ما يفضل عالق.
+            safety = setTimeout(() => { loader.hidden = true; }, 10000);
+        };
+        const hide = () => { clearTimeout(timer); clearTimeout(safety); loader.hidden = true; };
+
+        const isInternalNav = (a) => {
+            if (!a || a.target === '_blank' || a.hasAttribute('download')) return false;
+            const href = a.getAttribute('href') || '';
+            if (!href || href.startsWith('#') || /^(mailto:|tel:|javascript:)/i.test(href)) return false;
+            let url; try { url = new URL(a.href, location.href); } catch (e) { return false; }
+            if (url.origin !== location.origin) return false;
+            // نفس الصفحة (مجرد hash)؟ مش تنقّل.
+            if (url.pathname === location.pathname && url.search === location.search && url.hash) return false;
+            return true;
+        };
+
+        document.addEventListener('click', (e) => {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            const a = e.target.closest('a[href]');
+            if (a && isInternalNav(a)) show();
+        });
+
+        // الفورمات اللي بتنقّل الصفحة (زي البحث)
+        document.addEventListener('submit', (e) => {
+            const f = e.target;
+            if (e.defaultPrevented || f.target === '_blank' || f.hasAttribute('data-no-loader')) return;
+            show();
+        });
+
+        // إخفاء اللودر لو رجع المستخدم بالـ back (صفحة من كاش المتصفح)
+        addEventListener('pageshow', hide);
+        addEventListener('pagehide', () => clearTimeout(timer));
     })();
 
     // شريط «غير متصل»: يظهر/يختفي مع حالة الاتصال
