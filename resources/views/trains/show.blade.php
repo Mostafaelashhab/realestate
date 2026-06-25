@@ -2,15 +2,17 @@
 
 @section('title', "قطار {$train->number}")
 @section('og_title', "قطار {$train->number}" . ($origin && $terminal ? " — {$origin->name_ar} ← {$terminal->name_ar}" : ''))
-@section('og_desc', trim((\App\Support\Format::time($depart) ? \App\Support\Format::time($depart).' ← '.\App\Support\Format::time($arrive).' · ' : '') . ($duration ? $duration.' · ' : '') . 'مواعيد وأسعار رحلتك على قطارات مصر.'))
+@section('og_desc', trim((\App\Support\Format::time($depart) ? \App\Support\Format::time($depart) . ' ← ' . \App\Support\Format::time($arrive) . ' · ' : '') . ($duration ? $duration . ' · ' : '') . 'مواعيد وأسعار رحلتك على قطارات مصر.'))
 
 @section('content')
     {{-- هوية القطار + ملخّص الرحلة (هيرو) --}}
-    <section class="relative overflow-hidden bg-linear-to-br from-rail-800 via-rail-700 to-rail-600 text-white rounded-3xl p-5 mb-5 shadow-xl shadow-rail-800/25">
+    <section
+        class="relative overflow-hidden bg-linear-to-br from-rail-800 via-rail-700 to-rail-600 text-white rounded-3xl p-5 mb-5 shadow-xl shadow-rail-800/25">
         {{-- زخرفة قضبان خفيفة --}}
-        <svg class="absolute -top-8 -start-10 w-44 h-44 text-white/10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M20 0v100M40 0v100M60 0v100M80 0v100"/>
-            <path d="M0 30h100M0 55h100M0 80h100" stroke-dasharray="6 8"/>
+        <svg class="absolute -top-8 -start-10 w-44 h-44 text-white/10" viewBox="0 0 100 100" fill="none"
+            stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M20 0v100M40 0v100M60 0v100M80 0v100" />
+            <path d="M0 30h100M0 55h100M0 80h100" stroke-dasharray="6 8" />
         </svg>
 
         <div class="relative">
@@ -18,10 +20,11 @@
             <div class="flex items-start gap-2">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="bg-white/15 ring-1 ring-white/20 text-base font-extrabold px-3 py-1 rounded-xl">قطار {{ $train->number }}</span>
+                        <span class="bg-white/15 ring-1 ring-white/20 text-base font-extrabold px-3 py-1 rounded-xl">قطار
+                            {{ $train->number }}</span>
                         @if ($train->active)
                             <span class="inline-flex items-center gap-1 text-xs bg-white/15 px-2 py-1 rounded-md">
-                                <x-icon name="check" class="w-3.5 h-3.5"/> مؤكد
+                                <x-icon name="check" class="w-3.5 h-3.5" /> مؤكد
                             </span>
                         @endif
                     </div>
@@ -33,11 +36,11 @@
                         data-share-title="قطار {{ $train->number }}@if ($origin && $terminal) — {{ $origin->name_ar }} ← {{ $terminal->name_ar }}@endif"
                         aria-label="مشاركة"
                         class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 active:scale-90 text-white transition">
-                        <x-icon name="share" class="w-5 h-5"/>
+                        <x-icon name="share" class="w-5 h-5" />
                     </button>
                     <button id="fav-btn" type="button" aria-label="إضافة للمفضلة"
                         class="w-9 h-9 grid place-items-center rounded-full bg-white/15 hover:bg-white/25 active:scale-90 text-white/80 transition">
-                        <x-icon name="star" class="w-5 h-5"/>
+                        <x-icon name="star" class="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -45,20 +48,22 @@
             {{-- ملخّص الرحلة --}}
             <div class="mt-5 flex items-stretch gap-3">
                 <div class="text-center min-w-0">
-                    <div class="text-3xl font-extrabold whitespace-nowrap leading-none">{{ \App\Support\Format::time($depart) ?? '—' }}</div>
+                    <div class="text-3xl font-extrabold whitespace-nowrap leading-none">
+                        {{ \App\Support\Format::time($depart) ?? '—' }}</div>
                     <div class="text-xs text-rail-50/80 mt-1.5 truncate">{{ $origin?->name_ar }}</div>
                 </div>
 
                 <div class="flex-1 flex flex-col items-center justify-center px-1">
                     @if ($duration)
-                        <div class="text-[11px] bg-white/15 rounded-full px-2 py-0.5 mb-1.5 whitespace-nowrap">{{ $duration }}</div>
+                        <div class="text-[11px] bg-white/15 rounded-full px-2 py-0.5 mb-1.5 whitespace-nowrap">{{ $duration }}
+                        </div>
                     @endif
                     <div class="w-full flex items-center gap-1">
-                        <x-icon name="dot" class="w-2.5 h-2.5 shrink-0 text-white"/>
+                        <x-icon name="dot" class="w-2.5 h-2.5 shrink-0 text-white" />
                         <span class="flex-1 border-t-2 border-dashed border-white/40"></span>
-                        <x-icon name="train" class="w-4 h-4 shrink-0 text-white"/>
+                        <x-icon name="train" class="w-4 h-4 shrink-0 text-white" />
                         <span class="flex-1 border-t-2 border-dashed border-white/40"></span>
-                        <x-icon name="pin" class="w-3.5 h-3.5 shrink-0 text-amber-300"/>
+                        <x-icon name="pin" class="w-3.5 h-3.5 shrink-0 text-amber-300" />
                     </div>
                     @if ($validSegment)
                         <div class="text-[11px] mt-1.5 text-amber-200 font-bold">رحلتك</div>
@@ -66,7 +71,8 @@
                 </div>
 
                 <div class="text-center min-w-0">
-                    <div class="text-3xl font-extrabold whitespace-nowrap leading-none">{{ \App\Support\Format::time($arrive) ?? '—' }}</div>
+                    <div class="text-3xl font-extrabold whitespace-nowrap leading-none">
+                        {{ \App\Support\Format::time($arrive) ?? '—' }}</div>
                     <div class="text-xs text-rail-50/80 mt-1.5 truncate">{{ $terminal?->name_ar }}</div>
                 </div>
             </div>
@@ -77,7 +83,7 @@
         (() => {
             const KEY = 'qm:fav';
             const num = @json($train->number);
-            const label = @json(trim(($origin?->name_ar ? $origin->name_ar.' ← '.$terminal?->name_ar : ($train->type_label ?? ''))));
+            const label = @json(trim(($origin?->name_ar ? $origin->name_ar . ' ← ' . $terminal?->name_ar : ($train->type_label ?? ''))));
             const url = @json(request()->getRequestUri());
             const btn = document.getElementById('fav-btn');
             const get = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } };
@@ -85,12 +91,12 @@
             const paint = () => {
                 const on = isFav();
                 btn.classList.toggle('text-amber-400', on);
-                btn.classList.toggle('text-white/80', ! on);
+                btn.classList.toggle('text-white/80', !on);
             };
             btn.addEventListener('click', () => {
                 let list = get();
                 list = isFav() ? list.filter(f => f.number !== num) : [{ number: num, label, url }, ...list].slice(0, 12);
-                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+                try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { }
                 paint();
             });
             paint();
@@ -111,7 +117,8 @@
     @endphp
     <section id="status" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <div class="flex items-center justify-between gap-2">
-            <h2 class="font-bold flex items-center gap-2"><x-icon name="train" class="w-5 h-5 text-rail-600"/> فين القطر دلوقتي؟</h2>
+            <h2 class="font-bold flex items-center gap-2"><x-icon name="train" class="w-5 h-5 text-rail-600" /> فين القطر
+                دلوقتي؟</h2>
             <span class="text-xs text-slate-400 whitespace-nowrap">تقدير حسب الجدول</span>
         </div>
 
@@ -141,39 +148,58 @@
                 const stops = STOPS.filter(s => s.dep != null || s.arr != null);
                 if (stops.length < 2) return null;
                 const eff = stops.map(s => ({ name: s.name, in: s.arr ?? s.dep, out: s.dep ?? s.arr }));
-                const firstDep = eff[0].out, lastArr = eff[eff.length - 1].in;
+                const firstDep = eff[0].out, lastArr = eff[eff.length - 1].in, last = eff.length - 1;
                 if (lastArr <= firstDep) return null; // رحلة عابرة لمنتصف الليل — نتجنّب تقدير غلط
                 const now = cairoNowMin();
-                const from = eff[0].name, to = eff[eff.length - 1].name;
-                const frac = Math.max(0, Math.min(1, (now - firstDep) / (lastArr - firstDep)));
-                const wrap = (o) => ({ frac, from, to, ...o });
 
-                if (now < firstDep) return wrap({ text: `لسه ما قامش — بيقوم ${fmtMin(firstDep)}`, sub: `بعد ~${firstDep - now} دقيقة من ${from}` });
-                if (now >= lastArr) return wrap({ text: 'المفروض الرحلة خلصت', sub: `الوصول حوالي ${fmtMin(lastArr)}` });
-                for (let i = 0; i < eff.length; i++) {
-                    if (now >= eff[i].in && now <= eff[i].out) return wrap({ text: `المفروض دلوقتي في محطة ${eff[i].name}`, sub: '' });
-                    if (i < eff.length - 1 && now > eff[i].out && now < eff[i + 1].in)
-                        return wrap({ text: `بين ${eff[i].name} و ${eff[i + 1].name}`, sub: `الوصول ${eff[i + 1].name} ${fmtMin(eff[i + 1].in)}` });
+                // قبل القيام
+                if (now < firstDep) return {
+                    text: 'لسه ما قامش', sub: `بيقوم ${fmtMin(firstDep)} من ${eff[0].name} (بعد ~${firstDep - now} دقيقة)`,
+                    cur: eff[0].name, next: eff[1].name, frac: 0, arrived: false,
+                };
+                // وصل آخر محطة
+                if (now >= lastArr) return {
+                    text: `المفروض وصل ${eff[last].name}`, sub: `الوصول حوالي ${fmtMin(lastArr)}`,
+                    cur: eff[last].name, next: null, frac: 1, arrived: true,
+                };
+                // في الطريق — نحدّد القطعة الحالية (المحطة الحالية واللي جايه)
+                for (let i = 0; i < last; i++) {
+                    if (now >= eff[i].in && now <= eff[i].out) return {
+                        text: `في محطة ${eff[i].name}`, sub: `جايه ${eff[i + 1].name} الساعة ${fmtMin(eff[i + 1].in)}`,
+                        cur: eff[i].name, next: eff[i + 1].name, frac: 0, arrived: false,
+                    };
+                    if (now > eff[i].out && now < eff[i + 1].in) {
+                        const f = (now - eff[i].out) / (eff[i + 1].in - eff[i].out);
+                        return {
+                            text: `بين ${eff[i].name} و ${eff[i + 1].name}`, sub: `جايه ${eff[i + 1].name} الساعة ${fmtMin(eff[i + 1].in)}`,
+                            cur: eff[i].name, next: eff[i + 1].name, frac: Math.max(0, Math.min(1, f)), arrived: false,
+                        };
+                    }
                 }
-                return wrap({ text: 'القطار في الطريق', sub: '' });
+                return { text: 'القطار في الطريق', sub: '', cur: eff[0].name, next: eff[last].name, frac: 0.5, arrived: false };
             }
 
-            // شريط تقدّم المسار + القطر في مكانه التقديري
+            // شريط القطعة الحالية: المحطة اللي فيها → اللي جايه + صورة القطر في مكانه
             function progressBar(est) {
                 const pct = (est.frac * 100).toFixed(1);
-                return `<div class="mt-3 mb-1">
-                    <div class="relative h-1.5 rounded-full bg-rail-100">
-                        <div class="absolute inset-y-0 rounded-full bg-rail-500" style="inset-inline-start:0;inline-size:${pct}%"></div>
-                        <span class="absolute -top-2.5 grid place-items-center w-7 h-7 rounded-full bg-rail-600 text-white ring-4 ring-white shadow"
-                            style="inset-inline-start:calc(${pct}% - 14px)">
-                            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8"/><path d="M7 16l-2 4m12-4l2 4"/></svg>
-                        </span>
-                    </div>
-                    <div class="flex justify-between mt-2 text-[11px] text-slate-500">
-                        <span class="truncate max-w-[45%]">${esc(est.from)}</span>
-                        <span class="truncate max-w-[45%] text-amber-600">${esc(est.to)}</span>
-                    </div>
-                </div>`;
+                const train = `<svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8"/><path d="M7 16l-2 4m12-4l2 4"/></svg>`;
+                return `<div class="mt-4 mb-1">
+                        <div class="relative h-1.5 rounded-full bg-rail-100">
+                            <div class="absolute inset-y-0 rounded-full bg-rail-500" style="inset-inline-start:0;inline-size:${pct}%"></div>
+                            <span class="absolute -top-3 grid place-items-center w-8 h-8 rounded-full bg-rail-600 text-white ring-4 ring-white shadow-md"
+                                style="inset-inline-start:calc(${pct}% - 16px)">${train}</span>
+                        </div>
+                        <div class="flex justify-between items-start mt-2.5 gap-2">
+                            <span class="inline-flex items-center gap-1 text-xs font-bold text-rail-700 truncate max-w-[45%]">
+                                <span class="w-2 h-2 rounded-full bg-rail-600 shrink-0"></span>${esc(est.cur)}
+                            </span>
+                            ${est.next
+                                ? `<span class="inline-flex items-center gap-1 text-xs font-bold text-amber-600 truncate max-w-[50%]">
+                                       <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> جايه: ${esc(est.next)}
+                                   </span>`
+                                : `<span class="text-xs font-bold text-emerald-600">وصل ✓</span>`}
+                        </div>
+                    </div>`;
             }
 
             function render() {
@@ -183,14 +209,14 @@
                     return;
                 }
                 summaryEl.innerHTML = `<div class="rounded-2xl bg-rail-50 border border-rail-200 p-3.5">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">حسب الجدول</span>
-                        <span class="font-extrabold text-rail-800">${esc(est.text)}</span>
-                    </div>
-                    ${progressBar(est)}
-                    ${est.sub ? `<p class="text-xs text-rail-700/70 mt-1">${esc(est.sub)}</p>` : ''}
-                    <p class="text-[11px] text-slate-400 mt-1.5">تقدير من مواعيد الجدول — مش تتبّع فعلي.</p>
-                </div>`;
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">حسب الجدول</span>
+                            <span class="font-extrabold text-rail-800">${esc(est.text)}</span>
+                        </div>
+                        ${progressBar(est)}
+                        ${est.sub ? `<p class="text-xs text-rail-700/70 mt-1">${esc(est.sub)}</p>` : ''}
+                        <p class="text-[11px] text-slate-400 mt-1.5">تقدير من مواعيد الجدول — مش تتبّع فعلي.</p>
+                    </div>`;
             }
 
             render();
@@ -202,7 +228,8 @@
     {{-- الدرجات والأسعار الرسمية --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <div class="flex items-baseline justify-between gap-2 mb-1">
-            <h2 class="font-bold flex items-center gap-2"><x-icon name="ticket" class="w-5 h-5 text-rail-600"/> الأسعار الرسمية</h2>
+            <h2 class="font-bold flex items-center gap-2"><x-icon name="ticket" class="w-5 h-5 text-rail-600" /> الأسعار
+                الرسمية</h2>
             @if ($origin && $terminal)
                 <span class="text-xs text-slate-400 truncate">{{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
             @endif
@@ -214,9 +241,11 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 @foreach ($fares as $fare)
                     @php $isCheapest = $fare->price == $minFare; @endphp
-                    <div class="relative rounded-2xl border p-3 {{ $isCheapest ? 'border-rail-300 bg-rail-50 ring-1 ring-rail-200' : 'border-slate-200' }}">
+                    <div
+                        class="relative rounded-2xl border p-3 {{ $isCheapest ? 'border-rail-300 bg-rail-50 ring-1 ring-rail-200' : 'border-slate-200' }}">
                         @if ($isCheapest && $fares->count() > 1)
-                            <span class="absolute -top-2 end-2 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">الأرخص</span>
+                            <span
+                                class="absolute -top-2 end-2 text-[10px] font-bold bg-rail-600 text-white rounded-full px-2 py-0.5">الأرخص</span>
                         @endif
                         <div class="text-xs text-slate-500 truncate">{{ $fare->class_ar }}</div>
                         <div class="text-lg font-extrabold text-rail-800 mt-0.5 whitespace-nowrap">
@@ -227,13 +256,14 @@
             </div>
         @else
             <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-center">
-                <p class="text-sm text-slate-500">الأسعار الرسمية للمسار ده لسه مش محمّلة — هتلاقيها تحت في «المقاعد المتاحة».</p>
+                <p class="text-sm text-slate-500">الأسعار الرسمية للمسار ده لسه مش محمّلة — هتلاقيها تحت في «المقاعد المتاحة».
+                </p>
             </div>
         @endif
 
         <a href="{{ route('report', ['type' => 'price', 'train' => $train->number]) }}"
             class="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
-            <x-icon name="flag" class="w-3.5 h-3.5"/>
+            <x-icon name="flag" class="w-3.5 h-3.5" />
             السعر غلط؟ بلّغنا
         </a>
     </section>
@@ -248,17 +278,19 @@
                 </span>
                 المقاعد المتاحة دلوقتي
             </h2>
-            <p class="text-xs text-slate-400 mt-1 mb-3">مباشر من نظام الهيئة — مواعيد دقيقة، عربات، درجات، أسعار، ومقاعد فاضية.</p>
+            <p class="text-xs text-slate-400 mt-1 mb-3">مباشر من نظام الهيئة — مواعيد دقيقة، عربات، درجات، أسعار، ومقاعد فاضية.
+            </p>
 
             <div class="flex items-center gap-2 flex-wrap mb-3">
                 <div class="relative flex-1 min-w-40">
-                    <x-icon name="calendar" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
+                    <x-icon name="calendar"
+                        class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input type="date" id="live-date" value="{{ now()->toDateString() }}"
                         class="w-full rounded-xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-2 text-sm focus:bg-white focus:border-rail-400 focus:outline-none">
                 </div>
                 <button id="live-btn"
                     class="inline-flex items-center gap-1.5 bg-rail-600 hover:bg-rail-700 active:scale-95 text-white text-sm font-bold rounded-xl px-4 py-2 transition">
-                    <x-icon name="refresh" class="w-4 h-4"/> تحديث
+                    <x-icon name="refresh" class="w-4 h-4" /> تحديث
                 </button>
             </div>
             <div id="live-result"></div>
@@ -292,7 +324,7 @@
                 function snapshot(data, from) {
                     const key = `${NUMBER}:${from}:${dateInput.value}`;
                     let map = {};
-                    try { map = JSON.parse(localStorage.getItem('qm:snap') || '{}'); } catch (e) {}
+                    try { map = JSON.parse(localStorage.getItem('qm:snap') || '{}'); } catch (e) { }
                     if (map[key] && Date.now() - map[key] < 3600000) return;
                     fetch('{{ route('enr.snapshot') }}', {
                         method: 'POST',
@@ -300,8 +332,8 @@
                         body: JSON.stringify(data),
                     }).then(() => {
                         map[key] = Date.now();
-                        try { localStorage.setItem('qm:snap', JSON.stringify(map)); } catch (e) {}
-                    }).catch(() => {});
+                        try { localStorage.setItem('qm:snap', JSON.stringify(map)); } catch (e) { }
+                    }).catch(() => { });
                 }
 
                 // اقتراح محطات أبعد لما مفيش مقاعد من المحطة الحالية.
@@ -312,15 +344,15 @@
                     if (!candidates.length) return '';
                     const chips = candidates.map(a =>
                         `<button type="button" data-alt-enr="${a.enr}" data-alt-name="${a.name}"
-                            class="alt-board border border-rail-200 bg-rail-50 hover:bg-rail-100 text-rail-800 text-sm font-medium rounded-lg px-3 py-1.5 transition">
-                            ${a.name}
-                        </button>`).join('');
+                                    class="alt-board border border-rail-200 bg-rail-50 hover:bg-rail-100 text-rail-800 text-sm font-medium rounded-lg px-3 py-1.5 transition">
+                                    ${a.name}
+                                </button>`).join('');
                     return `
-                        <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                            <p class="text-sm font-bold text-amber-800 mb-1">مفيش مقاعد من ${currentName}؟</p>
-                            <p class="text-xs text-amber-700 mb-3">القطار جاي من محطات أبعد — جرّب تحجز من محطة قبلها وانزل في وجهتك، يمكن يكون فيها مقاعد:</p>
-                            <div class="flex flex-wrap gap-2">${chips}</div>
-                        </div>`;
+                                <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                                    <p class="text-sm font-bold text-amber-800 mb-1">مفيش مقاعد من ${currentName}؟</p>
+                                    <p class="text-xs text-amber-700 mb-3">القطار جاي من محطات أبعد — جرّب تحجز من محطة قبلها وانزل في وجهتك، يمكن يكون فيها مقاعد:</p>
+                                    <div class="flex flex-wrap gap-2">${chips}</div>
+                                </div>`;
                 }
 
                 async function loadLive(fromEnr, fromName) {
@@ -411,11 +443,12 @@
     {{-- جدول المحطات (تفصيلي) --}}
     <section class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-5">
         <h2 class="font-bold flex items-center gap-2 flex-wrap">
-            <x-icon name="station" class="w-5 h-5 text-rail-600"/>
+            <x-icon name="station" class="w-5 h-5 text-rail-600" />
             جدول المحطات
             <span class="text-xs font-normal text-slate-400">({{ $scheduleStops->count() }} محطة)</span>
             @if ($validSegment)
-                <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ← {{ $terminal->name_ar }}</span>
+                <span class="text-xs font-normal text-rail-600">— رحلتك: {{ $origin->name_ar }} ←
+                    {{ $terminal->name_ar }}</span>
             @endif
         </h2>
         <p class="text-xs text-slate-400 mt-1 mb-1">السعر = حتى {{ $terminal?->name_ar }}</p>
@@ -435,7 +468,7 @@
                         @if ($isFirst)
                             <span class="mt-1.5 w-4 h-4 rounded-full bg-rail-600 ring-4 ring-rail-100 shrink-0"></span>
                         @elseif ($isLast)
-                            <span class="mt-1 text-amber-500 shrink-0"><x-icon name="pin" class="w-5 h-5"/></span>
+                            <span class="mt-1 text-amber-500 shrink-0"><x-icon name="pin" class="w-5 h-5" /></span>
                         @else
                             <span class="mt-2 w-2.5 h-2.5 rounded-full bg-white border-2 border-rail-300 shrink-0"></span>
                         @endif
@@ -452,12 +485,15 @@
                                 {{ $stop->station->name_ar }}
                             </a>
                             @if ($stationFare !== null)
-                                <span class="shrink-0 text-xs font-bold bg-rail-50 text-rail-700 rounded-lg px-2 py-1 whitespace-nowrap">{{ number_format($stationFare) }} ج.م</span>
+                                <span
+                                    class="shrink-0 text-xs font-bold bg-rail-50 text-rail-700 rounded-lg px-2 py-1 whitespace-nowrap">{{ number_format($stationFare) }}
+                                    ج.م</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-x-4 mt-1 text-xs text-slate-500">
                             @if ($arr)
-                                <span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3.5 h-3.5 text-slate-400"/> وصول <b class="text-slate-700">{{ $arr }}</b></span>
+                                <span class="inline-flex items-center gap-1"><x-icon name="clock"
+                                        class="w-3.5 h-3.5 text-slate-400" /> وصول <b class="text-slate-700">{{ $arr }}</b></span>
                             @endif
                             @if ($dep)
                                 <span>قيام <b class="text-slate-700">{{ $dep }}</b></span>
@@ -473,7 +509,7 @@
 
         <a href="{{ route('report', ['type' => 'schedule', 'train' => $train->number]) }}"
             class="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rail-600 transition">
-            <x-icon name="flag" class="w-3.5 h-3.5"/>
+            <x-icon name="flag" class="w-3.5 h-3.5" />
             ميعاد غلط؟ بلّغنا
         </a>
     </section>
