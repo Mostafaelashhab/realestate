@@ -82,151 +82,192 @@
         </div>
     </section>
 
-    {{-- بحث المحطتين — يطفو فوق الهيرو --}}
-    <section class="relative -mt-7 bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-4">
+    {{-- بحث على شكل خطوات — يطفو فوق الهيرو --}}
+    <section id="wiz" class="relative -mt-7 bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-4">
         @error('number')
             <div class="flex items-center gap-2 bg-red-50 text-red-700 text-sm rounded-2xl px-4 py-3 mb-4">
                 <x-icon name="alert" class="w-5 h-5 shrink-0"/> {{ $message }}
             </div>
         @enderror
 
-        <form id="search-form" action="{{ route('search') }}" method="GET" class="space-y-4">
-            {{-- مجموعة المحطتين المتصلة + زر التبديل --}}
-            <div class="relative rounded-2xl border border-slate-200 bg-slate-50">
-                {{-- خط واصل بين النقطة والدبوس --}}
-                <span class="absolute start-[1.45rem] top-[2.85rem] h-[calc(100%-5.7rem)] w-px bg-slate-300" aria-hidden="true"></span>
+        {{-- مؤشّر التقدّم --}}
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex-1 flex gap-1.5">
+                <span class="wz-bar h-1.5 flex-1 rounded-full bg-rail-600 transition-colors"></span>
+                <span class="wz-bar h-1.5 flex-1 rounded-full bg-slate-200 transition-colors"></span>
+                <span class="wz-bar h-1.5 flex-1 rounded-full bg-slate-200 transition-colors"></span>
+            </div>
+            <span class="text-xs font-bold text-slate-400 whitespace-nowrap">خطوة <span id="wz-num">1</span>/3</span>
+        </div>
 
-                <x-station-select name="from" placeholder="محطة القيام" icon="dot" icon-class="text-rail-600" round="rounded-t-2xl"/>
+        <form id="search-form" action="{{ route('search') }}" method="GET">
+            <input type="hidden" name="from" id="from">
+            <input type="hidden" name="to" id="to">
 
-                <div class="mx-4 border-t border-slate-200"></div>
+            {{-- خطوة ١: محطة القيام --}}
+            <div data-pane="1" class="wz-pane">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <span class="w-9 h-9 grid place-items-center rounded-xl bg-rail-50 text-rail-600 shrink-0"><x-icon name="dot" class="w-3 h-3"/></span>
+                    <div><p class="font-extrabold leading-tight">من فين؟</p><p class="text-xs text-slate-400">اختار محطة القيام</p></div>
+                </div>
+                <div class="relative mb-2">
+                    <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
+                    <input type="text" data-search="from" placeholder="دوّر على محطة…" autocomplete="off"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                </div>
+                <ul data-list="from" class="max-h-64 overflow-y-auto"></ul>
+            </div>
 
-                <x-station-select name="to" placeholder="محطة الوصول" icon="pin" icon-class="text-amber-500" round="rounded-b-2xl"/>
+            {{-- خطوة ٢: محطة الوصول --}}
+            <div data-pane="2" class="wz-pane" hidden>
+                <button type="button" data-back class="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-rail-600 mb-2"><x-icon name="chevron-right" class="w-4 h-4 rotate-180"/> رجوع</button>
+                <div class="flex items-center gap-2.5 mb-3">
+                    <span class="w-9 h-9 grid place-items-center rounded-xl bg-amber-50 text-amber-500 shrink-0"><x-icon name="pin" class="w-4 h-4"/></span>
+                    <div><p class="font-extrabold leading-tight">رايح فين؟</p><p class="text-xs text-slate-400">من <span data-show="from" class="text-rail-700 font-bold"></span></p></div>
+                </div>
+                <div class="relative mb-2">
+                    <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
+                    <input type="text" data-search="to" placeholder="دوّر على محطة…" autocomplete="off"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                </div>
+                <ul data-list="to" class="max-h-64 overflow-y-auto"></ul>
+            </div>
 
-                {{-- زر تبديل المحطتين --}}
-                <button type="button" id="swap-btn" aria-label="عكس المحطتين"
-                    class="absolute end-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-full bg-white text-rail-600 ring-1 ring-slate-200 shadow-sm hover:bg-rail-50 active:scale-90 transition">
-                    <x-icon name="swap" class="w-4 h-4"/>
+            {{-- خطوة ٣: التاريخ --}}
+            <div data-pane="3" class="wz-pane" hidden>
+                <button type="button" data-back class="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-rail-600 mb-3"><x-icon name="chevron-right" class="w-4 h-4 rotate-180"/> رجوع</button>
+                <div class="flex items-center justify-center gap-2 text-sm font-bold mb-4 bg-slate-50 rounded-2xl py-3 px-3">
+                    <span data-show="from2" class="text-rail-700 truncate"></span>
+                    <x-icon name="arrow-left" class="w-4 h-4 text-slate-400 shrink-0"/>
+                    <span data-show="to2" class="text-amber-600 truncate"></span>
+                </div>
+                <p class="font-extrabold mb-2">إمتى تسافر؟</p>
+                <div class="flex flex-wrap gap-2 mb-3" id="wz-days"></div>
+                <div class="relative mb-4">
+                    <x-icon name="calendar" class="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-400 pointer-events-none"/>
+                    <input type="date" name="date" id="wz-date" value="{{ now()->toDateString() }}"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-12 pe-3 py-3.5 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
+                </div>
+                <button type="submit"
+                    class="w-full flex items-center justify-center gap-2 bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white font-extrabold rounded-2xl px-4 py-4 transition shadow-lg shadow-rail-600/25">
+                    <x-icon name="search" class="w-5 h-5"/>
+                    ابحث عن القطارات
                 </button>
             </div>
-
-            <p id="search-error" hidden class="text-sm text-red-600 flex items-center gap-1.5">
-                <x-icon name="alert" class="w-4 h-4 shrink-0"/> اختار محطة القيام والوصول الأول.
-            </p>
-
-            {{-- التاريخ --}}
-            <div class="relative">
-                <x-icon name="calendar" class="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-400 pointer-events-none"/>
-                <input type="date" name="date" value="{{ now()->toDateString() }}"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-12 pe-3 py-3.5 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
-            </div>
-
-            <button type="submit"
-                class="w-full flex items-center justify-center gap-2 bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white font-extrabold rounded-2xl px-4 py-4 transition shadow-lg shadow-rail-600/25">
-                <x-icon name="search" class="w-5 h-5"/>
-                ابحث عن القطارات
-            </button>
         </form>
+
+        {{-- بحث برقم القطار (اختياري) --}}
+        <div class="mt-4 pt-4 border-t border-slate-100">
+            <button type="button" id="num-toggle" class="mx-auto flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-rail-600 transition">
+                <x-icon name="search" class="w-3.5 h-3.5"/> أو دوّر برقم القطار
+            </button>
+            <form action="{{ route('search') }}" method="GET" id="num-form" hidden class="flex gap-2 mt-3">
+                <input type="text" name="number" inputmode="numeric" placeholder="رقم القطار (مثال: 936)" required
+                    class="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
+                <button type="submit" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold rounded-2xl px-6 transition whitespace-nowrap">
+                    اعرض
+                </button>
+            </form>
+        </div>
+
+        <style>
+            .wz-pane.wz-in { animation: wzIn .25s ease both; }
+            @keyframes wzIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        </style>
 
         <script>
             (() => {
                 const STATIONS = @json($stations->map(fn ($s) => ['id' => $s->id, 'name' => $s->name_ar])->values());
-                // تطبيع عربي بسيط لبحث أفضل (همزات/تاء مربوطة/ألف مقصورة/تشكيل).
-                const norm = (s) => s.replace(/[إأآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
-                    .replace(/[ً-ٰٟ]/g, '').trim();
+                // تطبيع عربي بسيط (همزات/تاء مربوطة/ألف مقصورة/تشكيل) لبحث أفضل.
+                const norm = (s) => s.replace(/[إأآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[ً-ْٰ]/g, '').trim();
+                const TODAY = @json(now()->toDateString());
 
-                function initSelect(root) {
-                    const hidden = root.querySelector('input[type=hidden]');
-                    const trigger = root.querySelector('[data-trigger]');
-                    const panel = root.querySelector('[data-panel]');
-                    const search = root.querySelector('[data-search]');
-                    const list = root.querySelector('[data-list]');
-                    const label = root.querySelector('[data-label]');
-                    const empty = root.querySelector('[data-empty]');
+                const wiz = document.getElementById('wiz');
+                const fromHidden = document.getElementById('from');
+                const toHidden = document.getElementById('to');
+                const panes = { 1: wiz.querySelector('[data-pane="1"]'), 2: wiz.querySelector('[data-pane="2"]'), 3: wiz.querySelector('[data-pane="3"]') };
+                const bars = [...wiz.querySelectorAll('.wz-bar')];
+                const numEl = document.getElementById('wz-num');
+                let step = 1;
 
-                    function render(q = '') {
-                        const nq = norm(q);
-                        const items = STATIONS.filter(s => !nq || norm(s.name).includes(nq));
-                        list.innerHTML = items.slice(0, 60).map(s =>
-                            `<li><button type="button" data-id="${s.id}" data-name="${s.name}"
-                                class="w-full text-start px-4 py-2.5 text-sm hover:bg-rail-50 ${String(s.id) === hidden.value ? 'bg-rail-50 text-rail-700 font-bold' : ''}">${s.name}</button></li>`
-                        ).join('');
-                        empty.hidden = items.length > 0;
-                    }
-                    function open() { panel.hidden = false; render(search.value); search.focus(); }
-                    function close() { panel.hidden = true; }
-                    function pick(id, nm) {
-                        hidden.value = id;
-                        label.textContent = nm;
-                        label.classList.remove('text-slate-400');
-                        label.classList.add('text-slate-800', 'font-medium');
-                        close();
-                    }
-
-                    trigger.addEventListener('click', () => panel.hidden ? open() : close());
-                    search.addEventListener('input', () => render(search.value));
-                    list.addEventListener('click', (e) => {
-                        const b = e.target.closest('[data-id]');
-                        if (b) pick(b.dataset.id, b.dataset.name);
-                    });
-                    search.addEventListener('keydown', (e) => {
-                        if (e.key === 'Escape') { close(); trigger.focus(); }
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const b = list.querySelector('[data-id]');
-                            if (b) pick(b.dataset.id, b.dataset.name);
-                        }
-                    });
-                    document.addEventListener('click', (e) => { if (!root.contains(e.target)) close(); });
-
-                    root._pick = pick; // للاستخدام في التبديل
-                    render();
+                function go(n) {
+                    step = n;
+                    [1, 2, 3].forEach(i => panes[i].hidden = (i !== n));
+                    numEl.textContent = n;
+                    bars.forEach((b, i) => { b.classList.toggle('bg-rail-600', i < n); b.classList.toggle('bg-slate-200', i >= n); });
+                    const p = panes[n];
+                    p.classList.remove('wz-in'); void p.offsetWidth; p.classList.add('wz-in');
                 }
 
-                const selects = [...document.querySelectorAll('[data-station-select]')];
-                selects.forEach(initSelect);
+                const setShow = (key, val) => wiz.querySelectorAll(`[data-show="${key}"]`).forEach(el => el.textContent = val);
 
-                // تبديل المحطتين (القيمة + النص الظاهر).
-                document.getElementById('swap-btn').addEventListener('click', () => {
-                    const [a, b] = selects;
-                    const ah = a.querySelector('input[type=hidden]'), bh = b.querySelector('input[type=hidden]');
-                    const al = a.querySelector('[data-label]'), bl = b.querySelector('[data-label]');
-                    const av = ah.value, bv = bh.value;
-                    const at = av ? al.textContent : '', bt = bv ? bl.textContent : '';
-                    av ? b._pick(av, at) : resetSelect(b);
-                    bv ? a._pick(bv, bt) : resetSelect(a);
-                });
-
-                function resetSelect(root) {
-                    const hidden = root.querySelector('input[type=hidden]');
-                    const label = root.querySelector('[data-label]');
-                    hidden.value = '';
-                    label.textContent = root.dataset.name === 'from' ? 'محطة القيام' : 'محطة الوصول';
-                    label.classList.add('text-slate-400');
-                    label.classList.remove('text-slate-800', 'font-medium');
+                function renderList(listEl, query, exclude, onPick) {
+                    const nq = norm(query || '');
+                    const items = STATIONS.filter(s => String(s.id) !== String(exclude) && (!nq || norm(s.name).includes(nq)));
+                    listEl.innerHTML = items.slice(0, 80).map(s =>
+                        `<li><button type="button" data-id="${s.id}" class="w-full text-start px-3 py-2.5 rounded-xl text-sm hover:bg-rail-50 active:bg-rail-100 transition">${s.name}</button></li>`
+                    ).join('') || '<li class="px-3 py-3 text-sm text-slate-400">مفيش محطة بالاسم ده</li>';
+                    listEl.onclick = (e) => { const b = e.target.closest('[data-id]'); if (b) onPick(b.dataset.id, b.textContent.trim()); };
                 }
 
-                // منع الإرسال لو محطة ناقصة.
+                const fromSearch = wiz.querySelector('[data-search="from"]');
+                const fromList = wiz.querySelector('[data-list="from"]');
+                const toSearch = wiz.querySelector('[data-search="to"]');
+                const toList = wiz.querySelector('[data-list="to"]');
+
+                function pickFrom(id, name) {
+                    fromHidden.value = id;
+                    setShow('from', name); setShow('from2', name);
+                    toSearch.value = '';
+                    renderList(toList, '', id, pickTo);
+                    go(2);
+                }
+                function pickTo(id, name) {
+                    toHidden.value = id;
+                    setShow('to2', name);
+                    go(3);
+                }
+
+                fromSearch.addEventListener('input', () => renderList(fromList, fromSearch.value, toHidden.value, pickFrom));
+                toSearch.addEventListener('input', () => renderList(toList, toSearch.value, fromHidden.value, pickTo));
+
+                // Enter يختار أول نتيجة بدل ما يبعت الفورم بدري.
+                [fromSearch, toSearch].forEach(inp => inp.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); inp.closest('.wz-pane').querySelector('[data-id]')?.click(); }
+                }));
+
+                wiz.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(step - 1)));
+
+                // خطوة التاريخ: كبسات سريعة + إدخال يدوي.
+                const dateInput = document.getElementById('wz-date');
+                const daysBox = document.getElementById('wz-days');
+                const isoAdd = (n) => { const d = new Date(TODAY + 'T00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+                const DAYS = [[0, 'النهاردة'], [1, 'بكرة'], [2, 'بعد بكرة']];
+                function paintDays() {
+                    daysBox.innerHTML = DAYS.map(([n, lbl]) => {
+                        const iso = isoAdd(n), on = dateInput.value === iso;
+                        return `<button type="button" data-iso="${iso}" class="rounded-xl px-3 py-1.5 text-sm font-bold transition ${on ? 'bg-rail-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${lbl}</button>`;
+                    }).join('');
+                }
+                daysBox.addEventListener('click', (e) => { const b = e.target.closest('[data-iso]'); if (b) { dateInput.value = b.dataset.iso; paintDays(); } });
+                dateInput.addEventListener('change', paintDays);
+                paintDays();
+
+                renderList(fromList, '', '', pickFrom);
+
                 document.getElementById('search-form').addEventListener('submit', (e) => {
-                    const ok = document.getElementById('from').value && document.getElementById('to').value;
-                    document.getElementById('search-error').hidden = ok;
-                    if (!ok) e.preventDefault();
+                    if (!fromHidden.value || !toHidden.value) { e.preventDefault(); go(!fromHidden.value ? 1 : 2); }
                 });
+
+                const numForm = document.getElementById('num-form');
+                document.getElementById('num-toggle').addEventListener('click', () => {
+                    numForm.hidden = !numForm.hidden;
+                    if (!numForm.hidden) numForm.querySelector('input').focus();
+                });
+
+                go(1);
             })();
         </script>
-
-        <div class="flex items-center gap-3 my-4 text-xs text-slate-400">
-            <span class="flex-1 border-t border-slate-100"></span>
-            أو ابحث برقم القطار
-            <span class="flex-1 border-t border-slate-100"></span>
-        </div>
-
-        <form action="{{ route('search') }}" method="GET" class="flex gap-2">
-            <input type="text" name="number" inputmode="numeric" placeholder="رقم القطار (مثال: 936)" required
-                class="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rail-500/30 focus:border-rail-500 focus:bg-white transition">
-            <button type="submit" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold rounded-2xl px-6 transition whitespace-nowrap">
-                اعرض
-            </button>
-        </form>
     </section>
 
     @include('partials.permissions')
