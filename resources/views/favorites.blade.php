@@ -3,14 +3,9 @@
 @section('title', 'المفضلة')
 
 @section('content')
-    <div class="flex items-center justify-between gap-2 mb-1">
-        <div class="flex items-center gap-2">
-            <x-icon name="star" class="w-6 h-6 text-amber-500"/>
-            <h1 class="text-xl font-bold">المفضلة</h1>
-        </div>
-        <a href="{{ route('alerts.mine') }}" class="inline-flex items-center gap-1 text-sm text-rail-700 hover:underline">
-            <x-icon name="alert" class="w-4 h-4"/> طلباتي
-        </a>
+    <div class="flex items-center gap-2 mb-1">
+        <x-icon name="star" class="w-6 h-6 text-amber-500"/>
+        <h1 class="text-xl font-bold">المفضلة</h1>
     </div>
     <p class="text-sm text-slate-500 mb-4">قطاراتك المحفوظة وآخر عمليات بحثك (على هذا الجهاز).</p>
 
