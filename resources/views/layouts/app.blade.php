@@ -78,7 +78,7 @@
         $hideHeader = $bare || trim($__env->yieldContent('hideHeader')) === '1';
         $dark = trim($__env->yieldContent('dark')) === '1';
     @endphp
-    <div class="app-shell w-full mx-auto max-w-xl min-h-screen {{ $dark ? 'bg-rail-950' : 'bg-slate-100' }} flex flex-col relative shadow-xl">
+    <div class="app-shell w-full mx-auto max-w-xl min-h-screen {{ $dark ? 'bg-linear-to-b from-rail-900 to-rail-950' : 'bg-slate-100' }} flex flex-col relative shadow-xl">
 
         {{-- شريط علوي --}}
         @unless ($hideHeader)
