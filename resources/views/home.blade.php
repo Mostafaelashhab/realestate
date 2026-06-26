@@ -78,10 +78,12 @@
         </script>
     @endif
 
-    {{-- رسمة قطار زخرفية أعلى اليسار --}}
-    <div aria-hidden="true" class="pointer-events-none absolute start-0 top-0 w-52 -translate-x-6 opacity-25 text-white">
-        <x-train-illustration class="w-full"/>
+    {{-- رسمة قطار زخرفية أعلى اليسار + توهّج --}}
+    <div aria-hidden="true" class="pointer-events-none absolute -start-6 -top-2 w-72 opacity-40 text-white">
+        <div class="absolute inset-0 bg-rail-500/30 blur-3xl rounded-full"></div>
+        <x-train-illustration class="relative w-full"/>
     </div>
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-56 bg-radial from-rail-500/15 to-transparent"></div>
 
     {{-- ترحيب + جرس --}}
     <div class="relative flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
@@ -96,22 +98,28 @@
         </a>
     </div>
 
-    {{-- كارت رحلتك القادمة (افتراضي = أشهر مسار، ويتحدّث لآخر قطر شُوهد) --}}
-    @php $sug = $popular->first(); @endphp
+    {{-- كارت رحلتك القادمة (افتراضي = رحلة مميّزة، ويتحدّث لآخر قطر شُوهد) --}}
+    @php
+        $sug = $popular->first();
+        $today = now()->translatedFormat('j F Y');
+        $fromName = $featured['from'] ?? ($sug ? $sug['from']->name_ar : 'القاهرة');
+        $toName = $featured['to'] ?? ($sug ? $sug['to']->name_ar : 'طنطا');
+        $heroUrl = $featured['url'] ?? ($sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home'));
+    @endphp
     <section class="relative overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
             <div class="flex items-center justify-between gap-2 mb-5">
                 <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> رحلتك القادمة</span>
-                <span id="trip-num" class="text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1" hidden></span>
+                <span id="trip-num" class="text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1" @unless ($featured) hidden @endunless>@if ($featured) قطار {{ $featured['number'] }} @endif</span>
                 <svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-300 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
             </div>
 
             <div class="flex items-stretch gap-3">
                 <div class="flex-1 min-w-0 text-center">
-                    <div id="trip-from" class="text-2xl font-extrabold truncate">{{ $sug ? $sug['from']->name_ar : 'القاهرة' }}</div>
-                    <div id="trip-ftime" class="text-sm font-bold text-rail-300 mt-1" hidden></div>
-                    <div id="trip-fdate" class="text-[11px] text-rail-100/60 mt-0.5">قيام</div>
+                    <div id="trip-from" class="text-2xl font-extrabold truncate">{{ $fromName }}</div>
+                    <div id="trip-ftime" class="text-sm font-bold text-rail-300 mt-1" @unless ($featured && $featured['ftime']) hidden @endunless>{{ $featured['ftime'] ?? '' }}</div>
+                    <div id="trip-fdate" class="text-[11px] text-rail-100/60 mt-0.5">{{ $featured ? $today : 'قيام' }}</div>
                 </div>
 
                 <div class="flex flex-col items-center justify-center w-24 shrink-0">
@@ -124,17 +132,17 @@
                         <span class="flex-1 border-t-2 border-dashed border-white/25"></span>
                         <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
                     </div>
-                    <div id="trip-dur" class="text-[11px] text-rail-100/70 mt-2 whitespace-nowrap">المواعيد بالكامل</div>
+                    <div id="trip-dur" class="text-[11px] text-rail-100/70 mt-2 whitespace-nowrap">{{ $featured['dur'] ?? 'المواعيد بالكامل' }}</div>
                 </div>
 
                 <div class="flex-1 min-w-0 text-center">
-                    <div id="trip-to" class="text-2xl font-extrabold truncate">{{ $sug ? $sug['to']->name_ar : 'طنطا' }}</div>
-                    <div id="trip-ttime" class="text-sm font-bold text-rail-300 mt-1" hidden></div>
-                    <div id="trip-tdate" class="text-[11px] text-rail-100/60 mt-0.5">وصول</div>
+                    <div id="trip-to" class="text-2xl font-extrabold truncate">{{ $toName }}</div>
+                    <div id="trip-ttime" class="text-sm font-bold text-rail-300 mt-1" @unless ($featured && $featured['ttime']) hidden @endunless>{{ $featured['ttime'] ?? '' }}</div>
+                    <div id="trip-tdate" class="text-[11px] text-rail-100/60 mt-0.5">{{ $featured ? $today : 'وصول' }}</div>
                 </div>
             </div>
 
-            <a id="trip-link" href="{{ $sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home') }}"
+            <a id="trip-link" href="{{ $heroUrl }}"
                 class="mt-5 flex items-center justify-center gap-1 bg-white/10 hover:bg-white/15 rounded-2xl py-3 text-sm font-bold transition">
                 عرض التفاصيل
                 <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
