@@ -78,8 +78,13 @@
         </script>
     @endif
 
+    {{-- رسمة قطار زخرفية أعلى اليسار --}}
+    <div aria-hidden="true" class="pointer-events-none absolute start-0 top-0 w-52 -translate-x-6 opacity-25 text-white">
+        <x-train-illustration class="w-full"/>
+    </div>
+
     {{-- ترحيب + جرس --}}
-    <div class="flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
+    <div class="relative flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
         <div>
             <p class="text-rail-200/80 text-sm font-medium">مرحبًا</p>
             <h1 class="text-2xl font-extrabold text-white mt-0.5">وين رحلتك الجاية؟</h1>
@@ -138,8 +143,27 @@
         })();
     </script>
 
-    {{-- بحث على شكل خطوات (كارت أبيض يطفو فوق الخلفية الداكنة) --}}
-    <section id="wiz" class="relative bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-5">
+    {{-- شريط البحث --}}
+    <div class="flex items-center gap-2 bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-2 mb-3">
+        <a href="{{ route('voice') }}" aria-label="بحث صوتي"
+            class="w-12 h-12 rounded-full bg-rail-600 hover:bg-rail-700 text-white grid place-items-center shrink-0 active:scale-95 transition">
+            <x-icon name="mic" class="w-5 h-5"/>
+        </a>
+        <button type="button" id="open-search" class="flex-1 flex items-center justify-between gap-2 text-start ps-2 pe-3 py-2 text-slate-400">
+            <span class="text-sm">ابحث عن محطة، قطار أو موعد</span>
+            <x-icon name="search" class="w-5 h-5"/>
+        </button>
+    </div>
+
+    {{-- شرائح سريعة (من آخر بحث/المفضلة) --}}
+    <div id="quick-chips" class="flex gap-2 overflow-x-auto pb-1 mb-6"></div>
+
+    {{-- البحث (يفتح من الشريط) --}}
+    <section id="wiz" hidden class="relative bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-6 scroll-mt-4">
+        <button type="button" id="close-search" aria-label="إغلاق"
+            class="absolute top-3.5 end-3.5 w-8 h-8 grid place-items-center rounded-xl text-slate-400 hover:bg-slate-100 z-10">
+            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
         @error('number')
             <div class="flex items-center gap-2 bg-red-50 text-red-700 text-sm rounded-2xl px-4 py-3 mb-4">
                 <x-icon name="alert" class="w-5 h-5 shrink-0"/> {{ $message }}
@@ -366,62 +390,6 @@
 
     @include('partials.permissions')
 
-    {{-- وجهات شائعة --}}
-    @if ($popular->isNotEmpty())
-        <section class="mb-5">
-            <h3 class="text-xs font-bold text-rail-200/70 mb-2">وجهات شائعة</h3>
-            <div class="flex flex-wrap gap-2">
-                @foreach ($popular as $p)
-                    <a href="{{ route('route', ['from' => $p['from']->slug, 'to' => $p['to']->slug]) }}"
-                        class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">
-                        <span>{{ $p['from']->name_ar }}</span>
-                        <x-icon name="arrow-left" class="w-3.5 h-3.5 text-slate-400"/>
-                        <span>{{ $p['to']->name_ar }}</span>
-                    </a>
-                @endforeach
-            </div>
-        </section>
-    @endif
-
-    {{-- المفضلة + آخر بحث (من التخزين المحلي) --}}
-    <section id="qm-quick" hidden class="mb-4 space-y-4"></section>
-
-    <script>
-        (() => {
-            const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
-            const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const box = document.getElementById('qm-quick');
-            const fav = get('qm:fav'), recent = get('qm:recent');
-            let html = '';
-
-            const chip = (href, inner) =>
-                `<a href="${href}" class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">${inner}</a>`;
-            const card = (title, icon, chips) =>
-                `<div><h3 class="text-xs font-bold text-rail-200/70 mb-2 flex items-center gap-1.5">${icon} ${title}</h3><div class="flex flex-wrap gap-2">${chips}</div></div>`;
-
-            const STAR = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-amber-500" fill="currentColor"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>';
-            const HIST = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>';
-            const ARROW = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6 7-7-7 7-7"/></svg>';
-
-            if (fav.length) {
-                const chips = fav.map(f =>
-                    chip(esc(f.url), `${STAR}<span class="font-bold">قطار ${esc(f.number)}</span>${f.label ? `<span class="text-xs text-slate-400">${esc(f.label)}</span>` : ''}`)
-                ).join('');
-                html += card('قطاراتك المفضلة', STAR, chips);
-            }
-
-            if (recent.length) {
-                const chips = recent.map(r =>
-                    chip(`/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date)}`,
-                        `<span>${esc(r.fromName)}</span>${ARROW}<span>${esc(r.toName)}</span>`)
-                ).join('');
-                html += card('آخر عمليات البحث', HIST, chips);
-            }
-
-            if (html) { box.innerHTML = html; box.hidden = false; }
-        })();
-    </script>
-
     {{-- خدمات سريعة (شبكة ٣×٢) --}}
     <div class="flex items-center gap-2 mb-3">
         <svg viewBox="0 0 24 24" class="w-5 h-5 text-rail-300" fill="currentColor" aria-hidden="true"><path d="M12 2l1.6 5.6L19 9l-5.4 1.4L12 16l-1.6-5.6L5 9l5.4-1.4z"/></svg>
@@ -451,15 +419,63 @@
         @endforeach
     </section>
 
+    {{-- بانر المقاعد --}}
+    <div class="relative overflow-hidden rounded-3xl mt-5 p-5 bg-linear-to-br from-rail-700 via-rail-800 to-rail-900 ring-1 ring-white/10 text-white">
+        <svg class="absolute -bottom-4 -end-3 w-28 h-28 text-white/10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="3" width="10" height="11" rx="3"/><rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/><rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/><rect x="6" y="12.5" width="12" height="5" rx="2"/></svg>
+        <div class="relative text-center">
+            <h3 class="text-lg font-extrabold">شوف مقعدك المفضل</h3>
+            <p class="text-sm text-rail-100/80 mt-1">اعرف الأماكن الفاضية قبل ما تتحرك</p>
+            <button type="button" data-quick="search" class="inline-flex items-center gap-1 bg-white text-rail-700 font-bold rounded-full px-5 py-2.5 mt-4 active:scale-95 transition">
+                استكشف المقاعد <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex justify-center gap-1.5 mt-4">
+                <span class="w-5 h-1.5 rounded-full bg-white"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+            </div>
+        </div>
+    </div>
+
     <script>
         (() => {
             const wiz = document.getElementById('wiz');
-            const scrollWiz = () => wiz?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+            // فتح/إغلاق صندوق البحث
+            const openWiz = () => {
+                if (!wiz) return;
+                wiz.hidden = false;
+                wiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => wiz.querySelector('[data-search="from"]')?.focus({ preventScroll: true }), 300);
+            };
+            document.getElementById('open-search')?.addEventListener('click', openWiz);
+            document.getElementById('close-search')?.addEventListener('click', () => { wiz.hidden = true; });
+
+            // الخدمات السريعة
             document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => {
                 try { navigator.vibrate?.(10); } catch (e) {}
-                if (b.dataset.quick === 'near') { scrollWiz(); setTimeout(() => document.getElementById('near-btn')?.click(), 350); }
-                else scrollWiz();
+                openWiz();
+                if (b.dataset.quick === 'near') setTimeout(() => document.getElementById('near-btn')?.click(), 400);
             }));
+
+            // شرائح سريعة من آخر بحث/المفضلة + أقرب محطة
+            const chipsBox = document.getElementById('quick-chips');
+            const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
+            const chip = (cls, inner) => `<span class="${cls}">${inner}</span>`;
+            const PIN = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+            const base = 'shrink-0 inline-flex items-center gap-1.5 bg-white/10 ring-1 ring-white/10 text-white rounded-full ps-3 pe-3 py-1.5 text-sm transition active:scale-95';
+            let html = '';
+            const r = get('qm:recent')[0];
+            if (r) {
+                const url = `/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date || '')}`;
+                html += `<a href="${url}" class="${base}">${PIN}<span>${esc(r.fromName)} ← ${esc(r.toName)}</span></a>`;
+            }
+            const f = get('qm:fav')[0];
+            if (f) html += `<a href="${esc(f.url)}" class="${base}"><span>قطار ${esc(f.number)}</span></a>`;
+            html += `<button type="button" id="chip-near" class="${base}">${PIN}<span>أقرب محطة</span></button>`;
+            chipsBox.innerHTML = html;
+            document.getElementById('chip-near')?.addEventListener('click', () => { openWiz(); setTimeout(() => document.getElementById('near-btn')?.click(), 400); });
         })();
     </script>
 @endsection
