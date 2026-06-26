@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+@section('dark', '1')
 @section('title', "قطار {$train->number}")
 @section('og_title', "قطار {$train->number}" . ($origin && $terminal ? " — {$origin->name_ar} ← {$terminal->name_ar}" : ''))
 @section('og_desc', trim((\App\Support\Format::time($depart) ? \App\Support\Format::time($depart) . ' ← ' . \App\Support\Format::time($arrive) . ' · ' : '') . ($duration ? $duration . ' · ' : '') . 'مواعيد وأسعار رحلتك على قطارات مصر.'))
