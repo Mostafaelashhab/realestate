@@ -102,9 +102,9 @@
     <section class="relative z-10 mt-20 overflow-hidden rounded-3xl p-5 mb-5 bg-white/10 backdrop-blur-xl ring-1 ring-white/20 shadow-xl shadow-black/40">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
-            <div class="flex items-center justify-between gap-2 mb-5">
+            <div class="relative flex items-center justify-between gap-2 mb-5">
                 <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> رحلتك القادمة</span>
-                <span id="trip-num" class="text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1" @unless ($featured) hidden @endunless>@if ($featured) قطار {{ $featured['number'] }} @endif</span>
+                <span id="trip-num" class="absolute left-1/2 -translate-x-1/2 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1 whitespace-nowrap" @unless ($featured) hidden @endunless>@if ($featured) قطار {{ $featured['number'] }} @endif</span>
                 <svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-300 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
             </div>
 
@@ -172,8 +172,11 @@
         })();
     </script>
 
+    {{-- ↓↓ الجزء الأبيض (بحث + خدمات + بانر) ↓↓ --}}
+    <div class="relative z-10 -mx-4 -mb-28 px-4 pt-6 pb-32 bg-slate-50 rounded-t-[2rem]">
+
     {{-- شريط البحث --}}
-    <div class="flex items-center gap-2 bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-2 mb-3">
+    <div class="flex items-center gap-2 bg-white rounded-3xl shadow-lg ring-1 ring-slate-100 p-2 mb-3 -mt-12">
         <a href="{{ route('voice') }}" aria-label="بحث صوتي"
             class="w-12 h-12 rounded-full bg-rail-600 hover:bg-rail-700 text-white grid place-items-center shrink-0 active:scale-95 transition">
             <x-icon name="mic" class="w-5 h-5"/>
@@ -435,9 +438,9 @@
     @include('partials.permissions')
 
     {{-- خدمات سريعة (شبكة ٣×٢) --}}
-    <div class="flex items-center gap-2 mb-3">
-        <svg viewBox="0 0 24 24" class="w-5 h-5 text-rail-300" fill="currentColor" aria-hidden="true"><path d="M12 2l1.6 5.6L19 9l-5.4 1.4L12 16l-1.6-5.6L5 9l5.4-1.4z"/></svg>
-        <h2 class="font-extrabold text-white">خدمات سريعة</h2>
+    <div class="flex items-center gap-2 mb-3 mt-6">
+        <svg viewBox="0 0 24 24" class="w-5 h-5 text-rail-600" fill="currentColor" aria-hidden="true"><path d="M12 2l1.6 5.6L19 9l-5.4 1.4L12 16l-1.6-5.6L5 9l5.4-1.4z"/></svg>
+        <h2 class="font-extrabold text-slate-800">خدمات سريعة</h2>
     </div>
     <section class="grid grid-cols-3 gap-3">
         @php
@@ -479,6 +482,8 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
             </div>
         </div>
+    </div>
+    {{-- ↑↑ نهاية الجزء الأبيض ↑↑ --}}
     </div>
 
     <script>
