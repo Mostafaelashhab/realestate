@@ -10,18 +10,18 @@
     --font-sans: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
 
-    /* أخضر السكة الحديد — سكيل كامل */
-    --color-rail-50: #edf7f1;
-    --color-rail-100: #d3ecdd;
-    --color-rail-200: #a9d8bd;
-    --color-rail-300: #74bd95;
-    --color-rail-400: #419e6f;
-    --color-rail-500: #15875a;
-    --color-rail-600: #0f7a4b;
-    --color-rail-700: #0b6340;
-    --color-rail-800: #094d33;
-    --color-rail-900: #073d29;
-    --color-rail-950: #04261a;
+    /* أخضر التطبيق — مبني على لوحة التصميم (#16A34A · #22C55E · #0F5132) */
+    --color-rail-50: #f0fdf4;
+    --color-rail-100: #dcfce7;
+    --color-rail-200: #bbf7d0;
+    --color-rail-300: #86efac;
+    --color-rail-400: #4ade80;
+    --color-rail-500: #22c55e;
+    --color-rail-600: #16a34a;
+    --color-rail-700: #15803d;
+    --color-rail-800: #0f5132;
+    --color-rail-900: #0c3f28;
+    --color-rail-950: #07271a;
 }
 
 html,

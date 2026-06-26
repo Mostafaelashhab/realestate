@@ -190,6 +190,20 @@
             </g>
             @break
 
+        @case('heart')
+            <g {!! $stroke !!}>
+                <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1l1.7 1.7L12 21.5l7.1-7.1 1.7-1.7a5 5 0 0 0 0-7.1z"/>
+            </g>
+            @break
+
+        @case('more')
+            <g {!! $stroke !!}>
+                <circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+                <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+                <circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+            </g>
+            @break
+
         @case('seat')
             <g fill="currentColor" stroke="none">
                 <rect x="7" y="3" width="10" height="11" rx="3"/>
