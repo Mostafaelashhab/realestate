@@ -101,6 +101,26 @@
             });
             paint();
         })();
+
+        {{-- نحفظ آخر قطر شُوهد لعرضه في كارت «رحلتك القادمة» بالصفحة الرئيسية --}}
+        @if ($origin && $terminal)
+            @php $tripDate = request('date') ? \Illuminate\Support\Carbon::parse(request('date'))->translatedFormat('j F Y') : now()->translatedFormat('j F Y'); @endphp
+            (() => {
+                try {
+                    localStorage.setItem('qm:lasttrip', JSON.stringify({
+                        number: @json((string) $train->number),
+                        fromName: @json($origin->name_ar),
+                        toName: @json($terminal->name_ar),
+                        ftime: @json(\App\Support\Format::time($depart)),
+                        ttime: @json(\App\Support\Format::time($arrive)),
+                        fdate: @json($tripDate),
+                        tdate: @json($tripDate),
+                        dur: @json($duration),
+                        url: @json(request()->getRequestUri()),
+                    }));
+                } catch (e) {}
+            })();
+        @endif
     </script>
 
     {{-- فين القطر دلوقتي — تقدير حسب الجدول (وقت القاهرة) --}}

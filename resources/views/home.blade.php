@@ -96,50 +96,68 @@
         </a>
     </div>
 
-    {{-- كارت رحلتك القادمة (يملأه JS من آخر بحث) أو ترحيب --}}
-    <section id="trip-hero" class="relative overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
+    {{-- كارت رحلتك القادمة (افتراضي = أشهر مسار، ويتحدّث لآخر قطر شُوهد) --}}
+    @php $sug = $popular->first(); @endphp
+    <section class="relative overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
-            <div class="flex items-center justify-between">
-                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> ابدأ رحلتك</span>
-                <span class="inline-flex items-center gap-1 text-xs text-rail-100/80"><x-icon name="train" class="w-4 h-4"/> {{ number_format($trainCount) }} قطار</span>
+            <div class="flex items-center justify-between gap-2 mb-5">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> رحلتك القادمة</span>
+                <span id="trip-num" class="text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1" hidden></span>
+                <svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-300 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
             </div>
-            <p class="mt-4 text-lg font-extrabold">دوّر على قطارك في ثواني</p>
-            <p class="text-sm text-rail-100/70 mt-1">مواعيد وأسعار ومقاعد متاحة — كله في مكان واحد.</p>
+
+            <div class="flex items-stretch gap-3">
+                <div class="flex-1 min-w-0 text-center">
+                    <div id="trip-from" class="text-2xl font-extrabold truncate">{{ $sug ? $sug['from']->name_ar : 'القاهرة' }}</div>
+                    <div id="trip-ftime" class="text-sm font-bold text-rail-300 mt-1" hidden></div>
+                    <div id="trip-fdate" class="text-[11px] text-rail-100/60 mt-0.5">قيام</div>
+                </div>
+
+                <div class="flex flex-col items-center justify-center w-24 shrink-0">
+                    <div class="w-full flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-rail-300 shrink-0"></span>
+                        <span class="flex-1 border-t-2 border-dashed border-white/25"></span>
+                        <span class="relative grid place-items-center w-10 h-10 rounded-full bg-rail-600 ring-4 ring-rail-500/30 shadow-lg shadow-rail-500/40 shrink-0">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8M7 16l-2 4m12-4l2 4"/></svg>
+                        </span>
+                        <span class="flex-1 border-t-2 border-dashed border-white/25"></span>
+                        <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+                    </div>
+                    <div id="trip-dur" class="text-[11px] text-rail-100/70 mt-2 whitespace-nowrap">المواعيد بالكامل</div>
+                </div>
+
+                <div class="flex-1 min-w-0 text-center">
+                    <div id="trip-to" class="text-2xl font-extrabold truncate">{{ $sug ? $sug['to']->name_ar : 'طنطا' }}</div>
+                    <div id="trip-ttime" class="text-sm font-bold text-rail-300 mt-1" hidden></div>
+                    <div id="trip-tdate" class="text-[11px] text-rail-100/60 mt-0.5">وصول</div>
+                </div>
+            </div>
+
+            <a id="trip-link" href="{{ $sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home') }}"
+                class="mt-5 flex items-center justify-center gap-1 bg-white/10 hover:bg-white/15 rounded-2xl py-3 text-sm font-bold transition">
+                عرض التفاصيل
+                <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
         </div>
     </section>
 
     <script>
         (() => {
-            let recent = [];
-            try { recent = JSON.parse(localStorage.getItem('qm:recent') || '[]'); } catch (e) {}
-            const r = recent[0];
-            const el = document.getElementById('trip-hero');
-            if (!r || !el) return;
-            const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const url = `/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date || '')}`;
-            el.innerHTML = `
-                <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
-                <div class="relative text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> رحلتك القادمة</span>
-                        <svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-300" fill="currentColor"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 min-w-0 text-center"><div class="text-xl font-extrabold truncate">${esc(r.fromName)}</div><div class="text-[11px] text-rail-100/60 mt-0.5">قيام</div></div>
-                        <div class="flex items-center gap-1 w-20 shrink-0">
-                            <span class="w-2 h-2 rounded-full bg-rail-300"></span>
-                            <span class="flex-1 border-t border-dashed border-white/30"></span>
-                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8M7 16l-2 4m12-4l2 4"/></svg>
-                            <span class="flex-1 border-t border-dashed border-white/30"></span>
-                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                        </div>
-                        <div class="flex-1 min-w-0 text-center"><div class="text-xl font-extrabold truncate">${esc(r.toName)}</div><div class="text-[11px] text-rail-100/60 mt-0.5">وصول</div></div>
-                    </div>
-                    <a href="${url}" class="mt-5 flex items-center justify-center gap-1 bg-white/10 hover:bg-white/15 rounded-2xl py-3 text-sm font-bold transition">عرض التفاصيل
-                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    </a>
-                </div>`;
+            let t = null;
+            try { t = JSON.parse(localStorage.getItem('qm:lasttrip') || 'null'); } catch (e) {}
+            if (!t) return;
+            const show = (id, val) => { const el = document.getElementById(id); if (el && val) { el.textContent = val; el.hidden = false; } };
+            const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+            setText('trip-from', t.fromName);
+            setText('trip-to', t.toName);
+            show('trip-num', t.number ? `قطار ${t.number}` : '');
+            show('trip-ftime', t.ftime);
+            show('trip-ttime', t.ttime);
+            setText('trip-fdate', t.fdate || 'قيام');
+            setText('trip-tdate', t.tdate || 'وصول');
+            setText('trip-dur', t.dur || 'المواعيد بالكامل');
+            if (t.url) document.getElementById('trip-link')?.setAttribute('href', t.url);
         })();
     </script>
 
@@ -155,8 +173,23 @@
         </button>
     </div>
 
-    {{-- شرائح سريعة (من آخر بحث/المفضلة) --}}
-    <div id="quick-chips" class="flex gap-2 overflow-x-auto pb-1 mb-6"></div>
+    {{-- شرائح سريعة --}}
+    <div id="quick-chips" class="flex gap-2 overflow-x-auto pb-1 mb-6">
+        @if ($sug)
+            <a href="{{ route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) }}"
+                class="shrink-0 inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 text-slate-700 rounded-full px-3 py-1.5 text-sm transition active:scale-95">
+                <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/> إلى {{ $sug['to']->name_ar }}
+            </a>
+            <a href="{{ route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) }}"
+                class="shrink-0 inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 text-slate-700 rounded-full px-3 py-1.5 text-sm transition active:scale-95">
+                <x-icon name="dot" class="w-2.5 h-2.5 text-rail-600"/> من {{ $sug['from']->name_ar }}
+            </a>
+        @endif
+        <button type="button" id="chip-near"
+            class="shrink-0 inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 text-slate-700 rounded-full px-3 py-1.5 text-sm transition active:scale-95">
+            <x-icon name="pin" class="w-3.5 h-3.5 text-rail-600"/> أقرب محطة
+        </button>
+    </div>
 
     {{-- البحث (يفتح من الشريط) --}}
     <section id="wiz" hidden class="relative bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-6 scroll-mt-4">
@@ -459,23 +492,21 @@
                 if (b.dataset.quick === 'near') setTimeout(() => document.getElementById('near-btn')?.click(), 400);
             }));
 
-            // شرائح سريعة من آخر بحث/المفضلة + أقرب محطة
+            // أقرب محطة (الشريحة)
+            document.getElementById('chip-near')?.addEventListener('click', () => { openWiz(); setTimeout(() => document.getElementById('near-btn')?.click(), 400); });
+
+            // نضيف آخر بحث/قطار مفضّل في أول الشرائح (لو موجود) من غير ما نمسح الافتراضي
             const chipsBox = document.getElementById('quick-chips');
             const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };
-            const chip = (cls, inner) => `<span class="${cls}">${inner}</span>`;
-            const PIN = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-            const base = 'shrink-0 inline-flex items-center gap-1.5 bg-white/10 ring-1 ring-white/10 text-white rounded-full ps-3 pe-3 py-1.5 text-sm transition active:scale-95';
-            let html = '';
+            const base = 'shrink-0 inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 text-slate-700 rounded-full px-3 py-1.5 text-sm transition active:scale-95';
+            const TR = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-rail-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8M7 16l-2 4m12-4l2 4"/></svg>';
+            const f = get('qm:fav')[0];
+            if (f) chipsBox.insertAdjacentHTML('afterbegin', `<a href="${esc(f.url)}" class="${base}">${TR}<span>قطار ${esc(f.number)}</span></a>`);
             const r = get('qm:recent')[0];
             if (r) {
                 const url = `/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date || '')}`;
-                html += `<a href="${url}" class="${base}">${PIN}<span>${esc(r.fromName)} ← ${esc(r.toName)}</span></a>`;
+                chipsBox.insertAdjacentHTML('afterbegin', `<a href="${url}" class="${base}"><span>${esc(r.fromName)} ← ${esc(r.toName)}</span></a>`);
             }
-            const f = get('qm:fav')[0];
-            if (f) html += `<a href="${esc(f.url)}" class="${base}"><span>قطار ${esc(f.number)}</span></a>`;
-            html += `<button type="button" id="chip-near" class="${base}">${PIN}<span>أقرب محطة</span></button>`;
-            chipsBox.innerHTML = html;
-            document.getElementById('chip-near')?.addEventListener('click', () => { openWiz(); setTimeout(() => document.getElementById('near-btn')?.click(), 400); });
         })();
     </script>
 @endsection
