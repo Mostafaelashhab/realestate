@@ -367,7 +367,14 @@
                 }
 
                 async function onSeatWatch(btn) {
+                    const orig = btn.textContent;
+                    const fail = (msg) => {
+                        btn.disabled = false; btn.textContent = orig;
+                        btn.nextElementSibling?.remove();
+                        btn.insertAdjacentHTML('afterend', `<p class="seatwatch-err text-xs text-red-600 mt-2 text-center">${msg}</p>`);
+                    };
                     btn.disabled = true; btn.textContent = 'جاري التفعيل…';
+                    btn.parentElement.querySelector('.seatwatch-err')?.remove();
                     try {
                         const res = await fetch(SEATWATCH_URL, {
                             method: 'POST',
@@ -378,10 +385,15 @@
                                 date: dateInput.value,
                             }),
                         });
-                        if (res.status === 403) { location.href = PREMIUM_URL; return; }
-                        if (!res.ok) throw new Error();
+                        if (res.status === 401 || res.status === 419) { location.href = LOGIN_URL; return; }
+                        if (!res.ok) {
+                            let msg = 'تعذّر التفعيل، حاول تاني.';
+                            try { const j = await res.json(); if (j.message) msg = j.message; } catch (_) {}
+                            fail(msg);
+                            return;
+                        }
                         btn.outerHTML = '<div class="mt-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold px-4 py-3 text-center">✓ تمام! هنبّهك أول ما يفضى كرسي على المسار ده.</div>';
-                    } catch (e) { btn.disabled = false; btn.textContent = '🔔 نبّهني أول ما يفضى كرسي'; }
+                    } catch (e) { fail('تعذّر الاتصال، حاول تاني.'); }
                 }
 
                 // إرسال رد الهيئة للموقع لتحديث المواعيد/الأسعار — مرّة كل ساعة لكل (مسار+تاريخ).
