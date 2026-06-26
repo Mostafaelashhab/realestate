@@ -85,17 +85,10 @@
         <div class="absolute inset-0 bg-linear-to-l from-rail-950/85 via-rail-950/30 to-transparent"></div>
     </div>
 
-    {{-- ترحيب + جرس --}}
-    <div class="relative z-10 flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
-        <div>
-            <p class="text-rail-200/80 text-sm font-medium">مرحبًا</p>
-            <h1 class="text-2xl font-extrabold text-white mt-0.5">وين رحلتك الجاية؟</h1>
-        </div>
-        <a href="{{ route('premium') }}" aria-label="التنبيهات"
-            class="relative w-11 h-11 grid place-items-center rounded-2xl bg-white/10 ring-1 ring-white/10 text-white shrink-0 active:scale-95 transition">
-            <x-icon name="bell" class="w-5 h-5"/>
-            <span class="absolute top-2.5 end-2.5 w-2 h-2 rounded-full bg-rail-400 ring-2 ring-rail-950"></span>
-        </a>
+    {{-- ترحيب --}}
+    <div class="relative z-10 pt-[env(safe-area-inset-top)] mb-4">
+        <p class="text-rail-200/80 text-sm font-medium">مرحبًا</p>
+        <h1 class="text-2xl font-extrabold text-white mt-0.5">وين رحلتك الجاية؟</h1>
     </div>
 
     {{-- كارت رحلتك القادمة (افتراضي = رحلة مميّزة، ويتحدّث لآخر قطر شُوهد) --}}
@@ -106,7 +99,7 @@
         $toName = $featured['to'] ?? ($sug ? $sug['to']->name_ar : 'طنطا');
         $heroUrl = $featured['url'] ?? ($sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home'));
     @endphp
-    <section class="relative z-10 mt-20 overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800/95 via-rail-800/95 to-rail-900/95 backdrop-blur-sm ring-1 ring-white/10 shadow-xl shadow-black/40">
+    <section class="relative z-10 mt-20 overflow-hidden rounded-3xl p-5 mb-5 bg-white/10 backdrop-blur-xl ring-1 ring-white/20 shadow-xl shadow-black/40">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
             <div class="flex items-center justify-between gap-2 mb-5">
