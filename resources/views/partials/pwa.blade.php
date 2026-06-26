@@ -108,6 +108,32 @@
         });
     })();
 
+    // البحث الصوتي (زر النص في البار): قول «من بنها للقاهرة» أو وجهتك.
+    (() => {
+        const fab = document.getElementById('voice-fab');
+        if (!fab) return;
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const toast = document.getElementById('qm-toast');
+        let tt;
+        const say = (m, keep) => { if (!toast) return; toast.textContent = m; toast.hidden = false; clearTimeout(tt); if (!keep) tt = setTimeout(() => { toast.hidden = true; }, 2200); };
+        fab.addEventListener('click', () => {
+            if (!SR) { location.href = '{{ route('home') }}'; return; } // مش مدعوم → الهوم
+            let rec;
+            try { rec = new SR(); } catch (e) { return; }
+            rec.lang = 'ar-EG'; rec.interimResults = false; rec.maxAlternatives = 1;
+            fab.classList.add('animate-pulse');
+            say('🎤 بسمعك… قول رايح فين', true);
+            rec.onresult = (e) => {
+                const t = (e.results[0][0].transcript || '').trim();
+                if (t) { say('بدوّرلك على «' + t + '»…', true); location.href = '{{ route('voice') }}?q=' + encodeURIComponent(t); }
+                else say('متسمعش كويس، حاول تاني');
+            };
+            rec.onerror = (e) => say(e.error === 'not-allowed' ? 'لازم تسمح بالمايك' : 'متسمعش كويس، حاول تاني');
+            rec.onend = () => fab.classList.remove('animate-pulse');
+            try { rec.start(); } catch (e) { fab.classList.remove('animate-pulse'); }
+        });
+    })();
+
     // لودر التنقّل: يظهر عند الضغط على أي رابط داخلي (أو إرسال فورم) أثناء تحميل الصفحة التالية
     (() => {
         const loader = document.getElementById('qm-loader');

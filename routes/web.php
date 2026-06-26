@@ -31,6 +31,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/voice', [\App\Http\Controllers\VoiceController::class, 'handle'])->name('voice');
 Route::view('/favorites', 'favorites')->name('favorites');
 // صفحة المسار (SEO) — رابط دائم بالـ slug.
 Route::get('/قطارات/{from}/{to}', [RouteController::class, 'show'])->name('route');

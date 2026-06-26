@@ -119,13 +119,24 @@
         <nav class="fixed bottom-0 inset-x-0 z-30">
             <div
                 class="mx-auto max-w-xl bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)]">
-                <div class="grid grid-cols-4">
+                <div class="grid grid-cols-5 items-end">
                     @foreach ($tabs as $tab)
                         <a href="{{ route($tab['route']) }}"
                             class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-700' : 'text-slate-400 hover:text-slate-600' }}">
                             <x-icon :name="$tab['icon']" class="w-6 h-6 {{ $tab['on'] ? '' : 'opacity-70' }}" />
                             <span class="text-[11px] font-bold whitespace-nowrap">{{ $tab['label'] }}</span>
                         </a>
+
+                        {{-- زر البحث الصوتي البارز في النص --}}
+                        @if ($loop->index === 1)
+                            <div class="flex flex-col items-center">
+                                <button id="voice-fab" type="button" aria-label="ابحث بصوتك"
+                                    class="-mt-7 w-16 h-16 rounded-full bg-linear-to-br from-rail-500 to-rail-700 text-white shadow-lg shadow-rail-600/40 ring-4 ring-white grid place-items-center active:scale-95 transition">
+                                    <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+                                </button>
+                                <span class="text-[11px] font-bold text-rail-700 -mt-0.5">رايح فين</span>
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
