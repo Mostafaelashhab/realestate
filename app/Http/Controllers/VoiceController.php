@@ -33,45 +33,76 @@ class VoiceController extends Controller
         $stations = Cache::remember(\App\Support\CacheVer::key('catalog', 'voice:stations'), now()->addHours(6),
             fn () => Station::whereNotNull('slug')->get(['id', 'name_ar', 'slug'])->all());
 
-        // "من X (إلى|لـ|ل) Y"
-        $from = $to = null;
-        if (preg_match('/من\s+(.+?)\s+(?:إلى|الى|الي|لحد|ل)\s*(.+)/u', $q, $m)) {
-            $from = $this->match($m[1], $stations);
-            $to = $this->match($m[2], $stations);
+        // المحطات المذكورة بترتيب ظهورها في الكلام (يتعامل مع "لـ" و"الـ").
+        $found = $this->stationsInText($q, $stations);
+
+        // رحلة (محطتين فأكثر) → القيام = الأولى، الوصول = التانية.
+        if (count($found) >= 2 && $found[0]->id !== $found[1]->id) {
+            return redirect()->route('route', ['from' => $found[0]->slug, 'to' => $found[1]->slug]);
         }
 
-        if ($from && $to && $from->id !== $to->id) {
-            return redirect()->route('route', ['from' => $from->slug, 'to' => $to->slug]);
-        }
-
-        // محطة واحدة فقط → صفحتها.
-        $single = $this->match($q, $stations);
-        if ($single) {
-            return redirect()->route('stations.show', $single);
+        // محطة واحدة → صفحتها.
+        if (count($found) === 1) {
+            return redirect()->route('stations.show', $found[0]);
         }
 
         return redirect()->route('home')->with('voice_error', "مفهمتش «{$q}» — جرّب قول: «من بنها للقاهرة».");
     }
 
-    /** أفضل محطة مطابقة للنص (تطبيع عربي + أطول اسم متضمَّن). */
-    private function match(string $text, array $stations): ?Station
+    /**
+     * يرجّع المحطات المذكورة في النص مرتّبة حسب موضعها (بدون تكرار/تداخل).
+     *
+     * @param  array<int,Station>  $stations
+     * @return array<int,Station>
+     */
+    private function stationsInText(string $text, array $stations): array
     {
         $t = $this->norm($text);
+        // "للقاهره" = لـ + القاهره → نرجّع أداة التعريف عشان المطابقة تظبط.
+        $t2 = str_replace('لل', 'ال', $t);
         if ($t === '') {
-            return null;
+            return [];
         }
 
-        $best = null;
-        $bestLen = 0;
+        $hits = [];
         foreach ($stations as $s) {
             $n = $this->norm($s->name_ar);
-            if ($n !== '' && (str_contains($t, $n) || str_contains($n, $t)) && mb_strlen($n) > $bestLen) {
-                $best = $s;
-                $bestLen = mb_strlen($n);
+            if ($n === '') {
+                continue;
+            }
+            $pos = mb_strpos($t, $n);
+            if ($pos === false) {
+                $pos = mb_strpos($t2, $n);
+            }
+            if ($pos !== false) {
+                $hits[] = ['s' => $s, 'pos' => $pos, 'len' => mb_strlen($n)];
             }
         }
 
-        return $best;
+        // الأقرب للبداية أولًا، والأطول له الأولوية عند نفس الموضع.
+        usort($hits, fn ($a, $b) => $a['pos'] <=> $b['pos'] ?: $b['len'] <=> $a['len']);
+
+        $picked = [];
+        $ranges = [];
+        foreach ($hits as $h) {
+            foreach ($picked as $p) {
+                if ($p->id === $h['s']->id) {
+                    continue 2;
+                }
+            }
+            foreach ($ranges as [$st, $en]) {
+                if (! ($h['pos'] + $h['len'] <= $st || $h['pos'] >= $en)) {
+                    continue 2; // متداخل مع محطة اتاختارت
+                }
+            }
+            $picked[] = $h['s'];
+            $ranges[] = [$h['pos'], $h['pos'] + $h['len']];
+            if (count($picked) >= 2) {
+                break;
+            }
+        }
+
+        return $picked;
     }
 
     private function norm(string $s): string
