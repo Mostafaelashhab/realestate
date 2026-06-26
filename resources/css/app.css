@@ -7,7 +7,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
+    --font-sans: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
 
     /* أخضر السكة الحديد — سكيل كامل */

@@ -17,7 +17,7 @@ class VoiceController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         if ($q === '') {
-            return redirect()->route('home');
+            return view('voice'); // صفحة المساعد الصوتي
         }
 
         // أرقام عربية/هندية → لاتينية (لرقم القطار).

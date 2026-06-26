@@ -108,46 +108,10 @@
         });
     })();
 
-    // البحث الصوتي (زر النص في البار): قول «من بنها للقاهرة» أو وجهتك.
+    // زر الصوت في البار → صفحة المساعد الصوتي.
     (() => {
         const fab = document.getElementById('voice-fab');
-        if (!fab) return;
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const toast = document.getElementById('qm-toast');
-        let tt;
-        const say = (m, keep) => { if (!toast) return; toast.textContent = m; toast.hidden = false; clearTimeout(tt); if (!keep) tt = setTimeout(() => { toast.hidden = true; }, 2200); };
-        fab.addEventListener('click', () => {
-            if (!SR) { location.href = '{{ route('home') }}'; return; } // مش مدعوم → الهوم
-            let rec;
-            try { rec = new SR(); } catch (e) { return; }
-            rec.lang = 'ar-EG'; rec.interimResults = false; rec.maxAlternatives = 1;
-            fab.classList.add('animate-pulse');
-            // مؤشّر استماع بموجة صوت
-            if (toast) {
-                const bars = [0, .15, .3, .15, 0].map(d => `<i class="vbar" style="animation-delay:${d}s"></i>`).join('');
-                toast.innerHTML = `<span class="inline-flex items-center gap-2">🎤 بسمعك… <span class="vwave">${bars}</span></span>`;
-                toast.hidden = false; clearTimeout(tt);
-            }
-            let got = false;
-            rec.onresult = (e) => {
-                const t = (e.results[0][0].transcript || '').trim();
-                if (t) { got = true; say('بدوّرلك على «' + t + '»…', true); location.href = '{{ route('voice') }}?q=' + encodeURIComponent(t); }
-            };
-            rec.onerror = (e) => {
-                const map = {
-                    'not-allowed': 'لازم تسمح بالمايك من إعدادات المتصفّح 🎤',
-                    'service-not-allowed': 'فعّل الإملاء (Dictation) من إعدادات الجهاز',
-                    'no-speech': 'متسمعتش صوت — اضغط واتكلم على طول وقرّب من المايك',
-                    'audio-capture': 'مفيش مايك متاح',
-                    'network': 'النت ضعيف، حاول تاني',
-                    'aborted': '',
-                };
-                const m = map[e.error] ?? ('تعذّر السمع (' + e.error + ')');
-                if (m) say(m);
-            };
-            rec.onend = () => fab.classList.remove('animate-pulse');
-            try { rec.start(); } catch (e) { fab.classList.remove('animate-pulse'); }
-        });
+        if (fab) fab.addEventListener('click', () => { location.href = '{{ route('voice') }}'; });
     })();
 
     // لودر التنقّل: يظهر عند الضغط على أي رابط داخلي (أو إرسال فورم) أثناء تحميل الصفحة التالية

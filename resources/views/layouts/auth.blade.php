@@ -12,7 +12,7 @@
     <link rel="icon" href="/icons/favicon-32.png?v=7" sizes="32x32" type="image/png">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=tajawal:400,500,700,800" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,800&family=tajawal:400,500,700,800" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
