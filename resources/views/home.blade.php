@@ -2,6 +2,8 @@
 
 @section('title', 'مواعيد وأسعار القطارات')
 @section('og_desc', 'مواعيد وأسعار قطارات مصر، والمحطات، والمقاعد المتاحة — في تطبيق واحد سريع.')
+@section('dark', '1')
+@section('hideHeader', '1')
 
 @push('head')
     <script type="application/ld+json">
@@ -76,24 +78,68 @@
         </script>
     @endif
 
-    {{-- ترحيب --}}
-    <section class="relative overflow-hidden bg-linear-to-br from-rail-800 via-rail-700 to-rail-600 text-white rounded-3xl p-6 pb-12 shadow-xl shadow-rail-800/25">
-        {{-- زخرفة قضبان خفيفة --}}
-        <svg class="absolute -top-6 -start-10 w-48 h-48 text-white/10" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M20 0v100M40 0v100M60 0v100M80 0v100"/>
-            <path d="M0 25h100M0 50h100M0 75h100" stroke-dasharray="6 8"/>
-        </svg>
-        <div class="relative">
-            <h1 class="text-3xl font-extrabold mb-1.5 tracking-tight">رايح فين؟</h1>
-            <p class="text-rail-50/90 text-sm leading-relaxed">مواعيد وأسعار قطارات مصر، والمقاعد المتاحة — في مكان واحد.</p>
-            <div class="mt-4 inline-flex items-center gap-1.5 bg-white/15 ring-1 ring-white/15 rounded-full px-3 py-1.5 text-xs font-bold backdrop-blur">
-                <x-icon name="train" class="w-4 h-4"/> {{ number_format($trainCount) }} قطار على الشبكة
+    {{-- ترحيب + جرس --}}
+    <div class="flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
+        <div>
+            <p class="text-rail-200/80 text-sm font-medium">مرحبًا</p>
+            <h1 class="text-2xl font-extrabold text-white mt-0.5">وين رحلتك الجاية؟</h1>
+        </div>
+        <a href="{{ route('premium') }}" aria-label="التنبيهات"
+            class="relative w-11 h-11 grid place-items-center rounded-2xl bg-white/10 ring-1 ring-white/10 text-white shrink-0 active:scale-95 transition">
+            <x-icon name="bell" class="w-5 h-5"/>
+            <span class="absolute top-2.5 end-2.5 w-2 h-2 rounded-full bg-rail-400 ring-2 ring-rail-950"></span>
+        </a>
+    </div>
+
+    {{-- كارت رحلتك القادمة (يملأه JS من آخر بحث) أو ترحيب --}}
+    <section id="trip-hero" class="relative overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
+        <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
+        <div class="relative text-white">
+            <div class="flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> ابدأ رحلتك</span>
+                <span class="inline-flex items-center gap-1 text-xs text-rail-100/80"><x-icon name="train" class="w-4 h-4"/> {{ number_format($trainCount) }} قطار</span>
             </div>
+            <p class="mt-4 text-lg font-extrabold">دوّر على قطارك في ثواني</p>
+            <p class="text-sm text-rail-100/70 mt-1">مواعيد وأسعار ومقاعد متاحة — كله في مكان واحد.</p>
         </div>
     </section>
 
-    {{-- بحث على شكل خطوات — يطفو فوق الهيرو --}}
-    <section id="wiz" class="relative -mt-7 bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-4">
+    <script>
+        (() => {
+            let recent = [];
+            try { recent = JSON.parse(localStorage.getItem('qm:recent') || '[]'); } catch (e) {}
+            const r = recent[0];
+            const el = document.getElementById('trip-hero');
+            if (!r || !el) return;
+            const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const url = `/search?from=${encodeURIComponent(r.from)}&to=${encodeURIComponent(r.to)}&date=${encodeURIComponent(r.date || '')}`;
+            el.innerHTML = `
+                <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
+                <div class="relative text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1"><span class="w-1.5 h-1.5 rounded-full bg-rail-300"></span> رحلتك القادمة</span>
+                        <svg viewBox="0 0 24 24" class="w-5 h-5 text-amber-300" fill="currentColor"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 min-w-0 text-center"><div class="text-xl font-extrabold truncate">${esc(r.fromName)}</div><div class="text-[11px] text-rail-100/60 mt-0.5">قيام</div></div>
+                        <div class="flex items-center gap-1 w-20 shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-rail-300"></span>
+                            <span class="flex-1 border-t border-dashed border-white/30"></span>
+                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8M7 16l-2 4m12-4l2 4"/></svg>
+                            <span class="flex-1 border-t border-dashed border-white/30"></span>
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        </div>
+                        <div class="flex-1 min-w-0 text-center"><div class="text-xl font-extrabold truncate">${esc(r.toName)}</div><div class="text-[11px] text-rail-100/60 mt-0.5">وصول</div></div>
+                    </div>
+                    <a href="${url}" class="mt-5 flex items-center justify-center gap-1 bg-white/10 hover:bg-white/15 rounded-2xl py-3 text-sm font-bold transition">عرض التفاصيل
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </a>
+                </div>`;
+        })();
+    </script>
+
+    {{-- بحث على شكل خطوات (كارت أبيض يطفو فوق الخلفية الداكنة) --}}
+    <section id="wiz" class="relative bg-white rounded-3xl shadow-xl ring-1 ring-slate-100 p-5 mb-5">
         @error('number')
             <div class="flex items-center gap-2 bg-red-50 text-red-700 text-sm rounded-2xl px-4 py-3 mb-4">
                 <x-icon name="alert" class="w-5 h-5 shrink-0"/> {{ $message }}
@@ -322,8 +368,8 @@
 
     {{-- وجهات شائعة --}}
     @if ($popular->isNotEmpty())
-        <section class="mb-4">
-            <h3 class="text-xs font-bold text-slate-500 mb-2">وجهات شائعة</h3>
+        <section class="mb-5">
+            <h3 class="text-xs font-bold text-rail-200/70 mb-2">وجهات شائعة</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach ($popular as $p)
                     <a href="{{ route('route', ['from' => $p['from']->slug, 'to' => $p['to']->slug]) }}"
@@ -351,7 +397,7 @@
             const chip = (href, inner) =>
                 `<a href="${href}" class="inline-flex items-center gap-1.5 bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full ps-3 pe-2 py-1.5 text-sm transition">${inner}</a>`;
             const card = (title, icon, chips) =>
-                `<div><h3 class="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">${icon} ${title}</h3><div class="flex flex-wrap gap-2">${chips}</div></div>`;
+                `<div><h3 class="text-xs font-bold text-rail-200/70 mb-2 flex items-center gap-1.5">${icon} ${title}</h3><div class="flex flex-wrap gap-2">${chips}</div></div>`;
 
             const STAR = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-amber-500" fill="currentColor"><path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg>';
             const HIST = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>';
@@ -376,40 +422,33 @@
         })();
     </script>
 
-    {{-- إجراءات سريعة (شبكة ٢×٢) --}}
-    <section class="grid grid-cols-2 gap-3 mb-3">
+    {{-- خدمات سريعة (شبكة ٣×٢) --}}
+    <div class="flex items-center gap-2 mb-3">
+        <svg viewBox="0 0 24 24" class="w-5 h-5 text-rail-300" fill="currentColor" aria-hidden="true"><path d="M12 2l1.6 5.6L19 9l-5.4 1.4L12 16l-1.6-5.6L5 9l5.4-1.4z"/></svg>
+        <h2 class="font-extrabold text-white">خدمات سريعة</h2>
+    </div>
+    <section class="grid grid-cols-3 gap-3">
         @php
-            $quick = [
-                ['icon' => 'seat',  'tint' => 'rail',  't' => 'شوف المقاعد',  's' => 'الأماكن المتاحة قبل ما تتحرك', 'act' => 'search'],
-                ['icon' => 'mic',   'tint' => 'rail',  't' => 'البحث بصوتك',  's' => 'اسأل عن محطة أو موعد',        'href' => route('voice')],
-                ['icon' => 'clock', 'tint' => 'amber', 't' => 'مواعيد دقيقة', 's' => 'محدّثة من الهيئة',             'act' => 'search'],
-                ['icon' => 'pin',   'tint' => 'amber', 't' => 'محطات قريبة',  's' => 'اعرف أقرب محطة ليك',          'act' => 'near'],
+            $services = [
+                ['icon' => 'mic',     't' => 'البحث بصوتك',  's' => 'اسأل بسهولة',  'href' => route('voice')],
+                ['icon' => 'seat',    't' => 'المقاعد',      's' => 'شوف الفاضي',   'act' => 'search'],
+                ['icon' => 'star',    't' => 'المفضلة',      's' => 'المحفوظة',     'href' => route('favorites')],
+                ['icon' => 'pin',     't' => 'محطات قريبة', 's' => 'حواليك',       'act' => 'near'],
+                ['icon' => 'station', 't' => 'جدول المحطات', 's' => 'المواعيد',     'act' => 'search'],
+                ['icon' => 'bell',    't' => 'التنبيهات',    's' => 'المهمة',       'href' => route('premium')],
             ];
-            $tints = ['rail' => 'bg-rail-50 text-rail-600 group-hover:bg-rail-100', 'amber' => 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'];
         @endphp
-        @foreach ($quick as $q)
-            <{{ isset($q['href']) ? 'a' : 'button' }}
-                @if (isset($q['href'])) href="{{ $q['href'] }}" @else type="button" data-quick="{{ $q['act'] }}" @endif
-                class="group text-start bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-rail-200 active:scale-95 transition">
-                <div class="w-11 h-11 grid place-items-center rounded-2xl mb-3 transition {{ $tints[$q['tint']] }}">
-                    <x-icon :name="$q['icon']" class="w-6 h-6"/>
-                </div>
-                <h3 class="font-bold text-sm">{{ $q['t'] }}</h3>
-                <p class="text-xs text-slate-500 mt-0.5 leading-snug">{{ $q['s'] }}</p>
-            </{{ isset($q['href']) ? 'a' : 'button' }}>
+        @foreach ($services as $s)
+            <{{ isset($s['href']) ? 'a' : 'button' }}
+                @if (isset($s['href'])) href="{{ $s['href'] }}" @else type="button" data-quick="{{ $s['act'] }}" @endif
+                class="group bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-3 flex flex-col items-center text-center active:scale-95 transition">
+                <span class="w-12 h-12 grid place-items-center rounded-full bg-rail-600 text-white mb-2 shadow-md shadow-rail-600/30 group-active:scale-95 transition">
+                    <x-icon :name="$s['icon']" class="w-6 h-6"/>
+                </span>
+                <span class="font-bold text-xs text-slate-800">{{ $s['t'] }}</span>
+                <span class="text-[10px] text-slate-400 mt-0.5 leading-tight">{{ $s['s'] }}</span>
+            </{{ isset($s['href']) ? 'a' : 'button' }}>
         @endforeach
-    </section>
-
-    {{-- اختصارات ثانوية --}}
-    <section class="grid grid-cols-2 gap-3">
-        <a href="{{ route('fines') }}" class="group flex items-center gap-2.5 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-amber-200 active:scale-95 transition">
-            <span class="w-9 h-9 grid place-items-center rounded-xl bg-amber-50 text-amber-600 shrink-0"><x-icon name="scale" class="w-5 h-5"/></span>
-            <span class="font-bold text-sm">الغرامات</span>
-        </a>
-        <a href="{{ route('report') }}" class="group flex items-center gap-2.5 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-rail-200 active:scale-95 transition">
-            <span class="w-9 h-9 grid place-items-center rounded-xl bg-rail-50 text-rail-600 shrink-0"><x-icon name="flag" class="w-5 h-5"/></span>
-            <span class="font-bold text-sm">بلّغ عن خطأ</span>
-        </a>
     </section>
 
     <script>
