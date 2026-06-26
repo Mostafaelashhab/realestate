@@ -123,12 +123,23 @@
             rec.lang = 'ar-EG'; rec.interimResults = false; rec.maxAlternatives = 1;
             fab.classList.add('animate-pulse');
             say('🎤 بسمعك… قول رايح فين', true);
+            let got = false;
             rec.onresult = (e) => {
                 const t = (e.results[0][0].transcript || '').trim();
-                if (t) { say('بدوّرلك على «' + t + '»…', true); location.href = '{{ route('voice') }}?q=' + encodeURIComponent(t); }
-                else say('متسمعش كويس، حاول تاني');
+                if (t) { got = true; say('بدوّرلك على «' + t + '»…', true); location.href = '{{ route('voice') }}?q=' + encodeURIComponent(t); }
             };
-            rec.onerror = (e) => say(e.error === 'not-allowed' ? 'لازم تسمح بالمايك' : 'متسمعش كويس، حاول تاني');
+            rec.onerror = (e) => {
+                const map = {
+                    'not-allowed': 'لازم تسمح بالمايك من إعدادات المتصفّح 🎤',
+                    'service-not-allowed': 'فعّل الإملاء (Dictation) من إعدادات الجهاز',
+                    'no-speech': 'متسمعتش صوت — اضغط واتكلم على طول وقرّب من المايك',
+                    'audio-capture': 'مفيش مايك متاح',
+                    'network': 'النت ضعيف، حاول تاني',
+                    'aborted': '',
+                };
+                const m = map[e.error] ?? ('تعذّر السمع (' + e.error + ')');
+                if (m) say(m);
+            };
             rec.onend = () => fab.classList.remove('animate-pulse');
             try { rec.start(); } catch (e) { fab.classList.remove('animate-pulse'); }
         });
