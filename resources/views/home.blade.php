@@ -376,21 +376,51 @@
         })();
     </script>
 
-    {{-- اختصارات --}}
+    {{-- إجراءات سريعة (شبكة ٢×٢) --}}
+    <section class="grid grid-cols-2 gap-3 mb-3">
+        @php
+            $quick = [
+                ['icon' => 'seat',  'tint' => 'rail',  't' => 'شوف المقاعد',  's' => 'الأماكن المتاحة قبل ما تتحرك', 'act' => 'search'],
+                ['icon' => 'mic',   'tint' => 'rail',  't' => 'البحث بصوتك',  's' => 'اسأل عن محطة أو موعد',        'href' => route('voice')],
+                ['icon' => 'clock', 'tint' => 'amber', 't' => 'مواعيد دقيقة', 's' => 'محدّثة من الهيئة',             'act' => 'search'],
+                ['icon' => 'pin',   'tint' => 'amber', 't' => 'محطات قريبة',  's' => 'اعرف أقرب محطة ليك',          'act' => 'near'],
+            ];
+            $tints = ['rail' => 'bg-rail-50 text-rail-600 group-hover:bg-rail-100', 'amber' => 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'];
+        @endphp
+        @foreach ($quick as $q)
+            <{{ isset($q['href']) ? 'a' : 'button' }}
+                @if (isset($q['href'])) href="{{ $q['href'] }}" @else type="button" data-quick="{{ $q['act'] }}" @endif
+                class="group text-start bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-rail-200 active:scale-95 transition">
+                <div class="w-11 h-11 grid place-items-center rounded-2xl mb-3 transition {{ $tints[$q['tint']] }}">
+                    <x-icon :name="$q['icon']" class="w-6 h-6"/>
+                </div>
+                <h3 class="font-bold text-sm">{{ $q['t'] }}</h3>
+                <p class="text-xs text-slate-500 mt-0.5 leading-snug">{{ $q['s'] }}</p>
+            </{{ isset($q['href']) ? 'a' : 'button' }}>
+        @endforeach
+    </section>
+
+    {{-- اختصارات ثانوية --}}
     <section class="grid grid-cols-2 gap-3">
-        <a href="{{ route('fines') }}" class="group bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-amber-200 active:scale-95 transition">
-            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-amber-50 text-amber-600 mb-3 group-hover:bg-amber-100 transition">
-                <x-icon name="scale" class="w-6 h-6"/>
-            </div>
-            <h3 class="font-bold text-sm flex items-center gap-1">الغرامات <x-icon name="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-amber-500 transition"/></h3>
-            <p class="text-xs text-slate-500 mt-0.5">المخالفات وقيمة كل غرامة</p>
+        <a href="{{ route('fines') }}" class="group flex items-center gap-2.5 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-amber-200 active:scale-95 transition">
+            <span class="w-9 h-9 grid place-items-center rounded-xl bg-amber-50 text-amber-600 shrink-0"><x-icon name="scale" class="w-5 h-5"/></span>
+            <span class="font-bold text-sm">الغرامات</span>
         </a>
-        <a href="{{ route('report') }}" class="group bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-rail-200 active:scale-95 transition">
-            <div class="w-11 h-11 grid place-items-center rounded-2xl bg-rail-50 text-rail-600 mb-3 group-hover:bg-rail-100 transition">
-                <x-icon name="flag" class="w-6 h-6"/>
-            </div>
-            <h3 class="font-bold text-sm flex items-center gap-1">بلّغ عن خطأ <x-icon name="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-rail-500 transition"/></h3>
-            <p class="text-xs text-slate-500 mt-0.5">ميعاد أو سعر غلط أو مشكلة</p>
+        <a href="{{ route('report') }}" class="group flex items-center gap-2.5 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 hover:ring-rail-200 active:scale-95 transition">
+            <span class="w-9 h-9 grid place-items-center rounded-xl bg-rail-50 text-rail-600 shrink-0"><x-icon name="flag" class="w-5 h-5"/></span>
+            <span class="font-bold text-sm">بلّغ عن خطأ</span>
         </a>
     </section>
+
+    <script>
+        (() => {
+            const wiz = document.getElementById('wiz');
+            const scrollWiz = () => wiz?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => {
+                try { navigator.vibrate?.(10); } catch (e) {}
+                if (b.dataset.quick === 'near') { scrollWiz(); setTimeout(() => document.getElementById('near-btn')?.click(), 350); }
+                else scrollWiz();
+            }));
+        })();
+    </script>
 @endsection

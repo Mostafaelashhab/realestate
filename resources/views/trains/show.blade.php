@@ -359,11 +359,12 @@
                 const PREMIUM_URL = @json(route('premium'));
 
                 // زر «نبّهني أول ما يفضى كرسي» — يظهر لما القطار مكتمل (مجاني لأي مسجّل).
+                const BELL = '<svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
                 function seatWatchCta() {
                     if (!IS_AUTH) {
-                        return `<a href="${LOGIN_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold px-4 py-3 transition">🔔 سجّل عشان نبّهك أول ما يفضى كرسي</a>`;
+                        return `<a href="${LOGIN_URL}" class="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 text-white text-sm font-bold px-4 py-3 transition">${BELL} سجّل عشان نبّهك أول ما يفضى كرسي</a>`;
                     }
-                    return `<button type="button" data-seatwatch class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white text-sm font-bold px-4 py-3 transition">🔔 نبّهني أول ما يفضى كرسي</button>`;
+                    return `<button type="button" data-seatwatch class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-rail-600 hover:bg-rail-700 active:scale-[.99] text-white text-sm font-bold px-4 py-3 transition">${BELL} نبّهني أول ما يفضى كرسي</button>`;
                 }
 
                 async function onSeatWatch(btn) {

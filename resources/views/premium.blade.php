@@ -10,7 +10,7 @@
             <path d="M20 0v100M40 0v100M60 0v100M80 0v100"/><path d="M0 30h100M0 55h100M0 80h100" stroke-dasharray="6 8"/>
         </svg>
         <div class="relative">
-            <span class="inline-flex items-center gap-1.5 bg-white/20 ring-1 ring-white/25 rounded-full px-3 py-1 text-xs font-bold">⭐ Premium</span>
+            <span class="inline-flex items-center gap-1.5 bg-white/20 ring-1 ring-white/25 rounded-full px-3 py-1 text-xs font-bold"><x-icon name="star" class="w-3.5 h-3.5"/> Premium</span>
             <h1 class="text-2xl font-extrabold mt-3">اعرف المقاعد أول واحد</h1>
             <p class="text-amber-50/90 text-sm mt-1.5 leading-relaxed">القطر مكتمل؟ سيبنا نراقبه، وأول ما يفضى كرسي يوصلك إشعار فورًا — من غير ما تفضل تفتح الصفحة.</p>
         </div>
@@ -40,7 +40,7 @@
             </a>
         @else
             <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-                <p class="text-sm font-bold text-amber-800">الاشتراك هيتفعّل قريب 🔜</p>
+                <p class="text-sm font-bold text-amber-800">الاشتراك هيتفعّل قريب</p>
                 <p class="text-xs text-amber-700 mt-1">بنجهّز طريقة الدفع. سيب إيميلك مسجّل وهنبلّغك أول ما يفتح.</p>
             </div>
         @endguest

@@ -175,5 +175,23 @@
                 <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/>
             </g>
             @break
+
+        @case('mic')
+            <g {!! $stroke !!}>
+                <rect x="9" y="2" width="6" height="12" rx="3"/>
+                <path d="M5 10a7 7 0 0 0 14 0M12 19v3"/>
+            </g>
+            @break
+
+        @case('seat')
+            <g fill="currentColor" stroke="none">
+                <rect x="7" y="3" width="10" height="11" rx="3"/>
+                <rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/>
+                <rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/>
+                <rect x="6" y="12.5" width="12" height="5" rx="2"/>
+                <rect x="6.2" y="17" width="2.4" height="3.4" rx="1"/>
+                <rect x="15.4" y="17" width="2.4" height="3.4" rx="1"/>
+            </g>
+            @break
     @endswitch
 </svg>

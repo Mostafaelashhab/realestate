@@ -228,6 +228,7 @@ window.EnrLive = (() => {
             const wrap = seat.closest('[data-seats]');
             if (wrap) wrap.querySelectorAll('.seat-selected').forEach(s => { if (s !== seat) s.classList.remove('seat-selected'); });
             seat.classList.toggle('seat-selected');
+            try { navigator.vibrate?.(12); } catch (e) {} // إحساس لمسي عند اختيار الكرسي
         });
     }
 
