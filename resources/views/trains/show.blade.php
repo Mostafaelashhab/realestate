@@ -102,22 +102,34 @@
             paint();
         })();
 
-        {{-- نحفظ آخر قطر شُوهد لعرضه في كارت «رحلتك القادمة» بالصفحة الرئيسية --}}
+        {{-- نسجّل القطر المعروض في «رحلاتي» لعرض الأكثر بحثًا/الأقرب ميعادًا بالرئيسية --}}
         @if ($origin && $terminal)
-            @php $tripDate = request('date') ? \Illuminate\Support\Carbon::parse(request('date'))->translatedFormat('j F Y') : now()->translatedFormat('j F Y'); @endphp
+            @php
+                $dateISO = request('date') ?: now()->toDateString();
+                $depHM = $depart ? \Illuminate\Support\Carbon::parse($depart)->format('H:i') : null;
+            @endphp
             (() => {
                 try {
-                    localStorage.setItem('qm:lasttrip', JSON.stringify({
+                    const key = @json($train->number . '|' . $origin->id . '|' . $terminal->id . '|' . $dateISO);
+                    let trips = {};
+                    try { trips = JSON.parse(localStorage.getItem('qm:trips') || '{}'); } catch (e) {}
+                    const prev = trips[key]?.count || 0;
+                    trips[key] = {
                         number: @json((string) $train->number),
                         fromName: @json($origin->name_ar),
                         toName: @json($terminal->name_ar),
                         ftime: @json(\App\Support\Format::time($depart)),
                         ttime: @json(\App\Support\Format::time($arrive)),
-                        fdate: @json($tripDate),
-                        tdate: @json($tripDate),
                         dur: @json($duration),
                         url: @json(request()->getRequestUri()),
-                    }));
+                        dateLabel: @json(\Illuminate\Support\Carbon::parse($dateISO)->translatedFormat('j F Y')),
+                        depISO: @json($depHM ? $dateISO . 'T' . $depHM : null),
+                        count: prev + 1,
+                        seen: Date.now(),
+                    };
+                    // نحتفظ بأحدث ٢٠ رحلة فقط.
+                    const entries = Object.entries(trips).sort((a, b) => (b[1].seen || 0) - (a[1].seen || 0)).slice(0, 20);
+                    localStorage.setItem('qm:trips', JSON.stringify(Object.fromEntries(entries)));
                 } catch (e) {}
             })();
         @endif

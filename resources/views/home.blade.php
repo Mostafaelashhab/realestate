@@ -78,11 +78,14 @@
         </script>
     @endif
 
-    {{-- توهّج علوي خفيف --}}
+    {{-- توهّج علوي + رسمة قطار خلف الكارت (أعلى الشمال) --}}
     <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-12 h-44 bg-rail-500/15 blur-3xl"></div>
+    <div aria-hidden="true" class="pointer-events-none absolute -top-2 -end-6 w-56 z-0 drop-shadow-2xl">
+        <x-train-illustration class="w-full"/>
+    </div>
 
     {{-- ترحيب + جرس --}}
-    <div class="relative flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
+    <div class="relative z-10 flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
         <div>
             <p class="text-rail-200/80 text-sm font-medium">مرحبًا</p>
             <h1 class="text-2xl font-extrabold text-white mt-0.5">وين رحلتك الجاية؟</h1>
@@ -102,7 +105,7 @@
         $toName = $featured['to'] ?? ($sug ? $sug['to']->name_ar : 'طنطا');
         $heroUrl = $featured['url'] ?? ($sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home'));
     @endphp
-    <section class="relative overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
+    <section class="relative z-10 overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
             <div class="flex items-center justify-between gap-2 mb-5">
@@ -148,9 +151,19 @@
 
     <script>
         (() => {
-            let t = null;
-            try { t = JSON.parse(localStorage.getItem('qm:lasttrip') || 'null'); } catch (e) {}
+            let trips = {};
+            try { trips = JSON.parse(localStorage.getItem('qm:trips') || '{}'); } catch (e) {}
+            const arr = Object.values(trips);
+            if (!arr.length) return;
+
+            // الأفضل: أكتر قطر بحثت عنه وميعاده لسه جاي؛ وإلا الأكثر بحثًا.
+            const now = Date.now();
+            const upcoming = arr.filter(t => t.depISO && new Date(t.depISO).getTime() > now)
+                .sort((a, b) => (b.count - a.count) || (new Date(a.depISO) - new Date(b.depISO)));
+            const byCount = arr.slice().sort((a, b) => (b.count || 0) - (a.count || 0));
+            const t = upcoming[0] || byCount[0];
             if (!t) return;
+
             const show = (id, val) => { const el = document.getElementById(id); if (el && val) { el.textContent = val; el.hidden = false; } };
             const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
             setText('trip-from', t.fromName);
@@ -158,8 +171,8 @@
             show('trip-num', t.number ? `قطار ${t.number}` : '');
             show('trip-ftime', t.ftime);
             show('trip-ttime', t.ttime);
-            setText('trip-fdate', t.fdate || 'قيام');
-            setText('trip-tdate', t.tdate || 'وصول');
+            setText('trip-fdate', t.dateLabel || 'قيام');
+            setText('trip-tdate', t.dateLabel || 'وصول');
             setText('trip-dur', t.dur || 'المواعيد بالكامل');
             if (t.url) document.getElementById('trip-link')?.setAttribute('href', t.url);
         })();
