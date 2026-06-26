@@ -78,8 +78,12 @@
         </script>
     @endif
 
-    {{-- توهّج علوي خفيف --}}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-10 h-48 bg-rail-500/15 blur-3xl"></div>
+    {{-- رسمة قطار أعلى اليسار + توهّج سرعة --}}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-8 h-52 bg-rail-500/20 blur-3xl"></div>
+    <div aria-hidden="true" class="pointer-events-none absolute -start-10 -top-4 w-72 text-white/90">
+        <div class="absolute inset-0 bg-rail-400/25 blur-2xl rounded-full"></div>
+        <x-train-illustration class="relative w-full drop-shadow-2xl"/>
+    </div>
 
     {{-- ترحيب + جرس --}}
     <div class="relative flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
@@ -455,6 +459,24 @@
             </{{ isset($s['href']) ? 'a' : 'button' }}>
         @endforeach
     </section>
+
+    {{-- بانر المقاعد --}}
+    <div class="relative overflow-hidden rounded-3xl mt-5 p-5 bg-linear-to-br from-rail-700 via-rail-800 to-rail-900 ring-1 ring-white/10 text-white">
+        <svg class="absolute -bottom-4 -end-3 w-28 h-28 text-white/10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="3" width="10" height="11" rx="3"/><rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/><rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/><rect x="6" y="12.5" width="12" height="5" rx="2"/></svg>
+        <div class="relative text-center">
+            <h3 class="text-lg font-extrabold">شوف مقعدك المفضل</h3>
+            <p class="text-sm text-rail-100/80 mt-1">اعرف الأماكن الفاضية قبل ما تتحرك</p>
+            <button type="button" data-quick="search" class="inline-flex items-center gap-1 bg-white text-rail-700 font-bold rounded-full px-5 py-2.5 mt-4 active:scale-95 transition">
+                استكشف المقاعد <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex justify-center gap-1.5 mt-4">
+                <span class="w-5 h-1.5 rounded-full bg-white"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+            </div>
+        </div>
+    </div>
 
     <script>
         (() => {
