@@ -78,10 +78,11 @@
         </script>
     @endif
 
-    {{-- توهّج علوي + رسمة قطار خلف الكارت (أعلى الشمال) --}}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-12 h-44 bg-rail-500/15 blur-3xl"></div>
-    <div aria-hidden="true" class="pointer-events-none absolute -top-2 -end-6 w-56 z-0 drop-shadow-2xl">
-        <x-train-illustration class="w-full"/>
+    {{-- بانر صورة القطار مدموجة في الخلفية الغامقة --}}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-72 overflow-hidden z-0">
+        <img src="{{ asset('images/train-hero.png') }}" alt="" loading="eager" class="w-full h-full object-cover object-center">
+        <div class="absolute inset-0 bg-linear-to-b from-rail-950/20 via-rail-950/70 to-rail-950"></div>
+        <div class="absolute inset-0 bg-linear-to-l from-rail-950/85 via-rail-950/30 to-transparent"></div>
     </div>
 
     {{-- ترحيب + جرس --}}
@@ -105,7 +106,7 @@
         $toName = $featured['to'] ?? ($sug ? $sug['to']->name_ar : 'طنطا');
         $heroUrl = $featured['url'] ?? ($sug ? route('route', ['from' => $sug['from']->slug, 'to' => $sug['to']->slug]) : route('home'));
     @endphp
-    <section class="relative z-10 overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800 via-rail-800 to-rail-900 ring-1 ring-white/10 shadow-xl shadow-black/30">
+    <section class="relative z-10 mt-20 overflow-hidden rounded-3xl p-5 mb-5 bg-linear-to-br from-rail-800/95 via-rail-800/95 to-rail-900/95 backdrop-blur-sm ring-1 ring-white/10 shadow-xl shadow-black/40">
         <div class="pointer-events-none absolute -top-10 -start-8 w-40 h-40 rounded-full bg-rail-400/15 blur-2xl"></div>
         <div class="relative text-white">
             <div class="flex items-center justify-between gap-2 mb-5">
