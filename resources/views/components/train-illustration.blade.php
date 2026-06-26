@@ -1,43 +1,55 @@
-{{-- رسمة قطار جانبية (أبيض على خلفية خضرا): مقدّمة مائلة + شبابيك + بوجيهات + بانتوغراف + قضبان وفلنكات --}}
-<svg viewBox="0 0 280 140" fill="none" aria-hidden="true" {{ $attributes->merge(['class' => 'w-60']) }}>
-    {{-- خطوط حركة --}}
-    <g stroke="#fff" stroke-opacity=".3" stroke-width="3.5" stroke-linecap="round">
-        <path d="M8 56h26"/><path d="M2 72h20"/><path d="M12 88h22"/>
+{{-- قطار حديث (مواجهة ٣/٤) — جسم أبيض لمّاع + زجاج غامق + لمسات خضرا + خطوط سرعة --}}
+<svg viewBox="0 0 240 180" fill="none" aria-hidden="true" {{ $attributes->merge(['class' => 'w-60']) }}>
+    <defs>
+        <linearGradient id="qmBody" x1="0.1" y1="0" x2="0.3" y2="1">
+            <stop offset="0" stop-color="#ffffff"/>
+            <stop offset=".55" stop-color="#eef2f6"/>
+            <stop offset="1" stop-color="#bcc7d3"/>
+        </linearGradient>
+        <linearGradient id="qmSide" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#e9eef3"/>
+            <stop offset="1" stop-color="#a7b3c0"/>
+        </linearGradient>
+        <linearGradient id="qmGlass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#14492f"/>
+            <stop offset="1" stop-color="#05241a"/>
+        </linearGradient>
+    </defs>
+
+    {{-- خطوط سرعة --}}
+    <g stroke="#22c55e" stroke-linecap="round">
+        <path d="M4 66h36" stroke-width="4" stroke-opacity=".75"/>
+        <path d="M0 90h28" stroke-width="5" stroke-opacity=".4"/>
+        <path d="M10 112h30" stroke-width="3" stroke-opacity=".7"/>
     </g>
+
     {{-- ظل --}}
-    <ellipse cx="150" cy="118" rx="104" ry="6" fill="#000" fill-opacity=".12"/>
-    {{-- بانتوغراف --}}
-    <g stroke="#fff" stroke-opacity=".75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M150 24v8M150 32l-14 8M150 32l14 8M132 42h36"/>
+    <ellipse cx="150" cy="156" rx="88" ry="9" fill="#000" fill-opacity=".18"/>
+
+    {{-- جسم جانبي (يمتد لليمين) --}}
+    <path d="M120 36 H214 a18 18 0 0 1 18 18 V120 a14 14 0 0 1-14 14 H120 Z" fill="url(#qmSide)"/>
+    <g fill="url(#qmGlass)">
+        <rect x="135" y="56" width="26" height="22" rx="5"/>
+        <rect x="168" y="56" width="26" height="22" rx="5"/>
+        <rect x="201" y="56" width="22" height="22" rx="5"/>
     </g>
-    {{-- سقف --}}
-    <rect x="74" y="34" width="156" height="9" rx="4.5" fill="#fff" fill-opacity=".85"/>
-    {{-- جسم القطار بمقدّمة مائلة (الأمام لليسار) --}}
-    <path d="M84 40 H224 a16 16 0 0 1 16 16 V96 H50 V64 Q50 48 70 42 Z" fill="#fff"/>
-    {{-- زجاج القيادة الأمامي --}}
-    <path d="M70 50 Q56 54 54 68 H78 V50 Z" fill="#0a4a31"/>
-    {{-- شبابيك الركاب --}}
-    <g fill="#0a4a31">
-        <rect x="92" y="52" width="28" height="20" rx="5"/>
-        <rect x="128" y="52" width="28" height="20" rx="5"/>
-        <rect x="164" y="52" width="28" height="20" rx="5"/>
-        <rect x="200" y="52" width="28" height="20" rx="5"/>
-    </g>
-    {{-- خط القاعدة + نور أمامي --}}
-    <rect x="50" y="84" width="190" height="6" fill="#0a4a31" fill-opacity=".12"/>
-    <circle cx="58" cy="80" r="4.5" fill="#f59e0b"/>
-    {{-- بوجيهات (عربتان بأربع عجلات) --}}
-    <g fill="#0a4a31">
-        <circle cx="88" cy="102" r="9"/><circle cx="114" cy="102" r="9"/>
-        <circle cx="188" cy="102" r="9"/><circle cx="214" cy="102" r="9"/>
-    </g>
-    <g fill="#fff">
-        <circle cx="88" cy="102" r="3.5"/><circle cx="114" cy="102" r="3.5"/>
-        <circle cx="188" cy="102" r="3.5"/><circle cx="214" cy="102" r="3.5"/>
-    </g>
-    {{-- القضيب + الفلنكات --}}
-    <g stroke="#fff" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"><path d="M28 118h224"/></g>
-    <g stroke="#fff" stroke-opacity=".2" stroke-width="3" stroke-linecap="round">
-        <path d="M56 114v9"/><path d="M96 114v9"/><path d="M136 114v9"/><path d="M176 114v9"/><path d="M216 114v9"/>
-    </g>
+    <path d="M122 98 H226" stroke="#16a34a" stroke-width="7" stroke-linecap="round"/>
+
+    {{-- مقدّمة انسيابية (الكابينة) --}}
+    <path d="M122 36 Q70 36 50 80 Q40 104 47 128 a14 14 0 0 0 14 12 H122 a14 14 0 0 0 14-14 V54 a18 18 0 0 0-14-18 Z" fill="url(#qmBody)"/>
+
+    {{-- زجاج القيادة --}}
+    <path d="M114 52 Q80 55 65 86 H114 Z" fill="url(#qmGlass)"/>
+    <path d="M110 57 Q88 60 76 80" stroke="#ffffff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/>
+
+    {{-- لمسة خضرا على المقدّمة --}}
+    <path d="M122 94 Q88 94 62 120" stroke="#22c55e" stroke-width="6" stroke-linecap="round"/>
+
+    {{-- نور أمامي --}}
+    <circle cx="66" cy="124" r="10" fill="#fbbf24" fill-opacity=".3"/>
+    <path d="M58 120l16 4-2 8-15-3z" fill="#fff7d6"/>
+
+    {{-- قاعدة --}}
+    <rect x="50" y="138" width="88" height="8" rx="4" fill="#94a3b8"/>
+    <path d="M26 150H224" stroke="#ffffff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
 </svg>
