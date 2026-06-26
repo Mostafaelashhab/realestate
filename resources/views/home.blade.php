@@ -78,12 +78,8 @@
         </script>
     @endif
 
-    {{-- رسمة قطار أعلى اليسار + توهّج سرعة --}}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-8 h-52 bg-rail-500/20 blur-3xl"></div>
-    <div aria-hidden="true" class="pointer-events-none absolute -start-10 -top-4 w-72 text-white/90">
-        <div class="absolute inset-0 bg-rail-400/25 blur-2xl rounded-full"></div>
-        <x-train-illustration class="relative w-full drop-shadow-2xl"/>
-    </div>
+    {{-- توهّج علوي خفيف --}}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 -top-12 h-44 bg-rail-500/15 blur-3xl"></div>
 
     {{-- ترحيب + جرس --}}
     <div class="relative flex items-start justify-between gap-3 pt-[env(safe-area-inset-top)] mb-4">
