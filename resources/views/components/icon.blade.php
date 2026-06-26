@@ -128,8 +128,9 @@
             @break
 
         @case('star')
-            <path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"
-                fill="currentColor" stroke="none"/>
+            <g {!! $stroke !!}>
+                <path d="M12 3.5l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4.1 5.8-.9z"/>
+            </g>
             @break
 
         @case('clock-history')
@@ -205,13 +206,10 @@
             @break
 
         @case('seat')
-            <g fill="currentColor" stroke="none">
-                <rect x="7" y="3" width="10" height="11" rx="3"/>
-                <rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/>
-                <rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/>
-                <rect x="6" y="12.5" width="12" height="5" rx="2"/>
-                <rect x="6.2" y="17" width="2.4" height="3.4" rx="1"/>
-                <rect x="15.4" y="17" width="2.4" height="3.4" rx="1"/>
+            <g {!! $stroke !!}>
+                <path d="M7 11V7.5A2.5 2.5 0 0 1 9.5 5h5A2.5 2.5 0 0 1 17 7.5V11"/>
+                <rect x="4.5" y="11" width="15" height="6" rx="2.5"/>
+                <path d="M6.5 17v2.5M17.5 17v2.5"/>
             </g>
             @break
     @endswitch
