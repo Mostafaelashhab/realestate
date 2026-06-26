@@ -176,7 +176,7 @@
     <div class="relative z-10 -mx-4 -mb-28 px-4 pt-6 pb-32 bg-slate-50 rounded-t-[2rem]">
 
     {{-- شريط البحث --}}
-    <div class="flex items-center gap-2 bg-white rounded-3xl shadow-lg ring-1 ring-slate-100 p-2 mb-3 -mt-12">
+    <div id="search-bar" class="flex items-center gap-2 bg-white rounded-3xl shadow-lg ring-1 ring-slate-100 p-2 mb-3 -mt-12">
         <a href="{{ route('voice') }}" aria-label="بحث صوتي"
             class="w-12 h-12 rounded-full bg-rail-600 hover:bg-rail-700 text-white grid place-items-center shrink-0 active:scale-95 transition">
             <x-icon name="mic" class="w-5 h-5"/>
@@ -491,15 +491,23 @@
             const wiz = document.getElementById('wiz');
             const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-            // فتح/إغلاق صندوق البحث
+            // فتح/إغلاق صندوق البحث — نخفي الشريط والشرائح عشان مايبقاش في تكرار
+            const searchBar = document.getElementById('search-bar');
+            const chips = document.getElementById('quick-chips');
             const openWiz = () => {
                 if (!wiz) return;
+                searchBar?.classList.add('hidden');
+                chips?.classList.add('hidden');
                 wiz.hidden = false;
-                wiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => wiz.querySelector('[data-search="from"]')?.focus({ preventScroll: true }), 300);
+                wiz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => wiz.querySelector('[data-search="from"]')?.focus({ preventScroll: true }), 250);
             };
+            document.getElementById('close-search')?.addEventListener('click', () => {
+                wiz.hidden = true;
+                searchBar?.classList.remove('hidden');
+                chips?.classList.remove('hidden');
+            });
             document.getElementById('open-search')?.addEventListener('click', openWiz);
-            document.getElementById('close-search')?.addEventListener('click', () => { wiz.hidden = true; });
 
             // الخدمات السريعة
             document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => {
