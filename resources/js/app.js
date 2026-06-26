@@ -26,8 +26,15 @@ window.EnrLive = (() => {
             <span class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-amber-400 inline-block"></span> مختار</span>
         </div>`;
 
-    // أيقونة كرسي (تتلوّن من currentColor).
-    const CHAIR = '<svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" aria-hidden="true"><path d="M7 4a2 2 0 0 0-2 2v4.3c-.6.3-1 1-1 1.7v5a1 1 0 0 0 2 0v-2h12v2a1 1 0 0 0 2 0v-5c0-.7-.4-1.4-1-1.7V6a2 2 0 0 0-2-2H7z" opacity=".25"/><rect x="4" y="11" width="16" height="6" rx="2"/><path d="M6 17v2.5M18 17v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    // أيقونة كرسي (armchair قدّامي) — تتلوّن من currentColor.
+    const CHAIR = '<svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" aria-hidden="true">'
+        + '<rect x="7" y="3" width="10" height="11" rx="3"/>'           // الظهر
+        + '<rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/>'        // مسند يسار
+        + '<rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/>'       // مسند يمين
+        + '<rect x="6" y="12.5" width="12" height="5" rx="2"/>'         // القاعدة
+        + '<rect x="6.2" y="17" width="2.4" height="3.4" rx="1"/>'      // رجل يسار
+        + '<rect x="15.4" y="17" width="2.4" height="3.4" rx="1"/>'     // رجل يمين
+        + '</svg>';
 
     // يجمّع إحداثيات متقاربة في خانات (يتجاهل ضوضاء ١-٢ بكسل) ويرجّع المراكز ودالة الفهرسة.
     const clusterAxis = (values, tol) => {
