@@ -73,9 +73,11 @@
         })();
     </script>
 
+    @php $bare = trim($__env->yieldContent('bare')) === '1'; @endphp
     <div class="app-shell w-full mx-auto max-w-xl min-h-screen bg-slate-100 flex flex-col relative shadow-xl">
 
         {{-- شريط علوي --}}
+        @unless ($bare)
         <header class="sticky top-0 z-30 bg-linear-to-l from-rail-800 to-rail-600 text-white">
             <div class="px-4 pb-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-extrabold text-lg">
@@ -99,15 +101,15 @@
                 @endauth
             </div>
         </header>
+        @endunless
 
         {{-- المحتوى --}}
-        <main class="flex-1 px-4 py-4 pb-28">
+        <main class="flex-1 {{ $bare ? '' : 'px-4 py-4 pb-28' }}">
             @yield('content')
-
-
         </main>
 
         {{-- تبويبات سفلية --}}
+        @unless ($bare)
         @php
             $tabs = [
                 ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
@@ -141,6 +143,7 @@
                 </div>
             </div>
         </nav>
+        @endunless
     </div>
 
     @include('partials.pwa')
