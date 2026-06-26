@@ -20,10 +20,14 @@ window.EnrLive = (() => {
     const egp = (piasters) => (piasters / 100).toLocaleString('ar-EG') + ' ج.م';
 
     const seatLegend = `
-        <div class="flex justify-center gap-4 mt-2 text-[10px] text-slate-400">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> متاح</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> محجوز</span>
+        <div class="flex justify-center flex-wrap gap-3 mt-3 text-[11px] text-slate-500">
+            <span class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-rail-600 inline-block"></span> متاح</span>
+            <span class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-slate-200 inline-block"></span> محجوز</span>
+            <span class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-amber-400 inline-block"></span> مختار</span>
         </div>`;
+
+    // أيقونة كرسي (تتلوّن من currentColor).
+    const CHAIR = '<svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" aria-hidden="true"><path d="M7 4a2 2 0 0 0-2 2v4.3c-.6.3-1 1-1 1.7v5a1 1 0 0 0 2 0v-2h12v2a1 1 0 0 0 2 0v-5c0-.7-.4-1.4-1-1.7V6a2 2 0 0 0-2-2H7z" opacity=".25"/><rect x="4" y="11" width="16" height="6" rx="2"/><path d="M6 17v2.5M18 17v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
     // يجمّع إحداثيات متقاربة في خانات (يتجاهل ضوضاء ١-٢ بكسل) ويرجّع المراكز ودالة الفهرسة.
     const clusterAxis = (values, tol) => {
@@ -43,52 +47,64 @@ window.EnrLive = (() => {
         return { centers, indexOf };
     };
 
-    // مخطط العربة بالمواقع الحقيقية (topLeft.x/y) — يعرض ٢ أو ٤... في الصف حسب العربة تلقائيًا.
+    // مخطط العربة كشبكة أنيقة: صفوف مرقّمة + أعمدة A/B · ممر · C/D، وكراسي قابلة للاختيار.
     const seatPlan = (pts) => {
-        const xC = clusterAxis(pts.map(p => p.topLeft.x), 20); // أعمدة على طول العربة
-        const yC = clusterAxis(pts.map(p => p.topLeft.y), 20); // مقاعد عرضية (٢ / ٤ / ٥...)
-        const cols = xC.centers.length, rows = yC.centers.length;
+        const lenAxis = clusterAxis(pts.map(p => p.topLeft.x), 20); // طول العربة → صفوف مرقّمة
+        const acrossAxis = clusterAxis(pts.map(p => p.topLeft.y), 20); // العرض → أعمدة (A/B/C/D)
+        const numRows = lenAxis.centers.length, numCols = acrossAxis.centers.length;
 
-        // الممر = أكبر فجوة بين الصفوف العرضية (لو واضحة).
+        // الممر = أكبر فجوة بين الأعمدة العرضية (لو واضحة).
         let aisleAfter = -1, maxGap = 0;
-        for (let i = 1; i < rows; i++) {
-            const g = yC.centers[i] - yC.centers[i - 1];
+        for (let i = 1; i < numCols; i++) {
+            const g = acrossAxis.centers[i] - acrossAxis.centers[i - 1];
             if (g > maxGap) { maxGap = g; aisleAfter = i - 1; }
         }
-        const avgGap = rows > 1 ? (yC.centers[rows - 1] - yC.centers[0]) / (rows - 1) : 0;
+        const avgGap = numCols > 1 ? (acrossAxis.centers[numCols - 1] - acrossAxis.centers[0]) / (numCols - 1) : 0;
         if (maxGap < avgGap * 1.3) aisleAfter = -1;
 
-        const SEAT = 28, GX = 6, GY = 6, AISLE = 16;
-        const colW = SEAT + GX, rowH = SEAT + GY;
+        // خريطة المقاعد حسب (صف، عمود).
+        const grid = {};
+        pts.forEach(p => { grid[lenAxis.indexOf(p.topLeft.x) + '-' + acrossAxis.indexOf(p.topLeft.y)] = p; });
 
-        const seats = pts.map(p => {
+        const letters = 'ABCDEFGH';
+        const cell = (p) => {
+            if (!p) return '<div></div>';
             const isSeat = (p.params?.kind ?? 'seat') === 'seat';
-            const ok = isSeat && p.available && !p.sold && !p.locked;
-            const left = xC.indexOf(p.topLeft.x) * colW;
-            const row = yC.indexOf(p.topLeft.y);
-            const top = row * rowH + (aisleAfter >= 0 && row > aisleAfter ? AISLE : 0);
+            if (!isSeat) return `<div class="grid place-items-center text-slate-300 text-xs" title="${p.params?.kind || ''}">◦</div>`;
+            const ok = p.available && !p.sold && !p.locked;
             const price = Math.round((p.cost || 0) / 100);
-            const cushion = !isSeat ? 'bg-slate-100 text-slate-300'
-                : ok ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400';
-            const backColor = ok ? 'bg-emerald-700' : 'bg-slate-300';
-            const backSide = p.params?.dir === 'right' ? 'right-0.5' : 'left-0.5';
-            const title = `${isSeat ? 'مقعد ' : ''}${p.number} — ${ok ? 'متاح' : (isSeat ? 'محجوز' : (p.params?.kind || ''))}${price && isSeat ? ' — ' + price + ' ج.م' : ''}`;
-            return `<div class="absolute" style="left:${left}px;top:${top}px;width:${SEAT}px;height:${SEAT}px" title="${title}">
-                <div class="relative w-full h-full rounded-md grid place-items-center ${cushion}">
-                    ${isSeat ? `<span class="absolute inset-y-1 w-1 rounded ${backColor} ${backSide}"></span>` : ''}
-                    <span class="text-[9px] font-bold leading-none ${ok ? '' : (isSeat ? 'line-through' : '')}">${p.number}</span>
-                </div>
-            </div>`;
-        }).join('');
+            const title = `مقعد ${p.number} — ${ok ? 'متاح' : 'محجوز'}${price ? ' — ' + price + ' ج.م' : ''}`;
+            const cls = ok ? 'bg-rail-50 text-rail-600 hover:bg-rail-100' : 'bg-slate-100 text-slate-300';
+            return `<button type="button" ${ok ? `data-seat="${p.number}"` : 'disabled'} title="${title}"
+                class="seat w-9 h-9 rounded-lg grid place-items-center ${cls} transition">${CHAIR}</button>`;
+        };
 
-        const W = cols * colW - GX;
-        const H = rows * rowH - GY + (aisleAfter >= 0 ? AISLE : 0);
+        // قالب الأعمدة: رقم الصف + الأعمدة + عمود الممر.
+        let tmpl = '1.75rem';
+        for (let c = 0; c < numCols; c++) { tmpl += ' 2.25rem'; if (c === aisleAfter) tmpl += ' 1rem'; }
+
+        // رأس الأعمدة.
+        let header = '<div></div>';
+        for (let c = 0; c < numCols; c++) {
+            header += `<div class="text-center text-[11px] font-bold text-slate-400">${letters[c] || (c + 1)}</div>`;
+            if (c === aisleAfter) header += '<div class="text-center text-[9px] text-slate-300 leading-tight self-center">ممر</div>';
+        }
+
+        // الصفوف.
+        let body = '';
+        for (let r = 0; r < numRows; r++) {
+            body += `<div class="grid place-items-center text-[11px] font-bold text-slate-400">${r + 1}</div>`;
+            for (let c = 0; c < numCols; c++) {
+                body += cell(grid[r + '-' + c]);
+                if (c === aisleAfter) body += '<div></div>';
+            }
+        }
 
         return `
-            <div class="mt-3">
-                <div class="overflow-x-auto pb-2">
-                    <div class="relative mx-auto bg-slate-50 border-2 border-slate-200 rounded-2xl p-3" style="width:${Math.round(W + 24)}px">
-                        <div class="relative" style="width:${Math.round(W)}px;height:${Math.round(H)}px">${seats}</div>
+            <div class="mt-3" data-seats>
+                <div class="overflow-x-auto pb-1">
+                    <div class="inline-grid gap-1.5 mx-auto items-center bg-slate-50 border border-slate-200 rounded-2xl p-3" style="grid-template-columns:${tmpl}">
+                        ${header}${body}
                     </div>
                 </div>
                 ${seatLegend}
@@ -196,6 +212,17 @@ window.EnrLive = (() => {
         `${base}?from=${from}&to=${to}&transfers=false&with_reservations=true`
         + `&without_reservations=false&skip_places_information=false`
         + `&departureDate=${date}&project=enr${number ? '&trainNumber=' + number : ''}`;
+
+    // اختيار الكرسي بالضغط (مختار واحد لكل عربة) — يشتغل في صفحة القطر وصفحة المزامنة.
+    if (typeof document !== 'undefined') {
+        document.addEventListener('click', (e) => {
+            const seat = e.target.closest('.seat[data-seat]');
+            if (!seat) return;
+            const wrap = seat.closest('[data-seats]');
+            if (wrap) wrap.querySelectorAll('.seat-selected').forEach(s => { if (s !== seat) s.classList.remove('seat-selected'); });
+            seat.classList.toggle('seat-selected');
+        });
+    }
 
     return { fmtTime, egp, render, totalSeats, buildUrl };
 })();

@@ -37,6 +37,18 @@ html {
     touch-action: manipulation;
 }
 
+/* الكرسي المختار في خريطة المقاعد (أصفر) */
+.seat-selected {
+    background-color: #fffbeb !important;
+    color: #f59e0b !important;
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+/* موجة صوت أثناء البحث الصوتي */
+.vwave { display: inline-flex; align-items: center; gap: 2px; height: 16px; }
+.vbar { width: 3px; height: 100%; border-radius: 2px; background: currentColor; animation: vbar .9s ease-in-out infinite; }
+@keyframes vbar { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+
 body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

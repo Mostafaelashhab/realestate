@@ -122,7 +122,12 @@
             try { rec = new SR(); } catch (e) { return; }
             rec.lang = 'ar-EG'; rec.interimResults = false; rec.maxAlternatives = 1;
             fab.classList.add('animate-pulse');
-            say('🎤 بسمعك… قول رايح فين', true);
+            // مؤشّر استماع بموجة صوت
+            if (toast) {
+                const bars = [0, .15, .3, .15, 0].map(d => `<i class="vbar" style="animation-delay:${d}s"></i>`).join('');
+                toast.innerHTML = `<span class="inline-flex items-center gap-2">🎤 بسمعك… <span class="vwave">${bars}</span></span>`;
+                toast.hidden = false; clearTimeout(tt);
+            }
             let got = false;
             rec.onresult = (e) => {
                 const t = (e.results[0][0].transcript || '').trim();
