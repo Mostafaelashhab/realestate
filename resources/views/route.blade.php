@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('dark', '1')
-@section('hideHeader', '1')
 @section('title', "قطارات {$from->name_ar} ← {$to->name_ar}")
 @section('og_title', "مواعيد وأسعار قطارات {$from->name_ar} إلى {$to->name_ar}")
 @section('og_desc', $summary['count']
@@ -90,7 +88,7 @@
             class="inline-flex items-center gap-1 bg-white ring-1 ring-slate-200 rounded-full px-3 py-1.5 hover:ring-rail-300 transition">
             <x-icon name="chevron-right" class="w-4 h-4"/> أمس
         </a>
-        <span class="text-white font-bold">{{ $date->translatedFormat('l j F') }}</span>
+        <span class="text-slate-500 font-bold">{{ $date->translatedFormat('l j F') }}</span>
         <a rel="nofollow" href="{{ route('route', ['from' => $from->slug, 'to' => $to->slug, 'date' => $date->copy()->addDay()->toDateString()]) }}"
             class="inline-flex items-center gap-1 bg-white ring-1 ring-slate-200 rounded-full px-3 py-1.5 hover:ring-rail-300 transition">
             بكرة <x-icon name="arrow-left" class="w-4 h-4"/>
@@ -102,7 +100,7 @@
         @php $types = $results->map(fn ($r) => $r['train']->type_label)->filter()->unique()->values(); @endphp
 
         <div class="flex items-center gap-2 mb-3 text-sm">
-            <span class="text-rail-200/70 text-xs">ترتيب:</span>
+            <span class="text-slate-400 text-xs">ترتيب:</span>
             <button data-sort="depart" class="sort-btn px-3 py-1.5 rounded-full bg-rail-600 text-white font-bold text-xs transition">بالوقت</button>
             <button data-sort="price" class="sort-btn px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 font-bold text-xs transition">الأرخص</button>
             <button data-sort="duration" class="sort-btn px-3 py-1.5 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 font-bold text-xs transition">الأسرع</button>
@@ -144,7 +142,7 @@
         {{-- محطات على الطريق (روابط داخلية) --}}
         @if ($onRoute->isNotEmpty())
             <div class="mt-5">
-                <h2 class="text-sm font-bold text-rail-100 mb-2">محطات على الطريق</h2>
+                <h2 class="text-sm font-bold text-slate-600 mb-2">محطات على الطريق</h2>
                 <div class="flex flex-wrap gap-2">
                     @foreach ($onRoute as $st)
                         <a href="{{ route('stations.show', $st) }}" class="text-sm bg-white ring-1 ring-slate-200 hover:ring-rail-300 rounded-full px-3 py-1.5 transition">{{ $st->name_ar }}</a>
@@ -169,7 +167,7 @@
 
         @if ($related['destinations']->isNotEmpty())
             <div>
-                <h2 class="text-sm font-bold text-rail-100 mb-2">وجهات أخرى من {{ $from->name_ar }}</h2>
+                <h2 class="text-sm font-bold text-slate-600 mb-2">وجهات أخرى من {{ $from->name_ar }}</h2>
                 <div class="flex flex-wrap gap-2">
                     @foreach ($related['destinations'] as $dest)
                         <a href="{{ route('route', ['from' => $from->slug, 'to' => $dest->slug]) }}"
@@ -185,7 +183,7 @@
     {{-- الأسئلة الشائعة --}}
     @if (! empty($faqs))
         <div class="mt-6">
-            <h2 class="font-bold mb-2 text-white">أسئلة شائعة</h2>
+            <h2 class="font-bold mb-2">أسئلة شائعة</h2>
             <div class="space-y-2">
                 @foreach ($faqs as $f)
                     <details class="bg-white rounded-2xl ring-1 ring-slate-100 px-4 py-3">

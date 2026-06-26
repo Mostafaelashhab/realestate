@@ -73,15 +73,11 @@
         })();
     </script>
 
-    @php
-        $bare = trim($__env->yieldContent('bare')) === '1';
-        $hideHeader = $bare || trim($__env->yieldContent('hideHeader')) === '1';
-        $dark = trim($__env->yieldContent('dark')) === '1';
-    @endphp
-    <div class="app-shell w-full mx-auto max-w-xl min-h-screen {{ $dark ? 'bg-linear-to-b from-rail-900 to-rail-950' : 'bg-slate-100' }} flex flex-col relative shadow-xl">
+    @php $bare = trim($__env->yieldContent('bare')) === '1'; @endphp
+    <div class="app-shell w-full mx-auto max-w-xl min-h-screen bg-slate-100 flex flex-col relative shadow-xl">
 
         {{-- شريط علوي --}}
-        @unless ($hideHeader)
+        @unless ($bare)
         <header class="sticky top-0 z-30 bg-linear-to-l from-rail-800 to-rail-600 text-white">
             <div class="px-4 pb-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-extrabold text-lg">
@@ -117,19 +113,19 @@
         @php
             $tabs = [
                 ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
-                ['route' => 'favorites', 'icon' => 'heart', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
+                ['route' => 'favorites', 'icon' => 'star', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
                 ['route' => 'fines', 'icon' => 'scale', 'label' => 'الغرامات', 'on' => request()->routeIs('fines')],
                 ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ', 'on' => request()->routeIs('report')],
             ];
         @endphp
         <nav class="fixed bottom-0 inset-x-0 z-30">
             <div
-                class="mx-auto max-w-xl bg-rail-950/95 backdrop-blur border-t border-white/10 px-2 pb-[env(safe-area-inset-bottom)]">
+                class="mx-auto max-w-xl bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)]">
                 <div class="grid grid-cols-5 items-end">
                     @foreach ($tabs as $tab)
                         <a href="{{ route($tab['route']) }}"
-                            class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-300' : 'text-slate-400 hover:text-slate-200' }}">
-                            <x-icon :name="$tab['icon']" class="w-6 h-6 {{ $tab['on'] ? '' : 'opacity-80' }}" />
+                            class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-700' : 'text-slate-400 hover:text-slate-600' }}">
+                            <x-icon :name="$tab['icon']" class="w-6 h-6 {{ $tab['on'] ? '' : 'opacity-70' }}" />
                             <span class="text-[11px] font-bold whitespace-nowrap">{{ $tab['label'] }}</span>
                         </a>
 
@@ -137,10 +133,10 @@
                         @if ($loop->index === 1)
                             <div class="flex flex-col items-center">
                                 <button id="voice-fab" type="button" aria-label="ابحث بصوتك"
-                                    class="-mt-7 w-16 h-16 rounded-full bg-linear-to-br from-rail-400 to-rail-600 text-white shadow-lg shadow-rail-500/50 ring-4 ring-rail-950 grid place-items-center active:scale-95 transition">
+                                    class="-mt-7 w-16 h-16 rounded-full bg-linear-to-br from-rail-500 to-rail-700 text-white shadow-lg shadow-rail-600/40 ring-4 ring-white grid place-items-center active:scale-95 transition">
                                     <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
                                 </button>
-                                <span class="text-[11px] font-bold text-rail-300 -mt-0.5">بحث صوتي</span>
+                                <span class="text-[11px] font-bold text-rail-700 -mt-0.5">رايح فين</span>
                             </div>
                         @endif
                     @endforeach
