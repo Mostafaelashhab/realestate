@@ -115,9 +115,14 @@
                 </div>
                 <div class="relative mb-2">
                     <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
-                    <input type="text" data-search="from" placeholder="دوّر على محطة…" autocomplete="off"
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                    <input type="text" data-search="from" placeholder="دوّر على محطة… أو قول وجهتك 🎤" autocomplete="off"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-12 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                    <button type="button" data-voice="1" aria-label="بحث صوتي"
+                        class="voice-btn absolute top-1/2 -translate-y-1/2 end-2 w-8 h-8 grid place-items-center rounded-full bg-rail-50 text-rail-600 hover:bg-rail-100 transition">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+                    </button>
                 </div>
+                <p data-voice-msg hidden class="text-xs text-rail-600 mb-2"></p>
                 <button type="button" id="near-btn" class="inline-flex items-center gap-1.5 text-xs font-bold text-rail-700 hover:text-rail-800 mb-2">
                     <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/> أقرب محطة ليّ
                 </button>
@@ -134,9 +139,14 @@
                 </div>
                 <div class="relative mb-2">
                     <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
-                    <input type="text" data-search="to" placeholder="دوّر على محطة…" autocomplete="off"
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                    <input type="text" data-search="to" placeholder="دوّر على محطة… أو قول الوجهة 🎤" autocomplete="off"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-12 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                    <button type="button" data-voice="2" aria-label="بحث صوتي"
+                        class="voice-btn absolute top-1/2 -translate-y-1/2 end-2 w-8 h-8 grid place-items-center rounded-full bg-rail-50 text-rail-600 hover:bg-rail-100 transition">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+                    </button>
                 </div>
+                <p data-voice-msg hidden class="text-xs text-rail-600 mb-2"></p>
                 <ul data-list="to" class="max-h-64 overflow-y-auto"></ul>
             </div>
 
@@ -244,6 +254,65 @@
                 }));
 
                 wiz.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(step - 1)));
+
+                // بحث صوتي بالعربي (Web Speech API). قول وجهتك، أو الرحلة كاملة "من بنها للقاهرة".
+                (() => {
+                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const btns = [...wiz.querySelectorAll('.voice-btn')];
+                    if (!SR) { btns.forEach(b => b.remove()); return; } // مش مدعوم → نخفي المايك
+
+                    const msgEl = (n) => panes[n].querySelector('[data-voice-msg]');
+                    const showMsg = (n, t, cls = 'text-rail-600') => { const m = msgEl(n); if (!m) return; m.textContent = t; m.className = `text-xs mb-2 ${cls}`; m.hidden = false; };
+
+                    // أفضل محطة مطابقة للنص المنطوق.
+                    function matchStation(text) {
+                        const t = norm(text || '');
+                        if (!t) return null;
+                        let best = null, bestLen = 0;
+                        for (const s of STATIONS) {
+                            const n = norm(s.name);
+                            if (n && (t.includes(n) || n.includes(t)) && n.length > bestLen) { best = s; bestLen = n.length; }
+                        }
+                        return best;
+                    }
+                    // "من بنها للقاهرة" → [بنها, القاهرة]
+                    const parseTrip = (text) => {
+                        const m = (text || '').match(/من\s+(.+?)\s+(?:إلى|الى|الي|لحد|ل)\s*(.+)/);
+                        return m ? [m[1], m[2]] : null;
+                    };
+
+                    let busy = false;
+                    function listen(stepN, btn) {
+                        if (busy) return;
+                        busy = true;
+                        const rec = new SR();
+                        rec.lang = 'ar-EG'; rec.interimResults = false; rec.maxAlternatives = 1;
+                        btn.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                        showMsg(stepN, '🎤 بسمعك… قول المحطة');
+                        rec.onresult = (e) => {
+                            const text = e.results[0][0].transcript.trim();
+                            showMsg(stepN, `سمعت: «${text}»`);
+                            if (stepN === 1) {
+                                const trip = parseTrip(text);
+                                if (trip) {
+                                    const a = matchStation(trip[0]), b = matchStation(trip[1]);
+                                    if (a && b) { pickFrom(a.id, a.name); pickTo(b.id, b.name); return; }
+                                    if (a) { pickFrom(a.id, a.name); return; }
+                                }
+                                const s = matchStation(text);
+                                s ? pickFrom(s.id, s.name) : showMsg(1, `مش لاقي محطة باسم «${text}»`, 'text-amber-600');
+                            } else {
+                                const s = matchStation(text);
+                                s ? pickTo(s.id, s.name) : showMsg(2, `مش لاقي محطة باسم «${text}»`, 'text-amber-600');
+                            }
+                        };
+                        rec.onerror = (e) => showMsg(stepN, e.error === 'not-allowed' ? 'لازم تسمح بالمايك.' : 'متسمعش كويس، حاول تاني.', 'text-amber-600');
+                        rec.onend = () => { busy = false; btn.classList.remove('bg-red-500', 'text-white', 'animate-pulse'); };
+                        try { rec.start(); } catch (e) { busy = false; }
+                    }
+
+                    btns.forEach(b => b.addEventListener('click', () => listen(+b.dataset.voice, b)));
+                })();
 
                 // خطوة التاريخ: كبسات سريعة + إدخال يدوي.
                 const dateInput = document.getElementById('wz-date');
