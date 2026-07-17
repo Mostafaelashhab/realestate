@@ -36,6 +36,16 @@ Route::view('/favorites', 'favorites')->name('favorites');
 // صفحة المسار (SEO) — رابط دائم بالـ slug.
 Route::get('/قطارات/{from}/{to}', [RouteController::class, 'show'])->name('route');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
+
+// الشكاوى (بوستات مجتمع الركّاب).
+Route::get('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'index'])->name('complaints.index');
+Route::post('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('complaints.store');
+Route::post('/شكاوى/{complaint}/like', [\App\Http\Controllers\ComplaintController::class, 'like'])->middleware(['auth', 'throttle:60,1'])->name('complaints.like');
+
+// سوق تبادل وبيع التذاكر.
+Route::get('/سوق-التذاكر', [\App\Http\Controllers\TicketController::class, 'index'])->name('tickets.index');
+Route::post('/سوق-التذاكر', [\App\Http\Controllers\TicketController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('tickets.store');
+Route::post('/سوق-التذاكر/{listing}/close', [\App\Http\Controllers\TicketController::class, 'close'])->middleware(['auth', 'throttle:20,1'])->name('tickets.close');
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
 Route::get('/أفضل-القطارات', [TrainController::class, 'top'])->name('trains.top');
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');

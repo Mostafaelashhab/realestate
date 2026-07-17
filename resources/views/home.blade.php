@@ -59,6 +59,8 @@
             ['icon' => 'station', 't' => 'جدول المحطات', 's' => 'كل المواعيد والمحطات', 'act' => 'search', 'color' => 'bg-sky-100 text-sky-700'],
             ['icon' => 'mic', 't' => 'البحث بصوتك', 's' => 'قول رحلتك وسيبها علينا', 'href' => route('voice'), 'color' => 'bg-rail-100 text-rail-700'],
             $discover,
+            ['icon' => 'flag', 't' => 'شكاوى الركّاب', 's' => 'شارك تجربتك مع القطر', 'href' => route('complaints.index'), 'color' => 'bg-orange-100 text-orange-700'],
+            ['icon' => 'ticket', 't' => 'سوق التذاكر', 's' => 'بيع أو بدّل تذكرتك', 'href' => route('tickets.index'), 'color' => 'bg-emerald-100 text-emerald-700'],
             ['icon' => 'pin', 't' => 'محطات قريبة منك', 's' => 'اعرف أقرب محطة', 'act' => 'near', 'color' => 'bg-rose-100 text-rose-700'],
             ['icon' => 'star', 't' => 'المفضلة', 's' => 'قطاراتك المحفوظة', 'href' => route('favorites'), 'color' => 'bg-amber-100 text-amber-700'],
             ['icon' => 'ticket', 't' => 'الغرامات', 's' => 'احسب غرامة التأخير', 'href' => route('fines'), 'color' => 'bg-teal-100 text-teal-700'],
