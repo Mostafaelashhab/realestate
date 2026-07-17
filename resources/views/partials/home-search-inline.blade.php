@@ -81,25 +81,27 @@
     </div>
 
     {{-- منتقي المحطات (bottom sheet بفلتر بحث) --}}
-    <div id="picker" hidden class="fixed inset-0 z-50">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-picker-close></div>
-        <div class="absolute inset-x-0 bottom-0 mx-auto max-w-xl bg-white rounded-t-3xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl flex flex-col" style="max-height:80vh">
-            <div class="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-3"></div>
-            <div class="flex items-center gap-2 mb-3">
-                <h3 id="picker-title" class="font-extrabold text-slate-800 flex-1">اختار المحطة</h3>
-                <button type="button" data-picker-close aria-label="إغلاق" class="w-8 h-8 grid place-items-center rounded-xl text-slate-400 hover:bg-slate-100">
-                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    <div id="picker" hidden class="fixed inset-0 z-50 bg-white">
+        <div class="mx-auto max-w-xl h-full flex flex-col">
+            {{-- رأس ثابت فيه خانة البحث (مايغطّيهاش الكيبورد) --}}
+            <div class="shrink-0 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2 mb-3">
+                    <button type="button" data-picker-close aria-label="رجوع" class="w-9 h-9 shrink-0 grid place-items-center rounded-xl text-slate-500 hover:bg-slate-100 active:scale-90 transition">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                    </button>
+                    <h3 id="picker-title" class="font-extrabold text-slate-800 flex-1">اختار المحطة</h3>
+                </div>
+                <div class="relative">
+                    <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
+                    <input type="text" id="picker-search" placeholder="اكتب اسم المحطة…" autocomplete="off"
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
+                </div>
+                <button type="button" id="picker-near" class="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-rail-700 hover:text-rail-800">
+                    <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/> أقرب محطة ليّ
                 </button>
             </div>
-            <div class="relative mb-2">
-                <x-icon name="search" class="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-slate-400 pointer-events-none"/>
-                <input type="text" id="picker-search" placeholder="اكتب اسم المحطة…" autocomplete="off"
-                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-3 text-sm focus:bg-white focus:border-rail-500 focus:outline-none">
-            </div>
-            <button type="button" id="picker-near" class="self-start inline-flex items-center gap-1.5 text-xs font-bold text-rail-700 hover:text-rail-800 mb-2">
-                <x-icon name="pin" class="w-3.5 h-3.5 text-amber-500"/> أقرب محطة ليّ
-            </button>
-            <ul id="picker-list" class="overflow-y-auto flex-1 -mx-1 px-1"></ul>
+            {{-- القائمة تتمرّر تحت الرأس --}}
+            <ul id="picker-list" class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-2 pb-[max(1rem,env(safe-area-inset-bottom))]"></ul>
         </div>
     </div>
 

@@ -1017,10 +1017,44 @@
             @endforelse
         </div>
 
-        <a href="{{ route('trains.top') }}"
-            class="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-slate-50 ring-1 ring-slate-100 text-rail-700 font-bold text-sm px-4 py-2.5 hover:ring-rail-200 transition">
-            <x-icon name="star" class="w-4 h-4 text-amber-400" /> شوف أعلى القطارات تقييمًا
-        </a>
+        {{-- متابعة القطر للإشعارات --}}
+        <button id="follow-btn" type="button" data-following="{{ $following ? '1' : '0' }}" data-url="{{ route('trains.follow', $train) }}"
+            class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3 font-bold text-sm transition {{ $following ? 'bg-rail-50 text-rail-700 ring-1 ring-rail-200' : 'bg-rail-600 text-white shadow-lg shadow-rail-600/25' }}"
+            @guest onclick="location.href='{{ route('login') }}';return false;" @endguest>
+            <x-icon name="bell" class="w-4 h-4" />
+            <span data-follow-label>{{ $following ? 'متابِع — هنبّهك بأي جديد' : 'تابع القطر ده' }}</span>
+            @if ($followersCount)<span class="text-xs font-normal opacity-70">· {{ $followersCount }}</span>@endif
+        </button>
+        <script>
+            (() => {
+                const b = document.getElementById('follow-btn');
+                if (!b || b.getAttribute('onclick')) return;
+                b.addEventListener('click', async () => {
+                    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+                    try {
+                        const r = await fetch(b.dataset.url, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
+                        if (r.status === 419 || r.status === 401) { location.href = '{{ route('login') }}'; return; }
+                        const d = await r.json(); if (!d.ok) return;
+                        const on = d.following;
+                        b.querySelector('[data-follow-label]').textContent = on ? 'متابِع — هنبّهك بأي جديد' : 'تابع القطر ده';
+                        ['bg-rail-600', 'text-white', 'shadow-lg', 'shadow-rail-600/25'].forEach(c => b.classList.toggle(c, !on));
+                        ['bg-rail-50', 'text-rail-700', 'ring-1', 'ring-rail-200'].forEach(c => b.classList.toggle(c, on));
+                        try { navigator.vibrate?.(10); } catch (e) {}
+                    } catch (e) {}
+                });
+            })();
+        </script>
+
+        <div class="mt-3 grid grid-cols-2 gap-2">
+            <a href="{{ route('complaints.index', ['train' => $train->number]) }}"
+                class="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-50 ring-1 ring-slate-100 text-rail-700 font-bold text-sm px-3 py-2.5 hover:ring-rail-200 transition">
+                <x-icon name="flag" class="w-4 h-4" /> نقاش القطر
+            </a>
+            <a href="{{ route('trains.top') }}"
+                class="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-50 ring-1 ring-slate-100 text-rail-700 font-bold text-sm px-3 py-2.5 hover:ring-rail-200 transition">
+                <x-icon name="star" class="w-4 h-4 text-amber-400" /> الأعلى تقييمًا
+            </a>
+        </div>
     </section>
 
     {{-- ========================= قطارات تانية على نفس المسار ========================= --}}

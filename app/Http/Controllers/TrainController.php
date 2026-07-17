@@ -168,10 +168,16 @@ class TrainController extends Controller
             ? $reviews->firstWhere('user_id', $request->user()->id)
             : null;
 
+        // متابعة القطر (للإشعارات).
+        $following = $request->user()
+            ? \App\Models\TrainFollow::where('user_id', $request->user()->id)->where('train_id', $train->id)->exists()
+            : false;
+        $followersCount = \App\Models\TrainFollow::where('train_id', $train->id)->count();
+
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
             'depart', 'arrive', 'duration', 'boardingAlternatives', 'routeStops', 'stationFares', 'liveStatus',
-            'reliability', 'sameRouteTrains',
+            'reliability', 'sameRouteTrains', 'following', 'followersCount',
             'myReminder', 'myStandingAlert', 'reviews', 'reviewsAvg', 'reviewsCount', 'myReview'
         ));
     }

@@ -30,6 +30,16 @@ class TrainStatusController extends Controller
         // نحدّث وقت البلاغ ليُحسب كأحدث بلاغ في نافذة "فين القطر دلوقتي".
         $report->forceFill(['created_at' => now()])->save();
 
+        // نبّه متابعي القطر بالحالة الجديدة.
+        $label = ['on_time' => 'في الموعد', 'delayed' => 'متأخر', 'cancelled' => 'اتلغى/وقف'][$data['status']] ?? '';
+        \App\Models\AppNotification::notifyTrainFollowers(
+            $train,
+            "حالة جديدة لقطار {$train->number}",
+            "راكب بلّغ إنه {$label}.",
+            route('trains.show', $train) . '#status',
+            $request->user()->id,
+        );
+
         if ($request->wantsJson()) {
             return response()->json([
                 'ok' => true,

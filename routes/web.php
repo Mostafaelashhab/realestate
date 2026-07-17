@@ -29,7 +29,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// المجتمع هو الواجهة الرئيسية (أول ما تفتح التطبيق).
+Route::get('/', [\App\Http\Controllers\ComplaintController::class, 'index'])->name('home');
+// صفحة القطارات/البحث والمواعيد.
+Route::get('/رحلتك', [HomeController::class, 'index'])->name('trains.hub');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/voice', [\App\Http\Controllers\VoiceController::class, 'handle'])->name('voice');
 Route::view('/favorites', 'favorites')->name('favorites');
@@ -41,17 +44,23 @@ Route::get('/fines', [FineController::class, 'index'])->name('fines');
 Route::get('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'index'])->name('complaints.index');
 Route::post('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('complaints.store');
 Route::post('/شكاوى/{complaint}/like', [\App\Http\Controllers\ComplaintController::class, 'like'])->middleware(['auth', 'throttle:60,1'])->name('complaints.like');
+Route::get('/مجتمع-feed', [\App\Http\Controllers\ComplaintController::class, 'feed'])->name('complaints.feed');
+Route::get('/شكاوى/{complaint}', [\App\Http\Controllers\ComplaintController::class, 'show'])->name('complaints.show');
+Route::post('/شكاوى/{complaint}/تعليق', [\App\Http\Controllers\ComplaintController::class, 'comment'])->middleware(['auth', 'throttle:20,1'])->name('complaints.comment');
 
-// سوق تبادل وبيع التذاكر.
-Route::get('/سوق-التذاكر', [\App\Http\Controllers\TicketController::class, 'index'])->name('tickets.index');
-Route::post('/سوق-التذاكر', [\App\Http\Controllers\TicketController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('tickets.store');
-Route::post('/سوق-التذاكر/{listing}/close', [\App\Http\Controllers\TicketController::class, 'close'])->middleware(['auth', 'throttle:20,1'])->name('tickets.close');
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
+// بروفايل الراكب + سمعته.
+Route::get('/راكب/{user}', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile');
 Route::get('/أفضل-القطارات', [TrainController::class, 'top'])->name('trains.top');
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');
 // أسعار الدرجات الحيّة من الهيئة حسب محطة القيام/النزول.
 Route::get('/trains/{train}/prices', [TrainController::class, 'prices'])->middleware('throttle:30,1')->name('trains.prices');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.standing');
+
+// متابعة القطر + الإشعارات.
+Route::post('/trains/{train}/follow', [\App\Http\Controllers\FollowController::class, 'toggle'])->middleware(['auth', 'throttle:30,1'])->name('trains.follow');
+Route::get('/تنبيهاتي', [\App\Http\Controllers\NotificationController::class, 'index'])->middleware('auth')->name('notifications.index');
+Route::get('/تنبيهاتي-عدد', [\App\Http\Controllers\NotificationController::class, 'unread'])->middleware('auth')->name('notifications.unread');
 
 // آراء الركّاب على القطر (مجتمع).
 Route::post('/trains/{train}/reviews', [\App\Http\Controllers\TrainReviewController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('trains.reviews.store');

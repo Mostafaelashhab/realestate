@@ -116,17 +116,17 @@
         @unless ($bare)
         @php
             $tabs = [
-                ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
-                ['route' => 'favorites', 'icon' => 'heart', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
-                ['route' => 'trains.top', 'icon' => 'star', 'label' => 'الأعلى', 'on' => request()->routeIs('trains.top')],
-                ['route' => 'premium', 'icon' => 'ticket', 'label' => 'العروض', 'on' => request()->routeIs('premium')],
+                ['url' => route('home'), 'icon' => 'home', 'label' => 'المجتمع', 'on' => request()->routeIs('home') || request()->routeIs('complaints.*')],
+                ['url' => route('trains.hub'), 'icon' => 'train', 'label' => 'القطارات', 'on' => request()->routeIs('trains.hub') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('trains.top') || request()->routeIs('route')],
+                ['url' => route('favorites'), 'icon' => 'heart', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
+                ['url' => auth()->check() ? route('profile', auth()->user()) : route('login'), 'icon' => 'user', 'label' => 'حسابي', 'on' => request()->routeIs('profile')],
             ];
         @endphp
         <nav class="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
             <div class="mx-auto max-w-xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <div class="pointer-events-auto relative flex items-center justify-around bg-white rounded-[2rem] shadow-[0_10px_35px_rgba(15,23,42,0.18)] ring-1 ring-slate-100 px-2 py-2">
                     @foreach ($tabs as $tab)
-                        <a href="{{ route($tab['route']) }}" aria-label="{{ $tab['label'] }}"
+                        <a href="{{ $tab['url'] }}" aria-label="{{ $tab['label'] }}"
                             class="flex flex-col items-center gap-0.5 flex-1 py-1.5 rounded-2xl transition {{ $tab['on'] ? 'text-rail-600' : 'text-slate-400 hover:text-slate-600' }}">
                             <span class="grid place-items-center w-10 h-8 rounded-2xl transition {{ $tab['on'] ? 'bg-rail-100' : '' }}">
                                 <x-icon :name="$tab['icon']" class="w-5 h-5" />
@@ -137,14 +137,9 @@
                         {{-- زر البحث الصوتي البارز في النص --}}
                         @if ($loop->index === 1)
                             <div class="flex-1 flex justify-center">
-                                <button id="voice-fab" type="button" aria-label="ابحث بصوتك"
+                                <button id="voice-fab" type="button" aria-label="اكتب بوست"
                                     class="-mt-9 w-16 h-16 rounded-full bg-linear-to-br from-rail-500 to-rail-700 text-white shadow-lg shadow-rail-600/50 ring-4 ring-slate-100 grid place-items-center active:scale-95 transition">
-                                    <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="9" y="2.5" width="6" height="11" rx="3"/>
-                                        <path d="M6 11a6 6 0 0 0 12 0"/>
-                                        <path d="M12 17v3.5M8.5 20.5h7"/>
-                                        <path d="M3.5 9.5v2M20.5 9.5v2" opacity=".6"/>
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                                 </button>
                             </div>
                         @endif

@@ -108,10 +108,15 @@
         });
     })();
 
-    // زر الصوت في البار → صفحة المساعد الصوتي.
+    // زر الوسط → اكتب بوست في المجتمع (يركّز على المحرّر لو أنت في الفيد، وإلا يروح المجتمع).
     (() => {
         const fab = document.getElementById('voice-fab');
-        if (fab) fab.addEventListener('click', () => { location.href = '{{ route('voice') }}'; });
+        if (!fab) return;
+        fab.addEventListener('click', () => {
+            const composer = document.getElementById('post-body');
+            if (composer) { composer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => composer.focus(), 250); }
+            else location.href = '{{ route('home') }}';
+        });
     })();
 
     // لودر التنقّل: يظهر عند الضغط على أي رابط داخلي (أو إرسال فورم) أثناء تحميل الصفحة التالية
