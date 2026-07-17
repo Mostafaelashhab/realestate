@@ -1,3 +1,69 @@
+// Alpine.js — تفاعلية خفيفة (أكشنز بدون إعادة تحميل).
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+
+const csrfToken = () => document.querySelector('meta[name=csrf-token]')?.content;
+
+// إرسال POST كـ JSON مع معالجة موحّدة للأخطاء (419 لوجين · 429 تهدئة · باقي الأخطاء).
+// يرجّع { ok, data, msg } — أو يعيد التوجيه للوجين عند انتهاء الجلسة.
+async function postJson(url, body, loginUrl) {
+    let r;
+    try {
+        r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+            body: JSON.stringify(body),
+        });
+    } catch (e) {
+        return { ok: false, data: null, msg: 'مفيش نت — راجع اتصالك وحاول تاني.' };
+    }
+    if (r.status === 419 || r.status === 401) { location.href = loginUrl; return { ok: false, data: null, redirect: true }; }
+    if (r.status === 429) return { ok: false, data: null, msg: 'بعتّ طلبات كتير بسرعة — استنى دقيقة وحاول تاني.' };
+    let d = null;
+    try { d = await r.json(); } catch (e) { /* رد مش JSON */ }
+    if (!r.ok || !d) return { ok: false, data: d, msg: (d && d.message) || 'حصل خطأ، جرّب تاني.' };
+    return { ok: !!d.ok, data: d, msg: d.message || '' };
+}
+
+// بلاغ حالة القطر (في الموعد/متأخر/اتلغى) بدون reload.
+Alpine.data('statusReport', () => ({
+    loading: false, msg: '', ok: false,
+    async send(status) {
+        if (this.loading) return;
+        this.loading = true; this.msg = '';
+        const res = await postJson(this.$el.dataset.url, { status }, this.$el.dataset.login);
+        this.loading = false;
+        if (res.redirect) return;
+        this.ok = res.ok;
+        this.msg = res.msg || (res.ok ? 'اتسجّل، شكرًا!' : 'حصل خطأ، جرّب تاني.');
+    },
+}));
+
+// تقييم القطر (نجوم + تعليق) بدون reload.
+Alpine.data('reviewForm', (rating = 0, comment = '', avg = 0, count = 0, hadReview = false) => ({
+    rating, comment, avg, count,
+    loading: false, msg: '', ok: false,
+    submitted: false, mine: null, hadReview,
+    setRating(n) { this.rating = n; this.msg = ''; },
+    async submit() {
+        if (this.loading) return;
+        if (!this.rating) { this.ok = false; this.msg = 'اختار تقييمك بالنجوم الأول.'; return; }
+        this.loading = true; this.msg = '';
+        const res = await postJson(this.$el.dataset.url, { rating: this.rating, comment: this.comment }, this.$el.dataset.login);
+        this.loading = false;
+        if (res.redirect) return;
+        this.ok = res.ok;
+        this.msg = res.msg || (res.ok ? 'اتسجّل، شكرًا!' : 'حصل خطأ، جرّب تاني.');
+        if (res.ok && res.data) { this.avg = res.data.avg; this.count = res.data.count; this.mine = res.data.review; this.submitted = true; }
+    },
+    // أول حرف من اسم صاحب الرأي (للأفاتار).
+    get mineInitial() { return this.mine ? (this.mine.user || 'أنا').substring(0, 1) : ''; },
+    // عدد النجوم الممتلئة لقيمة معيّنة.
+    filled(n) { return this.rating >= n; },
+}));
+
+Alpine.start();
+
 // أدوات عرض بيانات الرحلات الرسمية (يستعملها صفحة المزامنة وصفحة القطار).
 window.EnrLive = (() => {
     // أيقونات SVG داخلية بدل الإيموجي.

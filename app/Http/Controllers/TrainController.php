@@ -24,6 +24,51 @@ class TrainController extends Controller
         return redirect()->route('trains.show', $train);
     }
 
+    /** أسعار الدرجات الحيّة من نظام الهيئة لقطعة (قيام → نزول) — JSON. */
+    public function prices(Request $request, Train $train, \App\Services\EnrSeats $enr)
+    {
+        $data = $request->validate([
+            'from' => ['required', 'string', 'max:40'],
+            'to' => ['required', 'string', 'max:40'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $result = $enr->prices(
+            $data['from'], $data['to'], (string) $train->number,
+            $data['date'] ?? now()->toDateString()
+        );
+
+        return response()->json($result);
+    }
+
+    /** صفحة اكتشاف: أعلى القطارات تقييمًا من آراء الركّاب. */
+    public function top()
+    {
+        $trains = \Illuminate\Support\Facades\Cache::remember(
+            \App\Support\CacheVer::key('catalog', 'trains:top-rated'),
+            now()->addHours(6),
+            fn () => Train::query()
+                ->where('active', true)
+                ->whereHas('reviews')
+                ->withCount('reviews')
+                ->withAvg('reviews', 'rating')
+                ->orderByDesc('reviews_avg_rating')
+                ->orderByDesc('reviews_count')
+                ->take(30)
+                ->get()
+                ->map(fn ($t) => [
+                    'number' => (string) $t->number,
+                    'type' => $t->type_label,
+                    'avg' => round((float) $t->reviews_avg_rating, 1),
+                    'count' => (int) $t->reviews_count,
+                    'url' => route('trains.show', $t),
+                ])
+                ->all()
+        );
+
+        return view('trains.top', compact('trains'));
+    }
+
     public function show(Train $train, Request $request)
     {
         $train->load(['stops.station']);
@@ -91,6 +136,16 @@ class TrainController extends Controller
             : collect();
 
         $liveStatus = \App\Models\TrainStatusReport::summaryFor($train->id);
+        $reliability = \App\Models\TrainStatusReport::reliabilityFor($train->id);
+
+        // قطارات تانية على نفس المسار (بتعدّي على محطة القيام قبل محطة الوصول) — للتنقّل والاكتشاف.
+        $sameRouteTrains = ($origin && $terminal)
+            ? \Illuminate\Support\Facades\Cache::remember(
+                \App\Support\CacheVer::key('catalog', "route:{$origin->id}:{$terminal->id}:trains"),
+                now()->addHours(6),
+                fn () => $this->sameRouteTrains($origin->id, $terminal->id, $train->id)
+            )
+            : [];
 
         // تنبيهات المستخدم المفعّلة لهذا القطار/المسار (لإظهار حالة "مفعّل" بدل زر التفعيل).
         $myReminder = null;
@@ -104,11 +159,84 @@ class TrainController extends Controller
                 ->where('to_station_id', $terminal?->id)->where('status', 'active')->first();
         }
 
+        // آراء الركّاب (مجتمع القطر).
+        $reviews = \App\Models\TrainReview::where('train_id', $train->id)
+            ->with('user:id,name')->latest()->take(20)->get();
+        $reviewsAvg = round((float) $reviews->avg('rating'), 1);
+        $reviewsCount = $reviews->count();
+        $myReview = $request->user()
+            ? $reviews->firstWhere('user_id', $request->user()->id)
+            : null;
+
         return view('trains.show', compact(
             'train', 'fares', 'origin', 'terminal', 'scheduleStops', 'validSegment',
             'depart', 'arrive', 'duration', 'boardingAlternatives', 'routeStops', 'stationFares', 'liveStatus',
-            'myReminder', 'myStandingAlert'
+            'reliability', 'sameRouteTrains',
+            'myReminder', 'myStandingAlert', 'reviews', 'reviewsAvg', 'reviewsCount', 'myReview'
         ));
+    }
+
+    /**
+     * قطارات تعمل على نفس القطعة (origin → terminal) عدا القطر الحالي، مرتّبة بميعاد القيام.
+     * تُرجَع كمصفوفات جاهزة للعرض (نكاش المصفوفات لا الموديلات).
+     *
+     * @return array<int, array{number:string, type:string, depart:?string, arrive:?string, price:?int, url:string}>
+     */
+    private function sameRouteTrains(int $originId, int $terminalId, int $excludeTrainId): array
+    {
+        // محطات القطارات عند محطة الوصول (train_id => stop_order).
+        $terminalStops = \App\Models\TrainStop::where('station_id', $terminalId)
+            ->pluck('stop_order', 'train_id');
+
+        // محطات القطارات عند محطة القيام — نبقّي اللي القيام فيها قبل الوصول.
+        $originStops = \App\Models\TrainStop::where('station_id', $originId)
+            ->get(['train_id', 'arrival_time', 'departure_time'])
+            ->filter(fn ($o) => $o->train_id !== $excludeTrainId
+                && isset($terminalStops[$o->train_id]));
+
+        if ($originStops->isEmpty()) {
+            return [];
+        }
+
+        $trainIds = $originStops->pluck('train_id')->all();
+
+        // القطارات الفعّالة فقط.
+        $trains = Train::whereIn('id', $trainIds)->where('active', true)->get()->keyBy('id');
+
+        // وصول كل قطار عند محطة الوصول (train_id => arrival_time).
+        $terminalArrivals = \App\Models\TrainStop::where('station_id', $terminalId)
+            ->whereIn('train_id', $trainIds)
+            ->pluck('arrival_time', 'train_id');
+
+        // أرخص سعر لكل قطار على نفس القطعة.
+        $prices = Fare::whereIn('train_id', $trainIds)
+            ->where('from_station_id', $originId)->where('to_station_id', $terminalId)
+            ->orderBy('price_piasters')->get()
+            ->groupBy('train_id')->map(fn ($g) => (int) round($g->first()->price));
+
+        $rows = $originStops
+            ->filter(fn ($o) => $trains->has($o->train_id))
+            ->map(function ($o) use ($trains, $terminalArrivals, $prices, $originId, $terminalId) {
+                $t = $trains[$o->train_id];
+                $depRaw = $o->departure_time ?? $o->arrival_time;
+
+                return [
+                    'number' => (string) $t->number,
+                    'type' => $t->type_label,
+                    'depart' => \App\Support\Format::time($depRaw),
+                    'depart_sort' => $depRaw ? substr($depRaw, 0, 5) : '99:99',
+                    'arrive' => \App\Support\Format::time($terminalArrivals[$o->train_id] ?? null),
+                    'price' => $prices[$o->train_id] ?? null,
+                    'url' => route('trains.show', $t) . "?from={$originId}&to={$terminalId}",
+                ];
+            })
+            ->sortBy('depart_sort')
+            ->take(8)
+            ->map(fn ($r) => \Illuminate\Support\Arr::except($r, 'depart_sort'))
+            ->values()
+            ->all();
+
+        return $rows;
     }
 
     private function duration(?string $depart, int $dayDiff, ?string $arrive): ?string

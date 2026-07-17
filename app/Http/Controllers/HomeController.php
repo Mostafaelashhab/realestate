@@ -12,6 +12,12 @@ class HomeController extends Controller
 {
     public function index()
     {
+        return view('home', $this->homeData());
+    }
+
+    /** البيانات المشتركة لكل نسخ الرئيسية. */
+    private function homeData(): array
+    {
         // بيانات شبه ثابتة — تُكاش ٢٤ ساعة وتُبطَّل عند تحديث الجداول/الأسعار.
         $stations = Cache::remember(CacheVer::key('catalog', 'home:stations'), now()->addHours(24),
             fn () => Station::orderBy('name_ar')->get());
@@ -81,6 +87,6 @@ class HomeController extends Controller
         // العروض ديناميكية — لا تُكاش طويلًا.
         $promos = Promo::active()->get();
 
-        return view('home', compact('stations', 'trainCount', 'popular', 'promos', 'featured'));
+        return compact('stations', 'trainCount', 'popular', 'promos', 'featured');
     }
 }

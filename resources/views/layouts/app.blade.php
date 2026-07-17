@@ -9,7 +9,7 @@
     @endif
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0b6340">
+    <meta name="theme-color" content="#7c3aed">
     <title>@yield('title', 'قطارات مصر') — قطارات مصر</title>
 
     {{-- Open Graph / المعاينة عند المشاركة --}}
@@ -47,7 +47,7 @@
 
 <body class="bg-slate-100 text-slate-800 min-h-screen">
     {{-- شاشة بداية (تظهر عند فتح التطبيق المثبّت فقط) --}}
-    <div id="qm-splash" style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:linear-gradient(135deg,#0b5036,#11a06a);transition:opacity .45s ease">
+    <div id="qm-splash" style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:linear-gradient(135deg,#5b21b6,#8b5cf6);transition:opacity .45s ease">
         <div style="text-align:center;color:#fff">
             <x-train-illustration style="width:170px;height:auto;margin:0 auto;animation:qmBob 1.5s ease-in-out infinite"/>
             <p style="font-weight:800;font-size:1.3rem;margin-top:.5rem">قطارات مصر</p>
@@ -118,29 +118,34 @@
             $tabs = [
                 ['route' => 'home', 'icon' => 'home', 'label' => 'الرئيسية', 'on' => request()->routeIs('home') || request()->routeIs('search') || request()->routeIs('trains.show') || request()->routeIs('route')],
                 ['route' => 'favorites', 'icon' => 'heart', 'label' => 'المفضلة', 'on' => request()->routeIs('favorites')],
-                ['route' => 'fines', 'icon' => 'scale', 'label' => 'الغرامات', 'on' => request()->routeIs('fines')],
-                ['route' => 'report', 'icon' => 'flag', 'label' => 'بلّغ', 'on' => request()->routeIs('report')],
+                ['route' => 'trains.top', 'icon' => 'star', 'label' => 'الأعلى', 'on' => request()->routeIs('trains.top')],
+                ['route' => 'premium', 'icon' => 'ticket', 'label' => 'العروض', 'on' => request()->routeIs('premium')],
             ];
         @endphp
-        <nav class="fixed bottom-0 inset-x-0 z-30">
-            <div
-                class="mx-auto max-w-xl bg-white/95 backdrop-blur border-t border-slate-200 px-2 pb-[env(safe-area-inset-bottom)]">
-                <div class="grid grid-cols-5 items-end">
+        <nav class="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
+            <div class="mx-auto max-w-xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <div class="pointer-events-auto relative flex items-center justify-around bg-white rounded-[2rem] shadow-[0_10px_35px_rgba(15,23,42,0.18)] ring-1 ring-slate-100 px-2 py-2">
                     @foreach ($tabs as $tab)
-                        <a href="{{ route($tab['route']) }}"
-                            class="flex flex-col items-center gap-1 py-2.5 rounded-xl transition {{ $tab['on'] ? 'text-rail-700' : 'text-slate-400 hover:text-slate-600' }}">
-                            <x-icon :name="$tab['icon']" class="w-6 h-6 {{ $tab['on'] ? '' : 'opacity-70' }}" />
-                            <span class="text-[11px] font-bold whitespace-nowrap">{{ $tab['label'] }}</span>
+                        <a href="{{ route($tab['route']) }}" aria-label="{{ $tab['label'] }}"
+                            class="flex flex-col items-center gap-0.5 flex-1 py-1.5 rounded-2xl transition {{ $tab['on'] ? 'text-rail-600' : 'text-slate-400 hover:text-slate-600' }}">
+                            <span class="grid place-items-center w-10 h-8 rounded-2xl transition {{ $tab['on'] ? 'bg-rail-100' : '' }}">
+                                <x-icon :name="$tab['icon']" class="w-5 h-5" />
+                            </span>
+                            <span class="text-[10px] font-bold whitespace-nowrap">{{ $tab['label'] }}</span>
                         </a>
 
                         {{-- زر البحث الصوتي البارز في النص --}}
                         @if ($loop->index === 1)
-                            <div class="flex flex-col items-center">
+                            <div class="flex-1 flex justify-center">
                                 <button id="voice-fab" type="button" aria-label="ابحث بصوتك"
-                                    class="-mt-7 w-16 h-16 rounded-full bg-linear-to-br from-rail-500 to-rail-700 text-white shadow-lg shadow-rail-600/40 ring-4 ring-white grid place-items-center active:scale-95 transition">
-                                    <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+                                    class="-mt-9 w-16 h-16 rounded-full bg-linear-to-br from-rail-500 to-rail-700 text-white shadow-lg shadow-rail-600/50 ring-4 ring-slate-100 grid place-items-center active:scale-95 transition">
+                                    <svg viewBox="0 0 24 24" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="2.5" width="6" height="11" rx="3"/>
+                                        <path d="M6 11a6 6 0 0 0 12 0"/>
+                                        <path d="M12 17v3.5M8.5 20.5h7"/>
+                                        <path d="M3.5 9.5v2M20.5 9.5v2" opacity=".6"/>
+                                    </svg>
                                 </button>
-                                <span class="text-[11px] font-bold text-rail-700 -mt-0.5">بحث صوتي</span>
                             </div>
                         @endif
                     @endforeach

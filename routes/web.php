@@ -37,8 +37,16 @@ Route::view('/favorites', 'favorites')->name('favorites');
 Route::get('/قطارات/{from}/{to}', [RouteController::class, 'show'])->name('route');
 Route::get('/fines', [FineController::class, 'index'])->name('fines');
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
+Route::get('/أفضل-القطارات', [TrainController::class, 'top'])->name('trains.top');
 Route::get('/trains/{train}', [TrainController::class, 'show'])->name('trains.show');
+// أسعار الدرجات الحيّة من الهيئة حسب محطة القيام/النزول.
+Route::get('/trains/{train}/prices', [TrainController::class, 'prices'])->middleware('throttle:30,1')->name('trains.prices');
 Route::post('/trains/{train}/standing-alert', [StandingAlertController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.standing');
+
+// آراء الركّاب على القطر (مجتمع).
+Route::post('/trains/{train}/reviews', [\App\Http\Controllers\TrainReviewController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('trains.reviews.store');
+// بلاغ حالة القطر (متأخر/ملغي/في الموعد).
+Route::post('/trains/{train}/status', [\App\Http\Controllers\TrainStatusController::class, 'store'])->middleware(['auth', 'throttle:8,1'])->name('trains.status.store');
 
 // تذكير بميعاد قطار.
 Route::post('/trains/{train}/reminder', [TrainReminderController::class, 'store'])->middleware(['auth','throttle:10,1'])->name('trains.reminder');

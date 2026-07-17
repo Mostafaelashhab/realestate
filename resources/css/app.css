@@ -6,22 +6,34 @@
 /* الوضع الليلي بالكلاس (مش حسب النظام) */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* إخفاء عناصر Alpine قبل تهيئتها */
+[x-cloak] { display: none !important; }
+
+/* إخفاء شريط التمرير (لصفوف التبويبات الأفقية) */
+@utility no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 @theme {
     --font-sans: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
 
-    /* أخضر التطبيق — مبني على لوحة التصميم (#16A34A · #22C55E · #0F5132) */
-    --color-rail-50: #f0fdf4;
-    --color-rail-100: #dcfce7;
-    --color-rail-200: #bbf7d0;
-    --color-rail-300: #86efac;
-    --color-rail-400: #4ade80;
-    --color-rail-500: #22c55e;
-    --color-rail-600: #16a34a;
-    --color-rail-700: #15803d;
-    --color-rail-800: #0f5132;
-    --color-rail-900: #0c3f28;
-    --color-rail-950: #07271a;
+    /* بنفسجي التطبيق — مستوحى من التصميم المرجعي (#7C3AED · #8B5CF6 · #4C1D95) */
+    --color-rail-50: #f5f3ff;
+    --color-rail-100: #ede9fe;
+    --color-rail-200: #ddd6fe;
+    --color-rail-300: #c4b5fd;
+    --color-rail-400: #a78bfa;
+    --color-rail-500: #8b5cf6;
+    --color-rail-600: #7c3aed;
+    --color-rail-700: #6d28d9;
+    --color-rail-800: #5b21b6;
+    --color-rail-900: #4c1d95;
+    --color-rail-950: #2e1065;
 }
 
 html,
