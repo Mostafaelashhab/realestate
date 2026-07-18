@@ -1,5 +1,5 @@
 // Service Worker — قطارات مصر PWA
-const VERSION = 'v13';
+const VERSION = 'v14';
 const CACHE = `qm-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -16,7 +16,12 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).catch(() => {})
     );
-    self.skipWaiting();
+    // مننشّطش لوحدنا — نستنّى المستخدم يضغط «تحديث» (رسالة SKIP_WAITING) عشان مانقطعش عليه.
+});
+
+// الصفحة بتبعت الرسالة دي لما المستخدم يضغط زر التحديث → نفعّل النسخة الجديدة فورًا.
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {

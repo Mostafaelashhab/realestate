@@ -22,15 +22,15 @@
     <meta property="og:title" content="@yield('og_title', 'قطارات مصر — مواعيد وأسعار')">
     <meta property="og:description" content="{{ $ogDesc }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ url('/icons/icon-512.png') }}">
+    <meta property="og:image" content="{{ url('/icons/icon-512.png?v=8') }}">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="@yield('og_title', 'قطارات مصر — مواعيد وأسعار')">
     <meta name="twitter:description" content="{{ $ogDesc }}">
-    <meta name="twitter:image" content="{{ url('/icons/icon-512.png') }}">
+    <meta name="twitter:image" content="{{ url('/icons/icon-512.png?v=8') }}">
 
 
     {{-- PWA --}}
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="/manifest.webmanifest?v=8">
     <link rel="icon" href="/favicon.ico?v=8" sizes="any">
     <link rel="icon" href="/icons/favicon-32.png?v=8" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=8">

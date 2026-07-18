@@ -56,6 +56,22 @@
     إنت غير متصل بالنت — بتشوف نسخة محفوظة
 </div>
 
+{{-- شريط «في تحديث جديد» — يظهر لما يبقا فيه نسخة أحدث من التطبيق --}}
+<div id="pwa-update" hidden class="fixed inset-x-0 z-50 px-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))]">
+    <div class="mx-auto max-w-xl">
+        <div class="bg-rail-600 text-white rounded-2xl shadow-xl ring-1 ring-rail-700/40 p-3 flex items-center gap-3">
+            <span class="w-9 h-9 grid place-items-center rounded-xl bg-white/15 shrink-0">
+                <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v5h-5"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="font-bold text-sm leading-tight">في تحديث جديد للتطبيق</p>
+                <p class="text-xs text-white/80 mt-0.5">اضغط تحديث عشان تشوف آخر نسخة.</p>
+            </div>
+            <button id="pwa-update-btn" type="button" class="bg-white text-rail-700 text-sm font-extrabold rounded-xl px-4 py-2 active:scale-95 transition shrink-0">تحديث</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // مشاركة (Web Share API) مع بديل نسخ الرابط
     (() => {
@@ -171,10 +187,46 @@
     })();
 
     (() => {
-        // 1) تسجيل الـ Service Worker
+        // 1) تسجيل الـ Service Worker + كشف التحديثات («في نسخة جديدة»)
         if ('serviceWorker' in navigator) {
+            const bar = document.getElementById('pwa-update');
+            const btn = document.getElementById('pwa-update-btn');
+            let waitingSW = null;   // النسخة الجديدة المستنية التفعيل
+            let updating = false;   // المستخدم ضغط «تحديث»؟ (عشان مانعملش reload تلقائي غير كده)
+
+            const promptUpdate = (sw) => { waitingSW = sw; if (bar) bar.hidden = false; };
+
+            // نعرض الشريط بس لو فيه SW شغّال بالفعل (يعني ده تحديث مش أول تثبيت).
+            const checkWaiting = (reg) => {
+                if (reg.waiting && navigator.serviceWorker.controller) promptUpdate(reg.waiting);
+            };
+
+            if (btn) btn.addEventListener('click', () => {
+                btn.textContent = '…'; updating = true;
+                if (waitingSW) waitingSW.postMessage({ type: 'SKIP_WAITING' });
+                else location.reload();
+            });
+
+            // أول ما النسخة الجديدة تمسك التحكّم بعد الضغط → أعِد التحميل مرة واحدة.
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!updating) return; // مانعملش reload على أول تثبيت
+                updating = false;
+                location.reload();
+            });
+
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
+                navigator.serviceWorker.register('/sw.js').then((reg) => {
+                    checkWaiting(reg);
+                    reg.addEventListener('updatefound', () => {
+                        const nw = reg.installing;
+                        if (!nw) return;
+                        nw.addEventListener('statechange', () => {
+                            if (nw.state === 'installed' && navigator.serviceWorker.controller) promptUpdate(nw);
+                        });
+                    });
+                    // نفحص وجود تحديث عند كل فتح للصفحة.
+                    reg.update().catch(() => {});
+                }).catch(() => {});
             });
         }
 
