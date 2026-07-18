@@ -17,7 +17,12 @@ async function postJson(url, body, loginUrl) {
     } catch (e) {
         return { ok: false, data: null, msg: 'مفيش نت — راجع اتصالك وحاول تاني.' };
     }
-    if (r.status === 419 || r.status === 401) { location.href = loginUrl; return { ok: false, data: null, redirect: true }; }
+    // انتهت الجلسة / مش مسجّل دخول → رجّعه لصفحة الدخول.
+    // (بيرجع 401/419، أو 302 بيتبعه fetch لصفحة اللوجين فيبقى redirected أو رد HTML مش JSON.)
+    if (r.status === 401 || r.status === 419 || r.redirected || !(r.headers.get('content-type') || '').includes('json')) {
+        if (loginUrl) location.href = loginUrl;
+        return { ok: false, data: null, redirect: true };
+    }
     if (r.status === 429) return { ok: false, data: null, msg: 'بعتّ طلبات كتير بسرعة — استنى دقيقة وحاول تاني.' };
     let d = null;
     try { d = await r.json(); } catch (e) { /* رد مش JSON */ }

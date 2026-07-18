@@ -29,8 +29,13 @@ class PushController extends Controller
         );
 
         // إشعار ترحيب فوري عند أول اشتراك — تأكيد للمستخدم إن الإشعارات شغّالة.
+        // أي فشل في الإرسال مايكسرش حفظ الاشتراك نفسه.
         if ($sub->wasRecentlyCreated) {
-            $sender->send(collect([$sub]), 'تم تفعيل الإشعارات ✓', 'هنبّهك بمواعيد قطارك والمقاعد المتاحة.', '/');
+            try {
+                $sender->send(collect([$sub]), 'تم تفعيل الإشعارات ✓', 'هنبّهك بمواعيد قطارك والمقاعد المتاحة.', '/');
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return response()->json(['ok' => true]);

@@ -22,6 +22,32 @@
     </div>
 </div>
 
+{{-- بانر تفعيل التنبيهات (Web Push) — يطلب إذن الإشعارات في الخلفية --}}
+<div id="push-banner" hidden
+    class="fixed inset-x-0 z-40 px-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))]">
+    <div class="mx-auto max-w-xl">
+        <div class="bg-white rounded-2xl shadow-xl ring-1 ring-slate-200 p-3 flex items-center gap-3">
+            <span class="w-11 h-11 grid place-items-center rounded-xl bg-rail-50 text-rail-600 shrink-0">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="font-bold text-sm leading-tight">فعّل تنبيهات قطرك</p>
+                <p class="text-xs text-slate-500 mt-0.5">هنبّهك بمواعيد قطارك وأي جديد في القطارات اللي بتتابعها.</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button id="push-enable" type="button"
+                    class="bg-rail-600 hover:bg-rail-700 active:scale-95 text-white text-sm font-bold rounded-xl px-4 py-2 transition">
+                    تفعيل
+                </button>
+                <button id="push-dismiss" type="button" aria-label="إغلاق"
+                    class="w-9 h-9 grid place-items-center rounded-xl text-slate-400 hover:bg-slate-100 transition">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- نافذة تثبيت التطبيق (أندرويد/كروم) --}}
 <div id="pwa-modal" hidden class="fixed inset-0 z-50 grid place-items-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center">
@@ -312,6 +338,44 @@
             document.getElementById('pwa-banner-text').innerHTML = 'اضغط زر المشاركة <span class="font-bold">⎙</span> ثم «أضف إلى الشاشة الرئيسية».';
             banner.hidden = false;
             document.getElementById('pwa-dismiss').addEventListener('click', () => { dismiss(); banner.hidden = true; });
+        }
+
+        // 3) إذن التنبيهات (Web Push في الخلفية) — للمسجّلين فقط (الاشتراك محتاج تسجيل دخول).
+        const PUSH_AUTH = @json(auth()->check());
+        const supportsPush = () => PUSH_AUTH && window.QMPush && window.QMPush.supported();
+        const canNotify = typeof Notification !== 'undefined';
+
+        // لو الإذن متاح أصلاً بس مفيش اشتراك (اتمسح/جهاز جديد) → جدّد الاشتراك بهدوء في الخلفية.
+        if (supportsPush() && canNotify && Notification.permission === 'granted') {
+            window.QMPush.endpoint().then((ep) => { if (!ep) window.QMPush.subscribe().catch(() => {}); }).catch(() => {});
+        }
+
+        // بانر يطلب الإذن (لازم يبقا من ضغطة المستخدم — مش تلقائي).
+        const pushBanner = document.getElementById('push-banner');
+        const PUSH_KEY = 'push-prompt-dismissed';
+        const pushDismissed = () => {
+            const ts = +(localStorage.getItem(PUSH_KEY) || 0);
+            return ts && (Date.now() - ts) < 7 * 24 * 60 * 60 * 1000;
+        };
+        const rememberPush = () => { try { localStorage.setItem(PUSH_KEY, String(Date.now())); } catch (e) {} };
+
+        if (pushBanner && supportsPush() && canNotify && Notification.permission === 'default' && !pushDismissed()) {
+            const enableBtn = document.getElementById('push-enable');
+            const dismissBtn = document.getElementById('push-dismiss');
+            // مانزحمش المستخدم بنافذة التثبيت وبانر التنبيهات مع بعض.
+            setTimeout(() => {
+                if ((modal && !modal.hidden) || (banner && !banner.hidden)) return;
+                pushBanner.hidden = false;
+            }, 5000);
+
+            if (enableBtn) enableBtn.addEventListener('click', async () => {
+                enableBtn.disabled = true; enableBtn.textContent = '…';
+                let ok = false;
+                try { ok = await window.QMPush.subscribe(); } catch (e) {}
+                pushBanner.hidden = true;
+                if (!ok) rememberPush(); // رفض الإذن → مانضايقوش تاني قريب
+            });
+            if (dismissBtn) dismissBtn.addEventListener('click', () => { rememberPush(); pushBanner.hidden = true; });
         }
     })();
 </script>
