@@ -113,8 +113,8 @@
         const fab = document.getElementById('voice-fab');
         if (!fab) return;
         fab.addEventListener('click', () => {
-            const composer = document.getElementById('post-body');
-            if (composer) { composer.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => composer.focus(), 250); }
+            const opener = document.querySelector('[data-open-composer]');
+            if (opener) opener.click();
             else location.href = '{{ route('home') }}';
         });
     })();

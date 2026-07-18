@@ -10,25 +10,39 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Complaint extends Model
 {
     protected $fillable = [
-        'user_id', 'train_id', 'category', 'body',
+        'user_id', 'anonymous', 'train_id', 'category', 'body', 'poll_options',
         'from_station_id', 'to_station_id', 'travel_date', 'price_egp', 'contact',
     ];
 
     protected $casts = [
         'travel_date' => 'date',
         'price_egp' => 'integer',
+        'anonymous' => 'boolean',
+        'poll_options' => 'array',
     ];
 
     /** أنواع البوستات في مجتمع الركّاب (بتحدّد شكل البوست في الفيد). */
     public const CATEGORIES = [
         'general' => 'عام',
         'question' => 'سؤال',
+        'poll' => 'استطلاع',
         'complaint' => 'شكوى',
         'experience' => 'تجربة',
         'news' => 'خبر',
         'warning' => 'تنبيه',
         'ticket' => 'سوق تذاكر',
     ];
+
+    public function pollVotes(): HasMany
+    {
+        return $this->hasMany(PollVote::class);
+    }
+
+    /** اسم صاحب البوست للعرض (يخفي الاسم لو مجهول). */
+    public function displayName(): string
+    {
+        return $this->anonymous ? 'راكب مجهول' : ($this->user->name ?? 'راكب');
+    }
 
     public function comments(): HasMany
     {
@@ -57,6 +71,6 @@ class Complaint extends Model
 
     public function likers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'complaint_likes')->withTimestamps();
+        return $this->belongsToMany(User::class, 'complaint_likes')->withPivot('value')->withTimestamps();
     }
 }

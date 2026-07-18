@@ -44,9 +44,12 @@ Route::get('/fines', [FineController::class, 'index'])->name('fines');
 Route::get('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'index'])->name('complaints.index');
 Route::post('/شكاوى', [\App\Http\Controllers\ComplaintController::class, 'store'])->middleware(['auth', 'throttle:10,1'])->name('complaints.store');
 Route::post('/شكاوى/{complaint}/like', [\App\Http\Controllers\ComplaintController::class, 'like'])->middleware(['auth', 'throttle:60,1'])->name('complaints.like');
+Route::post('/شكاوى/{complaint}/vote', [\App\Http\Controllers\ComplaintController::class, 'vote'])->middleware(['auth', 'throttle:60,1'])->name('complaints.vote');
 Route::get('/مجتمع-feed', [\App\Http\Controllers\ComplaintController::class, 'feed'])->name('complaints.feed');
 Route::get('/شكاوى/{complaint}', [\App\Http\Controllers\ComplaintController::class, 'show'])->name('complaints.show');
+Route::get('/شكاوى/{complaint}/comments', [\App\Http\Controllers\ComplaintController::class, 'comments'])->name('complaints.comments');
 Route::post('/شكاوى/{complaint}/تعليق', [\App\Http\Controllers\ComplaintController::class, 'comment'])->middleware(['auth', 'throttle:20,1'])->name('complaints.comment');
+Route::post('/بلاغ-محتوى', [\App\Http\Controllers\ComplaintController::class, 'report'])->middleware(['auth', 'throttle:20,1'])->name('community.report');
 
 Route::get('/train-lookup', [TrainController::class, 'lookup'])->name('trains.lookup');
 // بروفايل الراكب + سمعته.

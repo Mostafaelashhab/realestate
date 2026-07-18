@@ -321,35 +321,18 @@
             function progressBar(est) {
                 const pct = Math.max(4, Math.min(96, est.frac * 100)).toFixed(0);
                 const train = `<svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 11h14M9 3v8m6-8v8"/><path d="M7 16l-2 4m12-4l2 4"/></svg>`;
-                const next = est.next
-                    ? `<div class="flex items-start gap-3">
-                           <span class="mt-0.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-amber-400 shrink-0"></span>
-                           <div class="min-w-0">
-                               <div class="text-sm font-bold text-amber-600 truncate">${esc(est.next)}</div>
-                               <div class="text-[11px] text-slate-400">المحطة الجاية</div>
-                           </div>
-                       </div>`
-                    : `<div class="flex items-center gap-3">
-                           <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 shrink-0"></span>
-                           <div class="text-sm font-bold text-emerald-600">وصل وجهته</div>
-                       </div>`;
-                return `<div class="mt-3">
-                        {{-- المحطة الحالية --}}
-                        <div class="flex items-start gap-3">
-                            <span class="mt-0.5 w-3.5 h-3.5 rounded-full bg-rail-600 ring-4 ring-rail-100 shrink-0"></span>
-                            <div class="min-w-0">
-                                <div class="text-sm font-bold text-rail-800 truncate">${esc(est.cur)}</div>
-                                <div class="text-[11px] text-slate-400">${est.arrived ? 'آخر محطة' : (est.frac > 0 ? 'آخر محطة عدّاها' : 'المحطة الحالية')}</div>
+                const dest = est.next
+                    ? `<svg viewBox="0 0 24 24" class="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg><span class="font-bold text-amber-600 truncate">${esc(est.next)}</span>`
+                    : `<span class="font-bold text-emerald-600 whitespace-nowrap">✓ وصل وجهته</span>`;
+                return `<div class="mt-3 flex items-center gap-3 rounded-2xl bg-white ring-1 ring-rail-100 p-3">
+                        <span class="w-11 h-11 shrink-0 grid place-items-center rounded-2xl bg-rail-600 text-white shadow-md shadow-rail-600/25">${train}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 text-sm min-w-0">
+                                <span class="font-bold text-rail-800 truncate">${esc(est.cur)}</span>
+                                ${dest}
                             </div>
+                            <div class="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-rail-500 rounded-full transition-all duration-500" style="width:${pct}%"></div></div>
                         </div>
-                        {{-- الوصلة الرأسية + القطر متحرّك --}}
-                        <div class="relative h-12 ms-[6px] my-0.5">
-                            <span class="absolute inset-y-0 w-0.5 bg-linear-to-b from-rail-400 to-amber-300"></span>
-                            <span class="absolute -start-[11px] grid place-items-center w-7 h-7 rounded-full bg-rail-600 text-white ring-4 ring-white shadow-md transition-all duration-500"
-                                style="top:calc(${pct}% - 14px)">${train}</span>
-                        </div>
-                        {{-- المحطة الجاية --}}
-                        ${next}
                     </div>`;
             }
 

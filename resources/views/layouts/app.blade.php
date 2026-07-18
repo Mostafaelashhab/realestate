@@ -9,7 +9,7 @@
     @endif
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#7c3aed">
+    <meta name="theme-color" content="#1877f2">
     <title>@yield('title', 'قطارات مصر') — قطارات مصر</title>
 
     {{-- Open Graph / المعاينة عند المشاركة --}}
@@ -47,7 +47,7 @@
 
 <body class="bg-slate-100 text-slate-800 min-h-screen">
     {{-- شاشة بداية (تظهر عند فتح التطبيق المثبّت فقط) --}}
-    <div id="qm-splash" style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:linear-gradient(135deg,#5b21b6,#8b5cf6);transition:opacity .45s ease">
+    <div id="qm-splash" style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:linear-gradient(135deg,#1461c9,#3b82f6);transition:opacity .45s ease">
         <div style="text-align:center;color:#fff">
             <x-train-illustration style="width:170px;height:auto;margin:0 auto;animation:qmBob 1.5s ease-in-out infinite"/>
             <p style="font-weight:800;font-size:1.3rem;margin-top:.5rem">قطارات مصر</p>
