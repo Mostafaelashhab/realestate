@@ -90,7 +90,7 @@
 
     <script>
         const SEARCH_URL = @json($searchUrl);
-        const IMPORT_URL = "{{ route('sync.import', $token) }}";
+        const IMPORT_URL = "{{ route('sync.import') }}";
         const CSRF = "{{ csrf_token() }}";
         const CHECK = '<svg viewBox="0 0 24 24" class="w-4 h-4 inline text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 

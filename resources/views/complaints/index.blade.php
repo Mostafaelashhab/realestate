@@ -129,18 +129,22 @@
 
                 @if ($c->category === 'ticket')
                     <div class="mt-2 rounded-2xl bg-emerald-50 ring-1 ring-emerald-100 p-3">
-                        <div class="flex items-center justify-between gap-2">
-                            <div class="font-bold text-slate-800 text-sm flex items-center gap-1.5 min-w-0">
-                                <span class="truncate max-w-[38%]">{{ $c->fromStation->name_ar ?? '—' }}</span>
-                                <x-icon name="arrow-left" class="w-3.5 h-3.5 text-emerald-600 shrink-0"/>
-                                <span class="truncate max-w-[38%]">{{ $c->toStation->name_ar ?? '—' }}</span>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
+                            <span class="flex-1 min-w-0 truncate text-end" title="{{ $c->fromStation->name_ar ?? '' }}">{{ $c->fromStation->name_ar ?? '—' }}</span>
+                            <x-icon name="arrow-left" class="w-3.5 h-3.5 text-emerald-600 shrink-0"/>
+                            <span class="flex-1 min-w-0 truncate" title="{{ $c->toStation->name_ar ?? '' }}">{{ $c->toStation->name_ar ?? '—' }}</span>
+                        </div>
+                        @if ($c->travel_date || $c->price_egp)
+                            <div class="flex items-center justify-between gap-2 mt-2.5">
+                                @if ($c->travel_date)
+                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-slate-600 bg-white rounded-full px-2.5 py-1 ring-1 ring-emerald-100"><x-icon name="calendar" class="w-3.5 h-3.5"/>{{ $c->travel_date->translatedFormat('l j F') }}</span>
+                                @else <span></span> @endif
+                                @if ($c->price_egp)<span class="flex items-baseline gap-1"><span class="text-lg font-extrabold text-emerald-700 leading-none">{{ number_format($c->price_egp) }}</span><span class="text-xs font-bold text-emerald-600">ج.م</span></span>@endif
                             </div>
-                            @if ($c->price_egp)<span class="font-extrabold text-emerald-700 text-sm whitespace-nowrap">{{ number_format($c->price_egp) }} ج.م</span>@endif
-                        </div>
-                        <div class="flex items-center justify-between gap-2 mt-2">
-                            <span class="text-xs text-slate-500">{{ $c->travel_date?->translatedFormat('l j F') }}</span>
-                            @if ($c->contact)<a href="https://wa.me/2{{ preg_replace('/\D/', '', $c->contact) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full px-3 py-1.5">تواصل</a>@endif
-                        </div>
+                        @endif
+                        @if ($c->contact)
+                            <a href="https://wa.me/2{{ preg_replace('/\D/', '', $c->contact) }}" target="_blank" rel="noopener" class="mt-2.5 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[.99] text-white text-sm font-bold rounded-xl px-3 py-2.5 transition"><x-icon name="whatsapp" class="w-4 h-4"/> تواصل على واتساب</a>
+                        @endif
                     </div>
                 @endif
 
@@ -292,11 +296,23 @@
                 return `${rows}<div class="text-[11px] text-slate-400 mt-0.5">${total} صوت</div>`;
             }
 
+            const calSvg = '<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+            const waSvg = '<svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.5-1.2-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.4.6-.3.3c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.2.1.4.1.6-.1l.7-.9c.2-.2.4-.2.6-.1l1.9.9c.3.1.4.2.5.3.1.3.1.8-.1 1.2z"/></svg>';
             function ticketBox(p) {
                 if (p.category !== 'ticket') return '';
-                const price = p.price ? `<span class="font-extrabold text-emerald-700 text-sm whitespace-nowrap">${Number(p.price).toLocaleString('ar-EG')} ج.م</span>` : '';
-                const wa = p.wa ? `<a href="https://wa.me/2${p.wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-emerald-600 text-white text-xs font-bold rounded-full px-3 py-1.5">تواصل</a>` : '';
-                return `<div class="mt-2 rounded-2xl bg-emerald-50 ring-1 ring-emerald-100 p-3"><div class="flex items-center justify-between gap-2"><div class="font-bold text-slate-800 text-sm flex items-center gap-1.5 min-w-0"><span class="truncate max-w-[38%]">${esc(p.from || '—')}</span>${arrowSvg}<span class="truncate max-w-[38%]">${esc(p.to || '—')}</span></div>${price}</div><div class="flex items-center justify-between gap-2 mt-2"><span class="text-xs text-slate-500">${esc(p.travel_date || '')}</span>${wa}</div></div>`;
+                const from = esc(p.from || '—'), to = esc(p.to || '—');
+                const price = p.price ? `<div class="flex items-baseline gap-1"><span class="text-lg font-extrabold text-emerald-700 leading-none">${Number(p.price).toLocaleString('ar-EG')}</span><span class="text-xs font-bold text-emerald-600">ج.م</span></div>` : '';
+                const date = p.travel_date ? `<span class="inline-flex items-center gap-1 text-xs font-bold text-slate-600 bg-white rounded-full px-2.5 py-1 ring-1 ring-emerald-100">${calSvg}${esc(p.travel_date)}</span>` : '';
+                const wa = p.wa ? `<a href="https://wa.me/2${p.wa}" target="_blank" rel="noopener" class="mt-2.5 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[.99] text-white text-sm font-bold rounded-xl px-3 py-2.5 transition">${waSvg} تواصل على واتساب</a>` : '';
+                return `<div class="mt-2 rounded-2xl bg-emerald-50 ring-1 ring-emerald-100 p-3">
+                    <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
+                        <span class="flex-1 min-w-0 truncate text-end" title="${from}">${from}</span>
+                        ${arrowSvg}
+                        <span class="flex-1 min-w-0 truncate" title="${to}">${to}</span>
+                    </div>
+                    ${(date || price) ? `<div class="flex items-center justify-between gap-2 mt-2.5">${date}${price}</div>` : ''}
+                    ${wa}
+                </div>`;
             }
 
             const upSvg = '<svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11M2 13v6a2 2 0 0 0 2 2h13.3a2 2 0 0 0 2-1.7l1.3-8a2 2 0 0 0-2-2.3H14V4a2 2 0 0 0-4 0c0 3-3 6-3 6H4a2 2 0 0 0-2 2z"/></svg>';
@@ -518,22 +534,30 @@
                     e.preventDefault();
                     const btn = document.getElementById('post-submit'), err = document.getElementById('post-err');
                     err.hidden = true; btn.disabled = true; const t = btn.textContent; btn.textContent = '…';
+                    const fail = (m) => { err.textContent = m; err.hidden = false; btn.disabled = false; btn.textContent = t; };
+                    let d = null;
                     try {
                         const r = await fetch(STORE_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' }, body: new FormData(form) });
-                        if (r.status === 419 || r.status === 401) { location.href = LOGIN; return; }
-                        const d = await r.json();
-                        if (d.ok && d.post) {
-                            document.getElementById('feed-empty')?.remove();
-                            feed.insertAdjacentHTML('afterbegin', card(d.post));
-                            mountPolls();
-                            form.reset(); catInput.value = 'general'; ticket.hidden = true; pollF.hidden = true;
-                            chips.forEach(x => { const on = x.dataset.type === 'general'; x.classList.toggle('bg-rail-600', on); x.classList.toggle('text-white', on); x.classList.toggle('bg-slate-100', !on); x.classList.toggle('text-slate-600', !on); });
-                            document.getElementById('tk-from-disp').textContent = 'من محطة'; document.getElementById('tk-to-disp').textContent = 'إلى محطة';
-                            closeC(); window.scrollTo({ top: 0, behavior: 'smooth' });
-                            try { navigator.vibrate?.(12); } catch (e) {}
-                        } else { err.textContent = d.message || 'مش قادر ينشر، جرّب تاني.'; err.hidden = false; }
-                    } catch (e) { err.textContent = 'حصل خطأ، جرّب تاني.'; err.hidden = false; }
-                    finally { btn.disabled = false; btn.textContent = t; }
+                        // انتهت الجلسة / مش مسجّل دخول → رجّعه لصفحة الدخول بدل رسالة خطأ غامضة.
+                        if (r.status === 401 || r.status === 419 || r.redirected || !(r.headers.get('content-type') || '').includes('json')) { location.href = LOGIN; return; }
+                        if (r.status === 429) return fail('بترسل بسرعة، استنى دقيقة وجرّب.');
+                        d = await r.json();
+                    } catch (_) { return fail('النت ضعيف، جرّب تاني.'); }
+
+                    if (!d || !d.ok || !d.post) return fail((d && d.message) || 'مش قادر ينشر، جرّب تاني.');
+
+                    // اتنشر بنجاح — أي خطأ في العرض بعد كده منفصل عن خطأ الإرسال.
+                    try {
+                        document.getElementById('feed-empty')?.remove();
+                        feed.insertAdjacentHTML('afterbegin', card(d.post));
+                        mountPolls();
+                    } catch (_) {}
+                    form.reset(); catInput.value = 'general'; ticket.hidden = true; pollF.hidden = true;
+                    chips.forEach(x => { const on = x.dataset.type === 'general'; x.classList.toggle('bg-rail-600', on); x.classList.toggle('text-white', on); x.classList.toggle('bg-slate-100', !on); x.classList.toggle('text-slate-600', !on); });
+                    document.getElementById('tk-from-disp').textContent = 'من محطة'; document.getElementById('tk-to-disp').textContent = 'إلى محطة';
+                    closeC(); window.scrollTo({ top: 0, behavior: 'smooth' });
+                    try { navigator.vibrate?.(12); } catch (e) {}
+                    btn.disabled = false; btn.textContent = t;
                 });
             }
         })();

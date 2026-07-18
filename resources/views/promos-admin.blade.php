@@ -17,7 +17,7 @@
     @endif
 
     {{-- إضافة عرض --}}
-    <form action="{{ route('promos.store', $token) }}" method="POST" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 space-y-3 mb-5">
+    <form action="{{ route('promos.store') }}" method="POST" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-4 space-y-3 mb-5">
         @csrf
         <h2 class="font-bold text-sm">عرض جديد</h2>
         <input name="title" required maxlength="120" placeholder="العنوان" value="{{ old('title') }}"
@@ -65,11 +65,11 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <form action="{{ route('promos.toggle', ['token' => $token, 'promo' => $promo->id]) }}" method="POST">
+                    <form action="{{ route('promos.toggle', $promo->id) }}" method="POST">
                         @csrf
                         <button class="text-xs font-bold bg-white/70 rounded-lg px-3 py-1.5">{{ $promo->active ? 'إيقاف' : 'تفعيل' }}</button>
                     </form>
-                    <form action="{{ route('promos.destroy', ['token' => $token, 'promo' => $promo->id]) }}" method="POST"
+                    <form action="{{ route('promos.destroy', $promo->id) }}" method="POST"
                         onsubmit="return confirm('حذف العرض؟')">
                         @csrf @method('DELETE')
                         <button class="text-xs font-bold bg-white/70 text-red-600 rounded-lg px-3 py-1.5">حذف</button>

@@ -27,12 +27,12 @@
 
     {{-- فلترة بالحالة --}}
     <div class="flex flex-wrap gap-2 mb-4 text-sm">
-        <a href="{{ route('reports.admin', $token) }}"
+        <a href="{{ route('reports.admin') }}"
             class="px-3 py-1.5 rounded-full {{ $activeStatus ? 'bg-white ring-1 ring-slate-200 text-slate-600' : 'bg-rail-600 text-white' }}">
             الكل ({{ number_format($total) }})
         </a>
         @foreach (\App\Models\Report::STATUSES as $key => $label)
-            <a href="{{ route('reports.admin', ['token' => $token, 'status' => $key]) }}"
+            <a href="{{ route('reports.admin', ['status' => $key]) }}"
                 class="px-3 py-1.5 rounded-full {{ $activeStatus === $key ? 'bg-rail-600 text-white' : 'bg-white ring-1 ring-slate-200 text-slate-600' }}">
                 {{ $label }} ({{ number_format($counts[$key] ?? 0) }})
             </a>
@@ -63,7 +63,7 @@
             @endif
 
             {{-- تغيير الحالة --}}
-            <form action="{{ route('reports.status', ['token' => $token, 'report' => $report->id]) }}" method="POST"
+            <form action="{{ route('reports.status', $report->id) }}" method="POST"
                 class="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100">
                 @csrf
                 @foreach (\App\Models\Report::STATUSES as $key => $label)

@@ -92,19 +92,24 @@ Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('
 Route::get('/report', [ReportController::class, 'create'])->name('report');
 Route::post('/report', [ReportController::class, 'store'])->middleware('throttle:8,1')->name('report.store');
 
-// لوحة المشرف الموحّدة + الأدوات (خلف رمز المزامنة).
-Route::get('/admin/{token}', [AdminController::class, 'index'])->name('admin');
+// لوحة المشرف وأدواتها — متاحة فقط لإيميل المشرف (config enr.admin_email).
+Route::middleware(['auth', 'admin'])->group(function () {
+    // اللوحة الموحّدة + إدارة المستخدمين (إظهار المقاعد لكل حساب).
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin');
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::post('/admin/users/{user}/seats', [AdminController::class, 'toggleSeats'])->name('admin.users.seats');
 
-// لوحة المشرف للبلاغات (خلف رابط سري — رمز المزامنة).
-Route::get('/admin/reports/{token}', [ReportController::class, 'admin'])->name('reports.admin');
-Route::post('/admin/reports/{token}/{report}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
+    // البلاغات.
+    Route::get('/admin/reports', [ReportController::class, 'admin'])->name('reports.admin');
+    Route::post('/admin/reports/{report}/status', [ReportController::class, 'updateStatus'])->name('reports.status');
 
-// لوحة المشرف للعروض/البانرات.
-Route::get('/admin/promos/{token}', [PromoController::class, 'admin'])->name('promos.admin');
-Route::post('/admin/promos/{token}', [PromoController::class, 'store'])->name('promos.store');
-Route::post('/admin/promos/{token}/{promo}/toggle', [PromoController::class, 'toggle'])->name('promos.toggle');
-Route::delete('/admin/promos/{token}/{promo}', [PromoController::class, 'destroy'])->name('promos.destroy');
+    // العروض/البانرات.
+    Route::get('/admin/promos', [PromoController::class, 'admin'])->name('promos.admin');
+    Route::post('/admin/promos', [PromoController::class, 'store'])->name('promos.store');
+    Route::post('/admin/promos/{promo}/toggle', [PromoController::class, 'toggle'])->name('promos.toggle');
+    Route::delete('/admin/promos/{promo}', [PromoController::class, 'destroy'])->name('promos.destroy');
 
-// مزامنة الأسعار الرسمية خلف رابط سري (الرمز من ENR_SYNC_TOKEN).
-Route::get('/sync/{token}', [SyncController::class, 'index'])->name('sync');
-Route::post('/sync/{token}/import', [SyncController::class, 'import'])->name('sync.import');
+    // مزامنة الأسعار الرسمية من نظام الهيئة.
+    Route::get('/sync', [SyncController::class, 'index'])->name('sync');
+    Route::post('/sync/import', [SyncController::class, 'import'])->name('sync.import');
+});

@@ -525,7 +525,7 @@
 
     {{-- ========================= المقاعد المتاحة (مخفي مؤقتًا لحين إذن الهيئة) ========================= --}}
     @php $isAuth = auth()->check(); $isPremium = (bool) auth()->user()?->isPremium(); @endphp
-    @if (config('enr.show_seats') && $origin?->enr_id && $terminal?->enr_id)
+    @if ((auth()->user()?->canSeeSeats() ?? config('enr.show_seats')) && $origin?->enr_id && $terminal?->enr_id)
         <section id="live" class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 p-5 mb-4 scroll-mt-20">
             <h2 class="font-bold flex items-center gap-2">
                 <span class="relative flex w-2.5 h-2.5">

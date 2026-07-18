@@ -6,23 +6,18 @@ use App\Models\Promo;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-/** إدارة العروض/البانرات خلف رابط سري (نفس رمز المزامنة). */
+/** إدارة العروض/البانرات (متاحة لإيميل المشرف فقط عبر middleware admin). */
 class PromoController extends Controller
 {
-    public function admin(string $token)
+    public function admin()
     {
-        $this->authorizeToken($token);
-
         return view('promos-admin', [
-            'token' => $token,
             'promos' => Promo::orderBy('sort')->orderByDesc('id')->get(),
         ]);
     }
 
-    public function store(string $token, Request $request)
+    public function store(Request $request)
     {
-        $this->authorizeToken($token);
-
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:120'],
             'body' => ['nullable', 'string', 'max:200'],
@@ -40,25 +35,17 @@ class PromoController extends Controller
         return back()->with('status', 'تم إضافة العرض.');
     }
 
-    public function toggle(string $token, Promo $promo)
+    public function toggle(Promo $promo)
     {
-        $this->authorizeToken($token);
         $promo->update(['active' => ! $promo->active]);
 
         return back()->with('status', 'تم تحديث حالة العرض.');
     }
 
-    public function destroy(string $token, Promo $promo)
+    public function destroy(Promo $promo)
     {
-        $this->authorizeToken($token);
         $promo->delete();
 
         return back()->with('status', 'تم حذف العرض.');
-    }
-
-    private function authorizeToken(string $token): void
-    {
-        $expected = config('enr.sync_token');
-        abort_if(! $expected || ! hash_equals($expected, $token), 404);
     }
 }

@@ -46,6 +46,24 @@ class AppNotification extends Model
         }
     }
 
+    /** إشعار لمستخدم واحد (داخل التطبيق + Web Push). */
+    public static function notify(int $userId, string $title, string $body, string $url, string $icon = 'bell'): void
+    {
+        static::create(['user_id' => $userId, 'icon' => $icon, 'title' => $title, 'body' => $body, 'url' => $url]);
+
+        try {
+            $sender = app(WebPushSender::class);
+            if ($sender->configured()) {
+                $subs = PushSubscription::where('user_id', $userId)->get();
+                if ($subs->isNotEmpty()) {
+                    $sender->send($subs, $title, $body, $url);
+                }
+            }
+        } catch (\Throwable $e) {
+            // الإشعار الداخلي اتسجّل؛ فشل الـ push مايوقفش العملية.
+        }
+    }
+
     public static function unreadCount(int $userId): int
     {
         return static::where('user_id', $userId)->whereNull('read_at')->count();

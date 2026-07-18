@@ -92,16 +92,6 @@ window.EnrLive = (() => {
             <span class="flex items-center gap-1"><span class="w-3.5 h-3.5 rounded bg-amber-400 inline-block"></span> مختار</span>
         </div>`;
 
-    // أيقونة كرسي (armchair قدّامي) — تتلوّن من currentColor.
-    const CHAIR = '<svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" aria-hidden="true">'
-        + '<rect x="7" y="3" width="10" height="11" rx="3"/>'           // الظهر
-        + '<rect x="3.4" y="9" width="3.4" height="8" rx="1.6"/>'        // مسند يسار
-        + '<rect x="17.2" y="9" width="3.4" height="8" rx="1.6"/>'       // مسند يمين
-        + '<rect x="6" y="12.5" width="12" height="5" rx="2"/>'         // القاعدة
-        + '<rect x="6.2" y="17" width="2.4" height="3.4" rx="1"/>'      // رجل يسار
-        + '<rect x="15.4" y="17" width="2.4" height="3.4" rx="1"/>'     // رجل يمين
-        + '</svg>';
-
     // يجمّع إحداثيات متقاربة في خانات (يتجاهل ضوضاء ١-٢ بكسل) ويرجّع المراكز ودالة الفهرسة.
     const clusterAxis = (values, tol) => {
         const sorted = [...new Set(values)].sort((a, b) => a - b);
@@ -147,9 +137,12 @@ window.EnrLive = (() => {
             const ok = p.available && !p.sold && !p.locked;
             const price = Math.round((p.cost || 0) / 100);
             const title = `مقعد ${p.number} — ${ok ? 'متاح' : 'محجوز'}${price ? ' — ' + price + ' ج.م' : ''}`;
-            const cls = ok ? 'bg-rail-50 text-rail-600 hover:bg-rail-100' : 'bg-slate-100 text-slate-300';
+            // رقم الكرسي مكتوب على الكرسي نفسه (بدل أيقونة عامة) — يظهر على الموبايل من غير hover.
+            const cls = ok
+                ? 'bg-rail-50 text-rail-700 ring-1 ring-rail-200 hover:bg-rail-100'
+                : 'bg-slate-100 text-slate-300 ring-1 ring-slate-200 line-through';
             return `<button type="button" ${ok ? `data-seat="${p.number}"` : 'disabled'} title="${title}"
-                class="seat w-9 h-9 rounded-lg grid place-items-center ${cls} transition">${CHAIR}</button>`;
+                class="seat w-9 h-9 rounded-lg grid place-items-center text-[11px] font-extrabold tabular-nums leading-none ${cls} transition">${p.number}</button>`;
         };
 
         // قالب الأعمدة: رقم الصف + الأعمدة + عمود الممر.

@@ -35,11 +35,9 @@ class ReportController extends Controller
         return redirect()->route('report')->with('status', 'وصلنا بلاغك، شكرًا لك! هنراجعه ونصلّح المشكلة.');
     }
 
-    /** لوحة المشرف لعرض البلاغات (خلف رابط سري — نفس رمز المزامنة). */
-    public function admin(string $token, Request $request)
+    /** لوحة المشرف لعرض البلاغات (متاحة لإيميل المشرف فقط عبر middleware admin). */
+    public function admin(Request $request)
     {
-        $this->authorizeToken($token);
-
         $status = $request->query('status');
         $query = Report::query()->latest();
         if (in_array($status, array_keys(Report::STATUSES), true)) {
@@ -47,7 +45,6 @@ class ReportController extends Controller
         }
 
         return view('reports-admin', [
-            'token' => $token,
             'reports' => $query->limit(200)->get(),
             'activeStatus' => $status,
             'counts' => Report::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
@@ -55,10 +52,8 @@ class ReportController extends Controller
         ]);
     }
 
-    public function updateStatus(string $token, Report $report, Request $request)
+    public function updateStatus(Report $report, Request $request)
     {
-        $this->authorizeToken($token);
-
         $validated = $request->validate([
             'status' => ['required', Rule::in(array_keys(Report::STATUSES))],
         ]);
@@ -66,11 +61,5 @@ class ReportController extends Controller
         $report->update($validated);
 
         return back()->with('status', 'تم تحديث حالة البلاغ.');
-    }
-
-    private function authorizeToken(string $token): void
-    {
-        $expected = config('enr.sync_token');
-        abort_if(! $expected || ! hash_equals($expected, $token), 404);
     }
 }

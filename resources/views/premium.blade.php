@@ -30,7 +30,7 @@
     @else
         @php
             $perks = [];
-            if (config('enr.show_seats')) {
+            if (auth()->user()?->canSeeSeats() ?? config('enr.show_seats')) {
                 $perks[] = ['icon' => 'seat', 'color' => 'bg-violet-100 text-violet-700', 't' => 'نبّهني أول ما يفضى كرسي', 's' => 'مراقبة تلقائية للقطر المكتمل وإشعار فوري'];
             }
             $perks = array_merge($perks, [

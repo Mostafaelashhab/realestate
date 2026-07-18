@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#0b6340">
     <title>@yield('title', 'حسابك') — قطارات مصر</title>
 
-    <link rel="icon" href="/favicon.ico?v=7" sizes="any">
-    <link rel="icon" href="/icons/favicon-32.png?v=7" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon.ico?v=8" sizes="any">
+    <link rel="icon" href="/icons/favicon-32.png?v=8" sizes="32x32" type="image/png">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,800&family=tajawal:400,500,700,800" rel="stylesheet">

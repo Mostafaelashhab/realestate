@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'premium_until'])]
+#[Fillable(['name', 'email', 'password', 'premium_until', 'can_see_seats'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -28,6 +28,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'premium_until' => 'datetime',
+            'can_see_seats' => 'boolean',
         ];
     }
 
@@ -35,5 +36,11 @@ class User extends Authenticatable
     public function isPremium(): bool
     {
         return $this->premium_until !== null && $this->premium_until->isFuture();
+    }
+
+    /** هل يشوف ميزة المقاعد؟ (مفعّلة لحسابه أو مفعّلة عالميًا). */
+    public function canSeeSeats(): bool
+    {
+        return $this->can_see_seats || (bool) config('enr.show_seats');
     }
 }

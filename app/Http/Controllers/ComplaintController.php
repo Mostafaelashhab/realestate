@@ -85,6 +85,17 @@ class ComplaintController extends Controller
         ]);
         $cm->load('user:id,name');
 
+        // إشعار: صاحب التعليق (عند الردّ) أو صاحب البوست (عند التعليق).
+        $actorId = $request->user()->id;
+        if ($parentId) {
+            $parentAuthor = \App\Models\ComplaintComment::where('id', $parentId)->value('user_id');
+            if ($parentAuthor && $parentAuthor !== $actorId) {
+                \App\Models\AppNotification::notify($parentAuthor, 'حد ردّ على تعليقك', \Illuminate\Support\Str::limit($cm->body, 80), route('complaints.show', $complaint));
+            }
+        } elseif ($complaint->user_id && $complaint->user_id !== $actorId) {
+            \App\Models\AppNotification::notify($complaint->user_id, 'حد علّق على بوستك', \Illuminate\Support\Str::limit($cm->body, 80), route('complaints.show', $complaint));
+        }
+
         if ($request->wantsJson()) {
             return response()->json(['ok' => true, 'comment' => $this->commentArray($cm), 'parent_id' => $parentId]);
         }

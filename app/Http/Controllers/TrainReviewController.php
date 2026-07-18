@@ -21,6 +21,17 @@ class TrainReviewController extends Controller
             ['rating' => $data['rating'], 'comment' => $data['comment'] ?? null],
         );
 
+        // نبّه المتابعين بتقييم جديد (مش التعديل).
+        if ($review->wasRecentlyCreated) {
+            \App\Models\AppNotification::notifyTrainFollowers(
+                $train,
+                "تقييم جديد لقطار {$train->number}",
+                "راكب قيّمه {$review->rating}/5" . ($review->comment ? ": {$review->comment}" : ''),
+                route('trains.show', $train) . '#reviews',
+                $request->user()->id,
+            );
+        }
+
         if ($request->wantsJson()) {
             $ratings = TrainReview::where('train_id', $train->id)->pluck('rating');
 

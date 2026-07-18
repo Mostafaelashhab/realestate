@@ -12,10 +12,8 @@ use Illuminate\Http\Request;
  */
 class SyncController extends Controller
 {
-    public function index(string $token)
+    public function index()
     {
-        $this->authorizeToken($token);
-
         $trains = Train::with(['stops.station'])
             ->withCount('fares')
             ->orderBy('number')
@@ -41,28 +39,19 @@ class SyncController extends Controller
             ->get(['id', 'name_ar', 'enr_id']);
 
         return view('sync', [
-            'token' => $token,
             'trains' => $trains,
             'stations' => $stations,
             'searchUrl' => config('enr.search_url'),
         ]);
     }
 
-    public function import(Request $request, string $token, EnrImporter $importer)
+    public function import(Request $request, EnrImporter $importer)
     {
-        $this->authorizeToken($token);
-
         $payload = $request->json()->all();
         if (! is_array($payload) || ! isset($payload[0]['steps'])) {
             return response()->json(['error' => 'بيانات غير صالحة'], 422);
         }
 
         return response()->json($importer->importSearch($payload, allowCreate: true));
-    }
-
-    private function authorizeToken(string $token): void
-    {
-        $expected = config('enr.sync_token');
-        abort_if(! $expected || ! hash_equals($expected, $token), 404);
     }
 }

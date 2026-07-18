@@ -31,9 +31,9 @@
 
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="icon" href="/favicon.ico?v=7" sizes="any">
-    <link rel="icon" href="/icons/favicon-32.png?v=7" sizes="32x32" type="image/png">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=7">
+    <link rel="icon" href="/favicon.ico?v=8" sizes="any">
+    <link rel="icon" href="/icons/favicon-32.png?v=8" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=8">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

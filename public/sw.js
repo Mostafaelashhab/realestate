@@ -1,5 +1,5 @@
 // Service Worker — قطارات مصر PWA
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = `qm-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
