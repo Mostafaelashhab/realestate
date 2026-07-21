@@ -67,11 +67,7 @@
 <div id="qm-toast" hidden
     class="fixed left-1/2 -translate-x-1/2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 bg-slate-900 text-white text-sm rounded-full px-4 py-2 shadow-lg"></div>
 
-{{-- شريط تقدّم علوي — إحساس فوري بالتحميل أول ما تضغط (قبل ما الصفحة الجديدة تحمّل) --}}
-<div id="qm-progress" aria-hidden="true"
-    style="position:fixed;top:0;left:0;right:0;height:3px;z-index:70;background:#1877f2;box-shadow:0 0 8px rgba(24,119,242,.65);transform:scaleX(0);transform-origin:100% 50%;opacity:0;transition:transform .2s ease,opacity .3s ease;pointer-events:none"></div>
-
-{{-- لودر كامل — يظهر بس لو التحميل خد وقت طويل --}}
+{{-- لودر التنقّل — يظهر فورًا أول ما تضغط أي رابط/كارت لحد ما الصفحة تحمّل --}}
 <div id="qm-loader" hidden class="fixed inset-0 z-60 grid place-items-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm">
     <div class="flex flex-col items-center gap-3">
         <span class="block w-11 h-11 rounded-full border-4 border-rail-200 border-t-rail-600 animate-spin"></span>
@@ -165,31 +161,20 @@
         });
     })();
 
-    // لودر التنقّل: شريط علوي فوري أول ما تضغط + أوفرلاي كامل للتحميل الطويل بس.
+    // لودر التنقّل: أوفرلاي كامل يظهر فورًا أول ما تضغط أي رابط/كارت أو تبعت فورم.
     (() => {
-        const bar = document.getElementById('qm-progress');
         const loader = document.getElementById('qm-loader');
-        if (!bar && !loader) return;
-        let trickle, overlayTimer, safety, active = false;
-        const setBar = (p) => { if (bar) bar.style.transform = `scaleX(${p})`; };
-
-        // نبدأ فورًا: الشريط يظهر من غير أي تأخير (إحساس سريع بالاستجابة).
-        const start = () => {
-            if (active) return; active = true;
-            if (bar) { bar.style.opacity = '1'; setBar(0.12); }
-            let p = 0.12;
-            trickle = setInterval(() => { p = Math.min(0.9, p + (0.92 - p) * 0.12); setBar(p); }, 300);
-            overlayTimer = setTimeout(() => { if (loader) loader.hidden = false; }, 650); // الأوفرلاي للتحميل البطيء بس
-            safety = setTimeout(finish, 12000);
+        if (!loader) return;
+        let timer, safety;
+        const show = () => {
+            clearTimeout(timer); clearTimeout(safety);
+            // تأخير بسيط جدًا (يمنع وميض على التنقّل الفوري) بس محسوس إنه فوري.
+            timer = setTimeout(() => { loader.hidden = false; }, 60);
+            safety = setTimeout(() => { loader.hidden = true; }, 12000);
         };
-        const finish = () => {
-            if (!active) return; active = false;
-            clearInterval(trickle); clearTimeout(overlayTimer); clearTimeout(safety);
-            if (loader) loader.hidden = true;
-            if (bar) { setBar(1); setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => setBar(0), 250); }, 200); }
-        };
-        // نخلّيها متاحة لأي تنقّل بالـ JS (مثلاً redirect لتسجيل الدخول).
-        window.QMNav = { start, done: finish };
+        const hide = () => { clearTimeout(timer); clearTimeout(safety); loader.hidden = true; };
+        // متاح لأي تنقّل بالـ JS (مثلاً redirect لتسجيل الدخول).
+        window.QMNav = { start: show, done: hide };
 
         const isInternalNav = (a) => {
             if (!a || a.target === '_blank' || a.hasAttribute('download')) return false;
@@ -204,18 +189,18 @@
         document.addEventListener('click', (e) => {
             if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
             const a = e.target.closest('a[href]');
-            if (a && isInternalNav(a)) start();
+            if (a && isInternalNav(a)) show();
         });
 
         document.addEventListener('submit', (e) => {
             const f = e.target;
             if (e.defaultPrevented || f.target === '_blank' || f.hasAttribute('data-no-loader')) return;
-            start();
+            show();
         });
 
         // إخفاء لو رجع المستخدم بالـ back (صفحة من كاش المتصفح) أو وصلت الصفحة الجديدة.
-        addEventListener('pageshow', finish);
-        addEventListener('pagehide', () => { clearInterval(trickle); clearTimeout(overlayTimer); clearTimeout(safety); });
+        addEventListener('pageshow', hide);
+        addEventListener('pagehide', () => { clearTimeout(timer); clearTimeout(safety); });
     })();
 
     // شريط «غير متصل»: يظهر/يختفي مع حالة الاتصال
